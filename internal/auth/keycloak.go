@@ -22,6 +22,7 @@ import (
 	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/internal/repo"
 	"github.com/tupyy/gophoto/internal/repo/postgres"
+	"github.com/tupyy/gophoto/utils/logutil"
 	"golang.org/x/oauth2"
 )
 
@@ -74,19 +75,21 @@ func (k *keyCloakAuthenticator) AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
+		logger := logutil.GetLogger(c)
+
 		s := session.Get(cookie.Value)
 		if s == nil {
-			logrus.WithField("sessionID", cookie.Value).Warn("no session found with this id")
+			logger.WithField("sessionID", cookie.Value).Warn("no session found with this id")
 			c.Abort()
 			redirectToLogin(c, k.oidcProvider.Config)
 			return
 		}
 
-		logrus.WithField("sessionID", cookie.Value).Debug("new request with session id")
+		logger.WithField("sessionID", cookie.Value).Debug("new request with session id")
 		sessionData, _ := s.(entity.Session)
 
 		if err := k.authenticate(c, sessionData); err != nil {
-			logrus.WithError(err).Debug("failed to authenticate")
+			logger.WithError(err).Debug("failed to authenticate")
 			c.Abort()
 			redirectToLogin(c, k.oidcProvider.Config)
 			return
@@ -104,7 +107,9 @@ func (k *keyCloakAuthenticator) Callback() gin.HandlerFunc {
 		// generate a session ID
 		uuid := uuid.New()
 
-		logrus.WithField("uuid", uuid.String()).Info("session created")
+		logger := logutil.GetLogger(c)
+
+		logger.WithField("uuid", uuid.String()).Info("session created")
 
 		state := session.Get("state")
 		if state == nil {
@@ -150,7 +155,7 @@ func (k *keyCloakAuthenticator) Callback() gin.HandlerFunc {
 			http.Error(c.Writer, "nonce did not match", http.StatusBadRequest)
 		}
 
-		user, err := k.createOrUpdateUserFromClaims(c.Request.Context(), normalizeGroupsFromClaims(claims))
+		user, err := k.createOrUpdateUserFromClaims(c, normalizeGroupsFromClaims(claims))
 		if err != nil {
 			http.Error(c.Writer, err.Error(), http.StatusBadRequest)
 		}
@@ -170,7 +175,7 @@ func (k *keyCloakAuthenticator) Callback() gin.HandlerFunc {
 		session.Set(uuid.String(), sessionData)
 		session.Save()
 
-		logrus.WithField("session data", fmt.Sprintf("%+v", sessionData)).Trace("session data for logged user")
+		logger.WithField("session data", fmt.Sprintf("%+v", sessionData)).Trace("session data for logged user")
 
 		// save uuid to cookie
 		c.SetCookie(sessionID, uuid.String(), 3600, "/", c.Request.Host, true, true)
@@ -225,52 +230,54 @@ func (k *keyCloakAuthenticator) authenticate(ctx *gin.Context, sessionData entit
 
 	ctx.Set("username", sessionData.Username)
 
-	logrus.WithField("username", sessionData.Username).Debug("user logged in")
+	logutil.GetLogger(ctx).Debug("user logged in")
 
 	return nil
 }
 
 // createOrUpdateUserFromClaims creates or updates an existing user from claims.
-func (k *keyCloakAuthenticator) createOrUpdateUserFromClaims(ctx context.Context, claims gophotoClaims) (entity.User, error) {
+func (k *keyCloakAuthenticator) createOrUpdateUserFromClaims(ctx *gin.Context, claims gophotoClaims) (entity.User, error) {
 	var noUser entity.User
+
+	logger := logutil.GetLogger(ctx)
 
 	username := getUsernameFromClaims(claims)
 	// create or update user in db
 	user, err := k.userRepo.Get(ctx, *username)
 	if err != nil {
 		if err != postgres.ErrUserNotFound {
-			logrus.WithError(err).Error("failed to get user")
+			logger.WithError(err).Error("failed to get user")
 			return noUser, errInternalError
 		}
 
 		newUser := entityFromClaims(*username, claims)
 		if groups, err := k.getGroupsFromClaims(ctx, claims.Groups); err != nil {
-			logrus.WithError(err).Error("cannot retrieve groups from claims")
+			logger.WithError(err).Error("cannot retrieve groups from claims")
 		} else {
 			newUser.Groups = groups
 		}
 
-		if id, err := k.userRepo.Create(ctx, newUser); err != nil {
-			logrus.WithError(err).Error("failed to create user")
+		if id, err := k.userRepo.Create(ctx.Request.Context(), newUser); err != nil {
+			logger.WithError(err).Error("failed to create user")
 			return noUser, errInternalError
 		} else {
-			logrus.WithField("user id", id).WithField("username", *username).Debug("user created")
+			logger.WithField("user id", id).WithField("username", *username).Debug("user created")
 		}
 	} else {
 		// update user
 		if groups, err := k.getGroupsFromClaims(ctx, claims.Groups); err != nil {
-			logrus.WithError(err).Error("cannot retrieve groups from claims")
+			logger.WithError(err).Error("cannot retrieve groups from claims")
 		} else {
 			user.Groups = groups
 		}
 
-		user, err := k.userRepo.Update(ctx, user)
+		user, err := k.userRepo.Update(ctx.Request.Context(), user)
 		if err != nil {
-			logrus.WithError(err).Error("failed to update user")
+			logger.WithError(err).Error("failed to update user")
 			return noUser, errInternalError
 		}
 
-		logrus.WithField("user", fmt.Sprintf("%+v", user)).Debug("user updated")
+		logger.WithField("user", fmt.Sprintf("%+v", user)).Debug("user updated")
 	}
 
 	return user, nil

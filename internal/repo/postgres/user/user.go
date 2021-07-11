@@ -29,7 +29,6 @@ func New(client pgclient.Client) (*UserRepo, error) {
 	return &UserRepo{db: gormDB, client: client}, nil
 }
 
-// Create inserts a new user and return the ID if successful.
 func (u *UserRepo) Create(ctx context.Context, user entity.User) (int, error) {
 	tx := u.db.WithContext(ctx).Begin()
 
