@@ -21,6 +21,7 @@ import (
 	"encoding/gob"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 
 	"github.com/gin-contrib/sessions/memstore"
 	"github.com/gin-gonic/gin"
@@ -79,12 +80,7 @@ var serveCmd = &cobra.Command{
 		r := router.NewRouter(store, keyCloakAuthenticator)
 
 		r.PrivateGroup.GET("/", func(c *gin.Context) {
-			username, found := c.Get("username")
-			if !found {
-				c.Writer.Write(bytes.NewBufferString("username not found").Bytes())
-			} else {
-				c.Writer.Write(bytes.NewBufferString(username.(string)).Bytes())
-			}
+			c.HTML(http.StatusOK, "index.html", gin.H{})
 		})
 
 		r.PublicGroup.POST("/test2/k_logout", func(c *gin.Context) {
