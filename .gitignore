@@ -1,0 +1,6 @@
+vendor/
+sql/.pgpass
+keycloak/.pass
+keycloak/gophoto-realm.json
+target/
+tools/
