@@ -93,11 +93,11 @@ func (a Album) String() string {
 	}
 
 	for k, v := range a.UserPermissions {
-		fmt.Fprintf(&sb, "user = %s, permisions = %+v\n", k, v)
+		fmt.Fprintf(&sb, "user = %d, permisions = %+v\n", k, v)
 	}
 
 	for k, v := range a.GroupPermissions {
-		fmt.Fprintf(&sb, "group = %s, permisions = %+v\n", k, v)
+		fmt.Fprintf(&sb, "group = %d, permisions = %+v\n", k, v)
 	}
 
 	return sb.String()
