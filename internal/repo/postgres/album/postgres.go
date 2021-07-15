@@ -7,6 +7,7 @@ import (
 
 	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/internal/repo/postgres"
+	"github.com/tupyy/gophoto/models"
 	"github.com/tupyy/gophoto/utils/logutil"
 	"github.com/tupyy/gophoto/utils/pgclient"
 	"gorm.io/gorm"
@@ -78,6 +79,14 @@ func (a *AlbumPostgresRepo) Create(ctx context.Context, album entity.Album) (alb
 	}
 
 	return m.ID, nil
+}
+
+func (a *AlbumPostgresRepo) Delete(ctx context.Context, id int32) error {
+	if res := a.db.WithContext(ctx).Delete(&models.Album{}, id); res.Error != nil {
+		return fmt.Errorf("%w %+v", postgres.ErrDeleteAlbum, res.Error)
+	}
+
+	return nil
 }
 
 func (a *AlbumPostgresRepo) Update(ctx context.Context, album entity.Album) error {

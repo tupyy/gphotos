@@ -13,4 +13,5 @@ var (
 	ErrAlbumNotFound = errors.New("album not found")
 	ErrCreateAlbum   = errors.New("cannot create album")
 	ErrUpdateAlbum   = errors.New("cannot update album")
+	ErrDeleteAlbum   = errors.New("error deleting album")
 )
