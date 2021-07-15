@@ -15,3 +15,6 @@ POSTGRESQL_DBNAME: gophoto
 
 SECRET_KEY: secret
 AUTH_CALLBACK_URL: http://localhost:8080/auth/callback/
+
+TEMPLATE_FOLDER: /home/cosmin/projects/perso/gphoto/templates
+STATICS_FOLDER: /home/cosmin/projects/perso/gphoto/assets
