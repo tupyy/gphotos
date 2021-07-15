@@ -35,8 +35,7 @@ type User struct {
 }
 
 func (u User) Validate() error {
-	err := validate.Struct(u)
-	if err != nil {
+	if err := validate.Struct(u); err != nil {
 		return fmt.Errorf("%w %v", ErrInvalidEntity, err)
 	}
 
