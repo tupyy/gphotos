@@ -20,10 +20,6 @@ const (
 
 	defaultHttpTimeout = 5 * time.Second
 
-	// folders
-	templateDir = "TEMPLATE_FOLDER"
-	staticDir   = "STATICS_FOLDER"
-
 	// params for keycloak
 	keycloakClientID     = "KEYCLOAK_CLIENT_ID"
 	keycloakClientSecret = "KEYCLOAK_CLIENT_SECRET"
@@ -122,14 +118,6 @@ func GetServerSecretKey() string {
 // GetServerAuthCallback returns the url of the authentication callback.
 func GetServerAuthCallback() string {
 	return viper.GetString(authCallbackURL)
-}
-
-func GetTemplateFolder() string {
-	return viper.GetString(templateDir)
-}
-
-func GetStaticsFolder() string {
-	return viper.GetString(staticDir)
 }
 
 func GetLogLevel() logrus.Level {

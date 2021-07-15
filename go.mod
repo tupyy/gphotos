@@ -3,11 +3,10 @@ module github.com/tupyy/gophoto
 go 1.16
 
 require (
-	github.com/Nerzal/gocloak/v8 v8.5.0 // indirect
+	github.com/Nerzal/gocloak/v8 v8.5.0
 	github.com/coreos/go-oidc/v3 v3.0.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/docker/go-connections v0.4.0
-	github.com/gin-contrib/multitemplate v0.0.0-20210428235909-8a2f6dd269a0
 	github.com/gin-contrib/sessions v0.0.3
 	github.com/gin-gonic/gin v1.7.2
 	github.com/go-playground/validator/v10 v10.4.1
