@@ -161,12 +161,9 @@ func (k *keyCloakAuthenticator) Callback() gin.HandlerFunc {
 		}
 
 		sessionData := entity.Session{
-			Username:  *claims.UserName,
-			UserID:    claims.StandardClaims.Subject,
+			User:      user,
 			TokenID:   claims.StandardClaims.Id,
 			SessionID: claims.SessionState,
-			Role:      user.Role,
-			Groups:    user.Groups,
 			Token:     oauth2Token,
 			ExpireAt:  time.Unix(claims.StandardClaims.ExpiresAt, 0),
 			IssueAt:   time.Unix(claims.StandardClaims.IssuedAt, 0),
@@ -227,8 +224,6 @@ func (k *keyCloakAuthenticator) authenticate(ctx *gin.Context, sessionData entit
 	if time.Now().After(sessionData.ExpireAt) {
 		return errSessionExpired
 	}
-
-	ctx.Set("username", sessionData.Username)
 
 	logutil.GetLogger(ctx).Debug("user logged in")
 

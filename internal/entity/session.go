@@ -9,13 +9,9 @@ import (
 )
 
 type Session struct {
-	Username string
-	// keycloak user id
-	UserID    string
+	User      User
 	TokenID   string
 	SessionID string
-	Role      Role
-	Groups    []Group
 	Token     *oauth2.Token
 	ExpireAt  time.Time
 	IssueAt   time.Time
@@ -24,10 +20,10 @@ type Session struct {
 func (s Session) String() string {
 	var sb strings.Builder
 
-	fmt.Fprintf(&sb, "username: %s ", s.Username)
-	fmt.Fprintf(&sb, "user_id: %s ", s.UserID)
-	fmt.Fprintf(&sb, "role: %s ", s.Role.String())
-	fmt.Fprintf(&sb, "groups: %+v ", s.Groups)
+	fmt.Fprintf(&sb, "username: %s ", s.User.Username)
+	fmt.Fprintf(&sb, "user_id: %s ", s.User.UserID)
+	fmt.Fprintf(&sb, "role: %s ", s.User.Role.String())
+	fmt.Fprintf(&sb, "groups: %+v ", s.User.Groups)
 	fmt.Fprintf(&sb, "AccessToken; %s ", s.Token.AccessToken)
 	fmt.Fprintf(&sb, "RefreshToken; %s ", s.Token.RefreshToken)
 	fmt.Fprintf(&sb, "ExpireAt: %s ", s.ExpireAt.Format("Mon Jan 2 15:04:05 MST 2006"))

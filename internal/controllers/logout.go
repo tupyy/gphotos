@@ -34,7 +34,7 @@ func Logout(r *gin.RouterGroup, k auth.Authenticator) {
 		sessionData, _ := s.(entity.Session)
 
 		// logout from keycloak
-		if err := k.Logout(c, sessionData.Username, sessionData.Token.RefreshToken); err != nil {
+		if err := k.Logout(c, sessionData.User.Username, sessionData.Token.RefreshToken); err != nil {
 			logrus.WithError(err).Error("error logging out user")
 		}
 
