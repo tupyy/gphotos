@@ -20,6 +20,10 @@ func GetLogger(c *gin.Context) *logrus.Entry {
 	return logger
 }
 
+func GetDefaultLogger() *logrus.Entry {
+	return logrus.WithField("method", getMethodName())
+}
+
 func newLogger(c *gin.Context) *logrus.Entry {
 	fields := logrus.Fields{}
 

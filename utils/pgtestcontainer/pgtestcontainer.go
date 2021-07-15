@@ -10,7 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 	testcontainers "github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
-	"github.com/tupyy/gophoto/internal/repo/postgres"
+	"github.com/tupyy/gophoto/utils/pgclient"
 )
 
 const (
@@ -121,18 +121,18 @@ func NewPostgreSQLContainer(ctx context.Context, req PostgreSQLContainerRequest)
 }
 
 // GetInitialClient returs a postgres.Client of the initial DB.
-func (c *PostgreSQLContainer) GetInitialClient(ctx context.Context) (postgres.Client, error) {
+func (c *PostgreSQLContainer) GetInitialClient(ctx context.Context) (pgclient.Client, error) {
 	host, err := c.Container.Host(ctx)
 	if err != nil {
-		return postgres.Client{}, err
+		return pgclient.Client{}, err
 	}
 
 	mappedPort, err := c.Container.MappedPort(ctx, postgresPort)
 	if err != nil {
-		return postgres.Client{}, err
+		return pgclient.Client{}, err
 	}
 
-	client, _ := postgres.NewClient(postgres.ClientParams{
+	client, _ := pgclient.NewClient(pgclient.ClientParams{
 		Host:     host,
 		Port:     uint(mappedPort.Int()),
 		User:     c.req.User,
@@ -143,19 +143,19 @@ func (c *PostgreSQLContainer) GetInitialClient(ctx context.Context) (postgres.Cl
 	return client, nil
 }
 
-// GetClient returns a postgres.Client which could be used to connect to another database than the one created by default.
-func (c *PostgreSQLContainer) GetClient(ctx context.Context, username, password, db string) (postgres.Client, error) {
+// GetClient returns a pgclient.Client which could be used to connect to another database than the one created by default.
+func (c *PostgreSQLContainer) GetClient(ctx context.Context, username, password, db string) (pgclient.Client, error) {
 	host, err := c.Container.Host(ctx)
 	if err != nil {
-		return postgres.Client{}, err
+		return pgclient.Client{}, err
 	}
 
 	mappedPort, err := c.Container.MappedPort(ctx, postgresPort)
 	if err != nil {
-		return postgres.Client{}, err
+		return pgclient.Client{}, err
 	}
 
-	client, _ := postgres.NewClient(postgres.ClientParams{
+	client, _ := pgclient.NewClient(pgclient.ClientParams{
 		Host:     host,
 		Port:     uint(mappedPort.Int()),
 		User:     username,

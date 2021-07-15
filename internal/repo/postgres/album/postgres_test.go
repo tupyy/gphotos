@@ -20,7 +20,7 @@ import (
 
 const (
 	// name of the root folder for the project.
-	parentFolder = "gphoto"
+	parentFolder = "gphotos"
 	// sql setup file relative to parent folder.
 	setupFile = "sql/setup/02_setup.sql"
 	// fixtures file relative to parent folder.
