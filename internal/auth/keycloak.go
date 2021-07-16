@@ -225,6 +225,8 @@ func (k *keyCloakAuthenticator) authenticate(ctx *gin.Context, sessionData entit
 		return errSessionExpired
 	}
 
+	ctx.Set("sessionData", sessionData)
+
 	logutil.GetLogger(ctx).Debug("user logged in")
 
 	return nil

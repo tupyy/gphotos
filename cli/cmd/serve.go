@@ -17,21 +17,21 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 package cmd
 
 import (
-	"bytes"
 	"encoding/gob"
 	"fmt"
-	"io/ioutil"
 
 	"github.com/gin-contrib/sessions/memstore"
-	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/tupyy/gophoto/internal/auth"
 	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/controllers"
 	"github.com/tupyy/gophoto/internal/entity"
+	"github.com/tupyy/gophoto/internal/repo"
+	"github.com/tupyy/gophoto/internal/repo/postgres/album"
 	groupRepo "github.com/tupyy/gophoto/internal/repo/postgres/group"
 	userRepo "github.com/tupyy/gophoto/internal/repo/postgres/user"
+	"github.com/tupyy/gophoto/utils/logutil"
 	"github.com/tupyy/gophoto/utils/pgclient"
 
 	router "github.com/tupyy/gophoto/internal/routes"
@@ -60,50 +60,22 @@ var serveCmd = &cobra.Command{
 			panic(err)
 		}
 
+		repos, err := createPostgresRepos(client)
+		if err != nil {
+			panic(err)
+		}
+
 		// initialize oidc provier
 		oidcProvider := auth.NewOidcProvider(keycloakConf, conf.GetServerAuthCallback())
 
-		ur, err := userRepo.New(client)
-		if err != nil {
-			panic(err)
-		}
-
-		gr, err := groupRepo.New(client)
-		if err != nil {
-			panic(err)
-		}
-
-		keyCloakAuthenticator := auth.NewKeyCloakAuthenticator(oidcProvider, ur, gr)
+		keyCloakAuthenticator := auth.NewKeyCloakAuthenticator(oidcProvider, repos[repo.UserRepoName].(repo.UserRepo), repos[repo.GroupRepoName].(repo.GroupRepo))
 
 		// create new router
 		r := router.NewRouter(store, keyCloakAuthenticator)
 
-		r.PrivateGroup.GET("/", func(c *gin.Context) {
-			username, found := c.Get("username")
-			if !found {
-				c.Writer.Write(bytes.NewBufferString("username not found").Bytes())
-			} else {
-				c.Writer.Write(bytes.NewBufferString(username.(string)).Bytes())
-			}
-		})
-
-		r.PublicGroup.POST("/test2/k_logout", func(c *gin.Context) {
-			logrus.WithFields(logrus.Fields{
-				"header": fmt.Sprintf("%+v", c.Request.Header),
-			}).Debug("logout request")
-
-			body, _ := ioutil.ReadAll(c.Request.Body)
-			defer c.Request.Body.Close()
-
-			logrus.WithField("body", string(body)).Debug("body content")
-
-		})
-
-		r.PublicGroup.GET("/test2", func(c *gin.Context) {
-			c.Writer.Write(bytes.NewBufferString("test2").Bytes())
-		})
-
 		controllers.Logout(r.PrivateGroup, keyCloakAuthenticator)
+
+		controllers.Register(r.PrivateGroup, r.PublicGroup, repos)
 
 		// run server
 		r.Run()
@@ -112,4 +84,37 @@ var serveCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(serveCmd)
+}
+
+func createPostgresRepos(client pgclient.Client) (repo.Repositories, error) {
+	repos := make(repo.Repositories)
+
+	ur, err := userRepo.New(client)
+	if err != nil {
+		logutil.GetDefaultLogger().WithError(err).Warn("cannot create user repo")
+
+		return repos, err
+	}
+
+	repos[repo.UserRepoName] = ur
+
+	gr, err := groupRepo.New(client)
+	if err != nil {
+		logutil.GetDefaultLogger().WithError(err).Warn("cannot create user repo")
+
+		return repos, err
+	}
+
+	repos[repo.GroupRepoName] = gr
+
+	albumRepo, err := album.NewPostgresRepo(client)
+	if err != nil {
+		logutil.GetDefaultLogger().WithError(err).Warn("cannot create user repo")
+
+		return repos, err
+	}
+
+	repos[repo.AlbumRepoName] = albumRepo
+
+	return repos, nil
 }

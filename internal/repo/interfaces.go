@@ -6,6 +6,16 @@ import (
 	"github.com/tupyy/gophoto/internal/entity"
 )
 
+type Repositories map[RepoName]interface{}
+
+type RepoName int
+
+const (
+	UserRepoName RepoName = iota
+	GroupRepoName
+	AlbumRepoName
+)
+
 type UserRepo interface {
 	Create(ctx context.Context, user entity.User) (int, error)
 	Update(ctx context.Context, user entity.User) (entity.User, error)
