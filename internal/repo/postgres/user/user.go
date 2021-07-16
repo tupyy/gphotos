@@ -3,10 +3,13 @@ package user
 import (
 	"context"
 	"fmt"
+	"strings"
 
+	"github.com/lib/pq"
 	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/internal/repo"
 	"github.com/tupyy/gophoto/models"
+	"github.com/tupyy/gophoto/utils/logutil"
 	pgclient "github.com/tupyy/gophoto/utils/pgclient"
 	"gorm.io/gorm"
 )
@@ -180,6 +183,38 @@ func (u *UserRepo) Get(ctx context.Context, username string) (entity.User, error
 
 }
 
+func (u *UserRepo) GetUsers(ctx context.Context) ([]entity.User, error) {
+	var results []customUser
+	var users []entity.User
+
+	tx := u.db.WithContext(ctx).Table("users").
+		Select("users.*, STRING_AGG(groups.name, ',') as group_names, ARRAY_REMOVE(ARRAY_AGG(groups.id),NULL) as group_ids").
+		Joins("INNER JOIN users_groups ON ( users_groups.users_id = users.id )").
+		Joins("INNER JOIN groups ON (users_groups.groups_id = groups.id)").
+		Group("users.id").
+		Find(&results)
+
+	if tx.Error != nil {
+		logutil.GetDefaultLogger().WithError(tx.Error).Error("fetching users")
+
+		return users, tx.Error
+	}
+
+	if len(results) == 0 {
+		logutil.GetDefaultLogger().Warn("no user found")
+
+		return users, repo.ErrUserNotFound
+	}
+
+	for _, m := range results {
+		user := m.toUser()
+
+		users = append(users, user)
+	}
+
+	return users, nil
+
+}
 func toUserEntity(m models.Users) entity.User {
 	var r entity.Role
 	switch m.Role {
@@ -202,6 +237,51 @@ func toUserEntity(m models.Users) entity.User {
 	}
 }
 
+type customUser struct {
+	ID         int32         `gorm:"primary_key;column:id;type:INT4;"`
+	Username   string        `gorm:"column:username;type:TEXT;"`
+	Role       models.Role   `gorm:"column:role;type:ROLE;"`
+	UserID     string        `gorm:"column:user_id;type:TEXT;"`
+	CanShare   *bool         `gorm:"column:can_share;type:BOOL;"`
+	GroupNames string        `gorm:"column:group_names;type:TEXT;"`
+	GroupIDS   pq.Int64Array `gorm:"column:group_ids;type:_INT4;"`
+}
+
+func (m customUser) toUser() entity.User {
+	var r entity.Role
+	switch m.Role {
+	case "admin":
+		r = entity.RoleAdmin
+	case "editor":
+		r = entity.RoleEditor
+	case "user":
+		r = entity.RoleUser
+	default:
+		r = entity.RoleUser
+	}
+
+	user := entity.User{
+		ID:       &m.ID,
+		Username: m.Username,
+		CanShare: *m.CanShare,
+		UserID:   m.UserID,
+		Role:     r,
+	}
+
+	if m.GroupNames == "" {
+		return user
+	}
+
+	groupNames := strings.Split(m.GroupNames, ",")
+	for idx, name := range groupNames {
+		id := int32(m.GroupIDS[idx])
+
+		user.Groups = append(user.Groups, entity.Group{ID: &id, Name: name})
+	}
+
+	return user
+
+}
 func fromUserEntity(u entity.User) models.Users {
 	var r models.Role
 

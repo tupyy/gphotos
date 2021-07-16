@@ -20,11 +20,11 @@ import (
 
 const (
 	// name of the root folder for the project.
-	parentFolder = "gophoto"
+	parentFolder = "gphotos"
 	// sql setup file relative to parent folder.
 	setupFile = "sql/setup/02_setup.sql"
 	// fixtures file relative to parent folder.
-	fixtureFile = "sql/fixtures/user_test.sql"
+	fixtureFile = "sql/fixtures/fixtures.sql"
 )
 
 type UserTestSuite struct {
@@ -97,6 +97,15 @@ func (u *UserTestSuite) TestUserRepo() {
 		assert.Equal(u.T(), user.Groups[0].Name, "admins")
 	})
 
+	u.T().Run("get users", func(t *testing.T) {
+		users, err := userRepo.GetUsers(context.Background())
+		if err != nil {
+			u.T().Error(err)
+		}
+
+		assert.Len(u.T(), users, 4)
+	})
+
 	u.T().Run("update user", func(t *testing.T) {
 		user, err := userRepo.Get(context.Background(), "batman")
 		if err != nil {
@@ -140,7 +149,7 @@ func (u *UserTestSuite) TestUserRepo() {
 		}
 
 		assert.Len(u.T(), user1.Groups, 2)
-		assert.Equal(u.T(), user1.Groups[1].ID, int32(3))
+		assert.Equal(u.T(), *user1.Groups[1].ID, int32(3))
 	})
 
 	u.T().Run("update user3", func(t *testing.T) {
@@ -172,12 +181,12 @@ func (u *UserTestSuite) TestUserRepo() {
 			CanShare: true,
 		}
 
-		id, err := userRepo.Create(context.Background(), user)
+		_, err := userRepo.Create(context.Background(), user)
 		if err != nil {
 			u.T().Error(err)
 		}
 
-		assert.Equal(u.T(), id, 3)
+		assert.Nil(u.T(), err)
 	})
 }
 

@@ -20,6 +20,7 @@ type UserRepo interface {
 	Create(ctx context.Context, user entity.User) (int, error)
 	Update(ctx context.Context, user entity.User) (entity.User, error)
 	Get(ctx context.Context, username string) (entity.User, error)
+	GetAllUsers(ctx context.Context) ([]entity.User, error)
 }
 
 type GroupRepo interface {
