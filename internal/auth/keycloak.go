@@ -238,6 +238,8 @@ func (k *keyCloakAuthenticator) createOrUpdateUserFromClaims(ctx *gin.Context, c
 	logger := logutil.GetLogger(ctx)
 
 	username := getUsernameFromClaims(claims)
+
+	loggedUser := entityFromClaims(*username, claims)
 	// create or update user in db
 	user, err := k.userRepo.Get(ctx, *username)
 	if err != nil {
@@ -246,28 +248,29 @@ func (k *keyCloakAuthenticator) createOrUpdateUserFromClaims(ctx *gin.Context, c
 			return noUser, errInternalError
 		}
 
-		newUser := entityFromClaims(*username, claims)
 		if groups, err := k.getGroupsFromClaims(ctx, claims.Groups); err != nil {
 			logger.WithError(err).Error("cannot retrieve groups from claims")
 		} else {
-			newUser.Groups = groups
+			loggedUser.Groups = groups
 		}
 
-		if id, err := k.userRepo.Create(ctx.Request.Context(), newUser); err != nil {
+		if id, err := k.userRepo.Create(ctx.Request.Context(), loggedUser); err != nil {
 			logger.WithError(err).Error("failed to create user")
 			return noUser, errInternalError
 		} else {
 			logger.WithField("user id", id).WithField("username", *username).Debug("user created")
 		}
 	} else {
-		// update user
+		// update user id
+		loggedUser.ID = user.ID
+
 		if groups, err := k.getGroupsFromClaims(ctx, claims.Groups); err != nil {
 			logger.WithError(err).Error("cannot retrieve groups from claims")
 		} else {
-			user.Groups = groups
+			loggedUser.Groups = groups
 		}
 
-		user, err := k.userRepo.Update(ctx.Request.Context(), user)
+		user, err := k.userRepo.Update(ctx.Request.Context(), loggedUser)
 		if err != nil {
 			logger.WithError(err).Error("failed to update user")
 			return noUser, errInternalError
@@ -276,7 +279,7 @@ func (k *keyCloakAuthenticator) createOrUpdateUserFromClaims(ctx *gin.Context, c
 		logger.WithField("user", fmt.Sprintf("%+v", user)).Debug("user updated")
 	}
 
-	return user, nil
+	return loggedUser, nil
 }
 
 func (k *keyCloakAuthenticator) getGroupsFromClaims(ctx context.Context, groups []string) ([]entity.Group, error) {
@@ -356,11 +359,11 @@ func entityFromClaims(username string, claims gophotoClaims) entity.User {
 
 	if claims.Role != nil {
 		switch *claims.Role {
-		case "admin":
+		case "[admin]":
 			r = entity.RoleAdmin
-		case "editor":
+		case "[editor]":
 			r = entity.RoleEditor
-		case "user":
+		case "[user]":
 			r = entity.RoleUser
 		default:
 			r = entity.RoleUser
