@@ -5,7 +5,7 @@
     </head>
     <body>
         <header>
-            {{ template "header" }}
+            {{ template "header" . }}
         </header>
         <p>{{ .username }}</p>
         {{ if .ownAlbums }}

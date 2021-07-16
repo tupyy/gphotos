@@ -44,10 +44,10 @@ func Index(r *gin.RouterGroup, albumRepo repo.AlbumRepo) {
 		}
 
 		c.HTML(http.StatusOK, "index.html", gin.H{
-			"hasOwnAlbums":    len(ownAlbums) != 0,
-			"ownAlbums":       ownAlbums,
-			"hasSharedAlbums": len(sharedAlbums) != 0,
-			"sharedAlbums":    sharedAlbums,
+			"username":     session.User.Username,
+			"user_role":    session.User.Role.String(),
+			"ownAlbums":    ownAlbums,
+			"sharedAlbums": sharedAlbums,
 		})
 	})
 }

@@ -1,3 +1,6 @@
 {{ define "header" }}
     <a href="/logout">Logout</a>
+    {{ if or ( eq .user_role "editor" ) ( eq .user_role "admin" ) }}
+        <a href="/album/new">Create album</a>
+    {{ end }}
 {{ end }}
