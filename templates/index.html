@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html>
-    <a href="dd">a</a>
     <head>
         <link rel="stylesheet" href="static/css/common.css"/>
     </head>
@@ -8,11 +7,25 @@
         <header>
             {{ template "header" }}
         </header>
-        <p class="title">title</p>
-        <a href="aa">test</a>
-            this is index
-        {{ .username }}
-        base : {{ template "base" .}}
+        <p>{{ .username }}</p>
+        {{ if .ownAlbums }}
+            <p> User owns albums: </p>
+            <ul>
+            {{ range .ownAlbums }}
+            <li> {{ .Name }} </li>
+            {{ end }}
+            </ul>
+        {{ end }}
+        <div>
+            {{ if .sharedAlbums }}
+            <div> User shared albums: </div>
+            <ul>
+            {{ range .sharedAlbums }}
+                <li> {{ .Name }} </li>
+            {{ end }}
+            </ul>
+            {{ end }}
+        </div>
     </body>
     <footer>
         {{ template "footer" }}

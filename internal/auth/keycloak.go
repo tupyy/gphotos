@@ -21,7 +21,6 @@ import (
 	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/internal/repo"
-	"github.com/tupyy/gophoto/internal/repo/postgres"
 	"github.com/tupyy/gophoto/utils/logutil"
 	"golang.org/x/oauth2"
 )
@@ -242,7 +241,7 @@ func (k *keyCloakAuthenticator) createOrUpdateUserFromClaims(ctx *gin.Context, c
 	// create or update user in db
 	user, err := k.userRepo.Get(ctx, *username)
 	if err != nil {
-		if err != postgres.ErrUserNotFound {
+		if err != repo.ErrUserNotFound {
 			logger.WithError(err).Error("failed to get user")
 			return noUser, errInternalError
 		}

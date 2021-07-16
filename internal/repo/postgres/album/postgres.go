@@ -6,7 +6,7 @@ import (
 	"sort"
 
 	"github.com/tupyy/gophoto/internal/entity"
-	"github.com/tupyy/gophoto/internal/repo/postgres"
+	"github.com/tupyy/gophoto/internal/repo"
 	"github.com/tupyy/gophoto/models"
 	"github.com/tupyy/gophoto/utils/logutil"
 	"github.com/tupyy/gophoto/utils/pgclient"
@@ -35,7 +35,7 @@ func (a *AlbumPostgresRepo) Create(ctx context.Context, album entity.Album) (alb
 	logger := logutil.GetDefaultLogger()
 
 	if err := album.Validate(); err != nil {
-		return -1, fmt.Errorf("%w cannot create album: %+v", postgres.ErrCreateAlbum, err)
+		return -1, fmt.Errorf("%w cannot create album: %+v", repo.ErrCreateAlbum, err)
 	}
 
 	tx := a.db.WithContext(ctx).Begin()
@@ -46,7 +46,7 @@ func (a *AlbumPostgresRepo) Create(ctx context.Context, album entity.Album) (alb
 	if result.Error != nil {
 		logger.WithError(result.Error).Warnf("cannot create album: %v", album)
 
-		return -1, fmt.Errorf("%w cannot create album %+v", postgres.ErrCreateAlbum, result.Error)
+		return -1, fmt.Errorf("%w cannot create album %+v", repo.ErrCreateAlbum, result.Error)
 	}
 
 	// create permissions entries
@@ -57,7 +57,7 @@ func (a *AlbumPostgresRepo) Create(ctx context.Context, album entity.Album) (alb
 			logger.WithError(result.Error).Warnf("cannot create album user permissions: %v", permModels)
 			tx.Rollback()
 
-			return -1, fmt.Errorf("%w cannot create user permissions %+v", postgres.ErrCreateAlbum, result.Error)
+			return -1, fmt.Errorf("%w cannot create user permissions %+v", repo.ErrCreateAlbum, result.Error)
 		}
 	}
 
@@ -68,14 +68,14 @@ func (a *AlbumPostgresRepo) Create(ctx context.Context, album entity.Album) (alb
 			logger.WithError(result.Error).Warnf("cannot create album group permissions: %v", permModels)
 			tx.Rollback()
 
-			return -1, fmt.Errorf("%w cannot create group permissions %+v", postgres.ErrCreateAlbum, result.Error)
+			return -1, fmt.Errorf("%w cannot create group permissions %+v", repo.ErrCreateAlbum, result.Error)
 		}
 	}
 
 	if err := tx.Commit().Error; err != nil {
 		logger.WithError(result.Error).Warnf("error commit album: %v", album)
 
-		return -1, fmt.Errorf("%w cannot create album %+v", postgres.ErrCreateAlbum, result.Error)
+		return -1, fmt.Errorf("%w cannot create album %+v", repo.ErrCreateAlbum, result.Error)
 	}
 
 	return m.ID, nil
@@ -83,7 +83,7 @@ func (a *AlbumPostgresRepo) Create(ctx context.Context, album entity.Album) (alb
 
 func (a *AlbumPostgresRepo) Delete(ctx context.Context, id int32) error {
 	if res := a.db.WithContext(ctx).Delete(&models.Album{}, id); res.Error != nil {
-		return fmt.Errorf("%w %+v", postgres.ErrDeleteAlbum, res.Error)
+		return fmt.Errorf("%w %+v", repo.ErrDeleteAlbum, res.Error)
 	}
 
 	return nil
@@ -93,12 +93,12 @@ func (a *AlbumPostgresRepo) Update(ctx context.Context, album entity.Album) erro
 	var oldAlbum entity.Album
 
 	if err := album.Validate(); err != nil {
-		return fmt.Errorf("%w cannot create album: %+v", postgres.ErrUpdateAlbum, err)
+		return fmt.Errorf("%w cannot create album: %+v", repo.ErrUpdateAlbum, err)
 	}
 
 	tx := a.db.WithContext(ctx).Where("id = ?", album.ID).First(&oldAlbum)
 	if tx.Error != nil {
-		return fmt.Errorf("%w cannot update album: %v", postgres.ErrAlbumNotFound, tx.Error)
+		return fmt.Errorf("%w cannot update album: %v", repo.ErrAlbumNotFound, tx.Error)
 	}
 
 	// update all fields except the owner
@@ -109,7 +109,7 @@ func (a *AlbumPostgresRepo) Update(ctx context.Context, album entity.Album) erro
 
 	tx = a.db.WithContext(ctx).Save(&oldAlbum)
 	if tx.Error != nil {
-		return fmt.Errorf("%w cannot update album %v", postgres.ErrUpdateAlbum, tx.Error)
+		return fmt.Errorf("%w cannot update album %v", repo.ErrUpdateAlbum, tx.Error)
 	}
 
 	return nil
@@ -130,11 +130,11 @@ func (a *AlbumPostgresRepo) Get(ctx context.Context) ([]entity.Album, error) {
 		Order("album.id").
 		Find(&albums)
 	if tx.Error != nil {
-		return []entity.Album{}, fmt.Errorf("%w internal error: %v", postgres.ErrInternalError, tx.Error)
+		return []entity.Album{}, fmt.Errorf("%w internal error: %v", repo.ErrInternalError, tx.Error)
 	}
 
 	if len(albums) == 0 {
-		return []entity.Album{}, fmt.Errorf("%w no album found", postgres.ErrAlbumNotFound)
+		return []entity.Album{}, fmt.Errorf("%w no album found", repo.ErrAlbumNotFound)
 	}
 
 	entities := albums.Merge()
@@ -161,11 +161,11 @@ func (a *AlbumPostgresRepo) GetByID(ctx context.Context, id int32) (entity.Album
 		Where("album.id = ?", id).
 		Find(&albums)
 	if tx.Error != nil {
-		return entity.Album{}, fmt.Errorf("%w internal error: %v", postgres.ErrInternalError, tx.Error)
+		return entity.Album{}, fmt.Errorf("%w internal error: %v", repo.ErrInternalError, tx.Error)
 	}
 
 	if len(albums) == 0 {
-		return entity.Album{}, fmt.Errorf("%w no album found with id %d", postgres.ErrAlbumNotFound, id)
+		return entity.Album{}, fmt.Errorf("%w no album found with id %d", repo.ErrAlbumNotFound, id)
 	}
 
 	entities := albums.Merge()
@@ -187,11 +187,11 @@ func (a *AlbumPostgresRepo) GetAlbumsByOwnerID(ctx context.Context, ownerID int3
 		Where("album.owner_id = ?", ownerID).
 		Find(&albums)
 	if tx.Error != nil {
-		return []entity.Album{}, fmt.Errorf("%w internal error: %v", postgres.ErrInternalError, tx.Error)
+		return []entity.Album{}, fmt.Errorf("%w internal error: %v", repo.ErrInternalError, tx.Error)
 	}
 
 	if len(albums) == 0 {
-		return []entity.Album{}, fmt.Errorf("%w no album found with id %d", postgres.ErrAlbumNotFound, ownerID)
+		return []entity.Album{}, fmt.Errorf("%w no album found with id %d", repo.ErrAlbumNotFound, ownerID)
 	}
 
 	entities := albums.Merge()
@@ -214,11 +214,13 @@ func (a *AlbumPostgresRepo) GetAlbumsByUserID(ctx context.Context, userID int32)
 		Where("album_user_permissions.user_id = ?", userID).
 		Find(&albums)
 	if tx.Error != nil {
-		return []entity.Album{}, fmt.Errorf("%w internal error: %v", postgres.ErrInternalError, tx.Error)
+		return []entity.Album{}, fmt.Errorf("%w internal error: %v", repo.ErrInternalError, tx.Error)
 	}
 
 	if len(albums) == 0 {
-		return []entity.Album{}, fmt.Errorf("%w no album found with id %d", postgres.ErrAlbumNotFound, userID)
+		logutil.GetDefaultLogger().WithField("user_id", userID).Warn("no abum found")
+
+		return []entity.Album{}, repo.ErrAlbumNotFound
 	}
 
 	entities := albums.Merge()
@@ -241,11 +243,11 @@ func (a *AlbumPostgresRepo) GetAlbumsByGroupID(ctx context.Context, groupID int3
 		Where("album_group_permissions.group_id = ?", groupID).
 		Find(&albums)
 	if tx.Error != nil {
-		return []entity.Album{}, fmt.Errorf("%w internal error: %v", postgres.ErrInternalError, tx.Error)
+		return []entity.Album{}, fmt.Errorf("%w internal error: %v", repo.ErrInternalError, tx.Error)
 	}
 
 	if len(albums) == 0 {
-		return []entity.Album{}, fmt.Errorf("%w no album found with id %d", postgres.ErrAlbumNotFound, groupID)
+		return []entity.Album{}, fmt.Errorf("%w no album found with id %d", repo.ErrAlbumNotFound, groupID)
 	}
 
 	entities := albums.Merge()

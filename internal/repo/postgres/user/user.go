@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/tupyy/gophoto/internal/entity"
-	"github.com/tupyy/gophoto/internal/repo/postgres"
+	"github.com/tupyy/gophoto/internal/repo"
 	"github.com/tupyy/gophoto/models"
 	pgclient "github.com/tupyy/gophoto/utils/pgclient"
 	"gorm.io/gorm"
@@ -147,7 +147,7 @@ func (u *UserRepo) Get(ctx context.Context, username string) (entity.User, error
 	tx := u.db.WithContext(ctx).Where("username = ?", username).First(&m)
 	if tx.Error != nil {
 		if tx.Error == gorm.ErrRecordNotFound {
-			return emptyUser, postgres.ErrUserNotFound
+			return emptyUser, repo.ErrUserNotFound
 		}
 		return emptyUser, tx.Error
 	}

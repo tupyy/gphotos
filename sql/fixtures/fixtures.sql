@@ -6,7 +6,7 @@ TRUNCATE TABLE users, groups, users_groups, album CASCADE;
 
 INSERT INTO users VALUES 
 (1,'batman','admin','user1',TRUE),
-(2,'superman','user','user2',TRUE),
+(2,'cosmin','user','user2',TRUE),
 (3,'joedoe','user','joe',TRUE),
 (4,'jane','user','jane',TRUE);
 
@@ -31,7 +31,9 @@ INSERT INTO album (id, name, created_at, owner_id, description, location) VALUES
 (5, 'album5', '2021-01-11 12:00:00', 2, 'album5', NULL),
 (6, 'album6', '2021-07-01 12:00:00', 2, 'album6', 'craiova'),
 (7, 'album7', '2021-08-11 12:00:00', 2, 'album7', 'oltenia'),
-(8, 'album8', '2021-09-21 12:00:00', 2, 'album8', NULL);
+(8, 'album8', '2021-09-21 12:00:00', 2, 'album8', NULL),
+(9, 'jane1', '2021-08-11 12:00:00',4, 'jane', 'oltenia'),
+(10, 'jane2', '2021-09-21 12:00:00', 4, 'jane', NULL);
 
 INSERT INTO album_user_permissions (user_id, album_id, permissions) VALUES
 (3, 1, '{album.read, album.write}'),
@@ -41,7 +43,9 @@ INSERT INTO album_user_permissions (user_id, album_id, permissions) VALUES
 (4, 5, '{album.read, album.write}'),
 (4, 6, '{album.read}'),
 (4, 7, '{album.read, album.write, album.edit}'),
-(3, 7, '{album.read, album.write}');
+(3, 7, '{album.read, album.write}'),
+(2, 9, '{album.read, album.write}'),
+(2, 10, '{album.read, album.write}');
 
 INSERT INTO album_group_permissions (group_id, album_id, permissions) VALUES
 (1, 1, '{album.read, album.write}'),
