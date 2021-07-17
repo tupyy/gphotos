@@ -27,7 +27,7 @@ Table: albums_tags
 
 JSON Sample
 -------------------------------------
-{    "album_id": 93,    "tag_id": 57}
+{    "album_id": 97,    "tag_id": 75}
 
 
 

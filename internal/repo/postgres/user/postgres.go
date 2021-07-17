@@ -2,6 +2,7 @@ package user
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -14,25 +15,25 @@ import (
 	"gorm.io/gorm"
 )
 
-type UserRepo struct {
+type userRepo struct {
 	db     *gorm.DB
 	client pgclient.Client
 }
 
-func New(client pgclient.Client) (*UserRepo, error) {
+func NewPostgresRepo(client pgclient.Client) (*userRepo, error) {
 	config := gorm.Config{
 		SkipDefaultTransaction: true, // No need transaction for those use cases.
 	}
 
 	gormDB, err := client.Open(config)
 	if err != nil {
-		return &UserRepo{}, err
+		return &userRepo{}, err
 	}
 
-	return &UserRepo{db: gormDB, client: client}, nil
+	return &userRepo{db: gormDB, client: client}, nil
 }
 
-func (u *UserRepo) Create(ctx context.Context, user entity.User) (int, error) {
+func (u *userRepo) Create(ctx context.Context, user entity.User) (int32, error) {
 	tx := u.db.WithContext(ctx).Begin()
 
 	m := fromUserEntity(user)
@@ -68,14 +69,14 @@ func (u *UserRepo) Create(ctx context.Context, user entity.User) (int, error) {
 		return 0, tx.Error
 	}
 
-	return int(m.ID), nil
+	return m.ID, nil
 }
 
 // Update updates an user.
-func (u *UserRepo) Update(ctx context.Context, user entity.User) (entity.User, error) {
+func (u *userRepo) Update(ctx context.Context, user entity.User) error {
 	err := user.Validate()
 	if err != nil {
-		return user, err
+		return err
 	}
 
 	tx := u.db.WithContext(ctx).Begin()
@@ -89,7 +90,7 @@ func (u *UserRepo) Update(ctx context.Context, user entity.User) (entity.User, e
 		Find(&userGroups)
 
 	if tx.Error != nil && tx.Error != gorm.ErrRecordNotFound {
-		return user, tx.Error
+		return tx.Error
 	}
 
 	for _, ug := range userGroups {
@@ -105,7 +106,7 @@ func (u *UserRepo) Update(ctx context.Context, user entity.User) (entity.User, e
 			tx.Exec("DELETE from users_groups WHERE users_id = ? AND groups_id = ?;", ug.UsersID, ug.GroupsID)
 			if tx.Error != nil {
 				tx.Rollback()
-				return user, tx.Error
+				return tx.Error
 			}
 		}
 	}
@@ -124,7 +125,7 @@ func (u *UserRepo) Update(ctx context.Context, user entity.User) (entity.User, e
 			tx.Create(models.UsersGroups{UsersID: *user.ID, GroupsID: *g.ID})
 			if tx.Error != nil {
 				tx.Rollback()
-				return user, tx.Error
+				return tx.Error
 			}
 		}
 	}
@@ -132,18 +133,54 @@ func (u *UserRepo) Update(ctx context.Context, user entity.User) (entity.User, e
 	tx.Save(fromUserEntity(user))
 	if tx.Error != nil {
 		tx.Rollback()
-		return user, tx.Error
+		return tx.Error
 	}
 
 	if err := tx.Commit().Error; err != nil {
-		return user, err
+		return err
 	}
 
-	return user, nil
+	return nil
 
 }
 
-func (u *UserRepo) Get(ctx context.Context, username string) (entity.User, error) {
+func (u *userRepo) Delete(ctx context.Context, userID int32) error {
+	return repo.ErrNotImplementated
+}
+
+func (u *userRepo) Get(ctx context.Context) ([]entity.User, error) {
+	var results []customUser
+	var users []entity.User
+
+	tx := u.db.WithContext(ctx).Table("users").
+		Select("users.*, STRING_AGG(groups.name, ',') as group_names, ARRAY_REMOVE(ARRAY_AGG(groups.id),NULL) as group_ids").
+		Joins("INNER JOIN users_groups ON ( users_groups.users_id = users.id )").
+		Joins("INNER JOIN groups ON (users_groups.groups_id = groups.id)").
+		Group("users.id").
+		Find(&results)
+
+	if tx.Error != nil {
+		logutil.GetDefaultLogger().WithError(tx.Error).Error("fetching users")
+
+		return users, tx.Error
+	}
+
+	if len(results) == 0 {
+		logutil.GetDefaultLogger().Warn("no user found")
+
+		return users, repo.ErrUserNotFound
+	}
+
+	for _, m := range results {
+		user := m.toEntity()
+
+		users = append(users, user)
+	}
+
+	return users, nil
+}
+
+func (u *userRepo) GetByUsername(ctx context.Context, username string) (entity.User, error) {
 	var m models.Users
 	var emptyUser = entity.User{}
 
@@ -183,15 +220,45 @@ func (u *UserRepo) Get(ctx context.Context, username string) (entity.User, error
 
 }
 
-func (u *UserRepo) GetUsers(ctx context.Context) ([]entity.User, error) {
-	var results []customUser
-	var users []entity.User
+func (u *userRepo) GetByID(ctx context.Context, id int32) (entity.User, error) {
+	var result customUser
+	var emptyUser entity.User
 
 	tx := u.db.WithContext(ctx).Table("users").
 		Select("users.*, STRING_AGG(groups.name, ',') as group_names, ARRAY_REMOVE(ARRAY_AGG(groups.id),NULL) as group_ids").
 		Joins("INNER JOIN users_groups ON ( users_groups.users_id = users.id )").
 		Joins("INNER JOIN groups ON (users_groups.groups_id = groups.id)").
 		Group("users.id").
+		Where("users.id = ?", id).
+		First(&result)
+
+	if tx.Error != nil {
+		if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
+			logutil.GetDefaultLogger().WithError(tx.Error).WithField("id", id).Error("no user found")
+
+			return emptyUser, repo.ErrUserNotFound
+		}
+
+		logutil.GetDefaultLogger().WithError(tx.Error).Error("fetching users")
+
+		return emptyUser, tx.Error
+	}
+
+	return result.toEntity(), nil
+}
+
+func (u *userRepo) GetByGroupID(ctx context.Context, groupID int32) ([]entity.User, error) {
+	var results []customUser
+	var users []entity.User
+
+	subquery := u.db.WithContext(ctx).Table("users").
+		Select("users.*, STRING_AGG(groups.name, ',') as group_names, ARRAY_REMOVE(ARRAY_AGG(groups.id),NULL) as group_ids").
+		Joins("INNER JOIN users_groups ON ( users_groups.users_id = users.id )").
+		Joins("INNER JOIN groups ON (users_groups.groups_id = groups.id)").
+		Group("users.id")
+
+	tx := u.db.WithContext(ctx).Table("(?) as s", subquery).
+		Where("? = ANY(group_ids)", groupID).
 		Find(&results)
 
 	if tx.Error != nil {
@@ -207,14 +274,14 @@ func (u *UserRepo) GetUsers(ctx context.Context) ([]entity.User, error) {
 	}
 
 	for _, m := range results {
-		user := m.toUser()
+		user := m.toEntity()
 
 		users = append(users, user)
 	}
 
 	return users, nil
-
 }
+
 func toUserEntity(m models.Users) entity.User {
 	var r entity.Role
 	switch m.Role {
@@ -247,7 +314,7 @@ type customUser struct {
 	GroupIDS   pq.Int64Array `gorm:"column:group_ids;type:_INT4;"`
 }
 
-func (m customUser) toUser() entity.User {
+func (m customUser) toEntity() entity.User {
 	var r entity.Role
 	switch m.Role {
 	case "admin":

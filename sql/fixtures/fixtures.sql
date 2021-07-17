@@ -15,7 +15,7 @@ INSERT INTO groups VALUES
 (2,'users'),
 (3,'editors');
 
-INSERT INTO users_groups VALUES 
+INSERT INTO users_groups (users_id, groups_id) VALUES 
 (1,1),
 (1,2),
 (2,2),

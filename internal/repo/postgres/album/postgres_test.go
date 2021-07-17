@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/tupyy/gophoto/internal/entity"
+	"github.com/tupyy/gophoto/internal/repo"
 	"github.com/tupyy/gophoto/internal/repo/postgres/album"
 	"github.com/tupyy/gophoto/utils/pgclient"
 	"github.com/tupyy/gophoto/utils/pgtestcontainer"
@@ -31,7 +32,7 @@ type AlbumTestSuite struct {
 	suite.Suite
 	container testcontainers.Container
 	pgClient  pgclient.Client
-	repo      *album.AlbumPostgresRepo
+	repo      repo.AlbumRepo
 }
 
 func (as *AlbumTestSuite) TestGetAllAlbums() {
@@ -150,7 +151,7 @@ type AlbumTestSuite1 struct {
 	suite.Suite
 	container testcontainers.Container
 	pgClient  pgclient.Client
-	repo      *album.AlbumPostgresRepo
+	repo      repo.AlbumRepo
 }
 
 func (as *AlbumTestSuite1) SetupSuite() {

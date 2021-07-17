@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/guregu/null"
-	uuid "github.com/satori/go.uuid"
+	"github.com/satori/go.uuid"
 )
 
 var (
@@ -22,7 +22,7 @@ DB Table Details
 
 Table: users
 [ 0] id                                             INT4                 null: false  primary: true   isArray: false  auto: false  col: INT4            len: -1      default: []
-[ 1] username                                       TEXT                 null: false  primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
+[ 1] username                                       VARCHAR(100)         null: false  primary: false  isArray: false  auto: false  col: VARCHAR         len: 100     default: []
 [ 2] role                                           USER_DEFINED         null: false  primary: false  isArray: false  auto: false  col: USER_DEFINED    len: -1      default: []
 [ 3] user_id                                        TEXT                 null: false  primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
 [ 4] can_share                                      BOOL                 null: true   primary: false  isArray: false  auto: false  col: BOOL            len: -1      default: []
@@ -30,7 +30,7 @@ Table: users
 
 JSON Sample
 -------------------------------------
-{    "id": 10,    "username": "hfgUQvtLBkaTYcePVqdPENqXz",    "role": 2,    "user_id": "WWTxIsKcmnuRQzVCVfdhCBjKA",    "can_share": false}
+{    "can_share": true,    "id": 3,    "username": "LydEupdsfAvbJyWvhmmmzcIjo",    "role": 52,    "user_id": "oZSwCSlmiaGWLoavkcaqkcZNh"}
 
 
 
@@ -40,8 +40,8 @@ JSON Sample
 type Users struct {
 	//[ 0] id                                             INT4                 null: false  primary: true   isArray: false  auto: false  col: INT4            len: -1      default: []
 	ID int32 `gorm:"primary_key;column:id;type:INT4;"`
-	//[ 1] username                                       TEXT                 null: false  primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
-	Username string `gorm:"column:username;type:TEXT;"`
+	//[ 1] username                                       VARCHAR(100)         null: false  primary: false  isArray: false  auto: false  col: VARCHAR         len: 100     default: []
+	Username string `gorm:"column:username;type:VARCHAR;size:100;"`
 	//[ 2] role                                           USER_DEFINED         null: false  primary: false  isArray: false  auto: false  col: USER_DEFINED    len: -1      default: []
 	Role Role `gorm:"column:role;type:ROLE;"`
 	//[ 3] user_id                                        TEXT                 null: false  primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
@@ -81,18 +81,18 @@ var usersTableInfo = &TableInfo{
 			Comment:            ``,
 			Notes:              ``,
 			Nullable:           false,
-			DatabaseTypeName:   "TEXT",
-			DatabaseTypePretty: "TEXT",
+			DatabaseTypeName:   "VARCHAR",
+			DatabaseTypePretty: "VARCHAR(100)",
 			IsPrimaryKey:       false,
 			IsAutoIncrement:    false,
 			IsArray:            false,
-			ColumnType:         "TEXT",
-			ColumnLength:       -1,
+			ColumnType:         "VARCHAR",
+			ColumnLength:       100,
 			GoFieldName:        "Username",
 			GoFieldType:        "string",
 			JSONFieldName:      "username",
 			ProtobufFieldName:  "username",
-			ProtobufType:       "",
+			ProtobufType:       "string",
 			ProtobufPos:        2,
 		},
 

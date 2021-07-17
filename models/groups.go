@@ -22,12 +22,12 @@ DB Table Details
 
 Table: groups
 [ 0] id                                             INT4                 null: false  primary: true   isArray: false  auto: false  col: INT4            len: -1      default: []
-[ 1] name                                           TEXT                 null: false  primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
+[ 1] name                                           VARCHAR(100)         null: false  primary: false  isArray: false  auto: false  col: VARCHAR         len: 100     default: []
 
 
 JSON Sample
 -------------------------------------
-{    "id": 61,    "name": "uAcVGBtviKsxVmtGALvaDXEeh"}
+{    "id": 19,    "name": "dzLWxMLRwtCPCytjYBVkxwRbr"}
 
 
 
@@ -37,8 +37,8 @@ JSON Sample
 type Groups struct {
 	//[ 0] id                                             INT4                 null: false  primary: true   isArray: false  auto: false  col: INT4            len: -1      default: []
 	ID int32 `gorm:"primary_key;column:id;type:INT4;"`
-	//[ 1] name                                           TEXT                 null: false  primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
-	Name string `gorm:"column:name;type:TEXT;"`
+	//[ 1] name                                           VARCHAR(100)         null: false  primary: false  isArray: false  auto: false  col: VARCHAR         len: 100     default: []
+	Name string `gorm:"column:name;type:VARCHAR;size:100;"`
 }
 
 var groupsTableInfo = &TableInfo{
@@ -72,18 +72,18 @@ var groupsTableInfo = &TableInfo{
 			Comment:            ``,
 			Notes:              ``,
 			Nullable:           false,
-			DatabaseTypeName:   "TEXT",
-			DatabaseTypePretty: "TEXT",
+			DatabaseTypeName:   "VARCHAR",
+			DatabaseTypePretty: "VARCHAR(100)",
 			IsPrimaryKey:       false,
 			IsAutoIncrement:    false,
 			IsArray:            false,
-			ColumnType:         "TEXT",
-			ColumnLength:       -1,
+			ColumnType:         "VARCHAR",
+			ColumnLength:       100,
 			GoFieldName:        "Name",
 			GoFieldType:        "string",
 			JSONFieldName:      "name",
 			ProtobufFieldName:  "name",
-			ProtobufType:       "",
+			ProtobufType:       "string",
 			ProtobufPos:        2,
 		},
 	},

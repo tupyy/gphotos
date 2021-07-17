@@ -27,7 +27,7 @@ Table: users_groups
 
 JSON Sample
 -------------------------------------
-{    "users_id": 6,    "groups_id": 55}
+{    "users_id": 86,    "groups_id": 47}
 
 
 

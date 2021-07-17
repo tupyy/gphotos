@@ -241,7 +241,7 @@ func (k *keyCloakAuthenticator) createOrUpdateUserFromClaims(ctx *gin.Context, c
 
 	loggedUser := entityFromClaims(*username, claims)
 	// create or update user in db
-	user, err := k.userRepo.Get(ctx, *username)
+	user, err := k.userRepo.GetByUsername(ctx, *username)
 	if err != nil {
 		if err != repo.ErrUserNotFound {
 			logger.WithError(err).Error("failed to get user")
@@ -270,7 +270,7 @@ func (k *keyCloakAuthenticator) createOrUpdateUserFromClaims(ctx *gin.Context, c
 			loggedUser.Groups = groups
 		}
 
-		user, err := k.userRepo.Update(ctx.Request.Context(), loggedUser)
+		err := k.userRepo.Update(ctx.Request.Context(), loggedUser)
 		if err != nil {
 			logger.WithError(err).Error("failed to update user")
 			return noUser, errInternalError
@@ -285,13 +285,17 @@ func (k *keyCloakAuthenticator) createOrUpdateUserFromClaims(ctx *gin.Context, c
 func (k *keyCloakAuthenticator) getGroupsFromClaims(ctx context.Context, groups []string) ([]entity.Group, error) {
 	grps := make([]entity.Group, 0, len(groups))
 	for _, name := range groups {
-		group, created, err := k.groupRepo.FirstOrCreate(ctx, name)
+		group, err := k.groupRepo.GetByName(ctx, name)
 		if err != nil {
-			return []entity.Group{}, err
-		}
-
-		if created {
-			logrus.WithField("group", name).Debug("group created")
+			if errors.Is(err, repo.ErrGroupNotFound) {
+				id, err := k.groupRepo.Create(ctx, entity.Group{Name: name})
+				if err != nil {
+					return []entity.Group{}, err
+				} else {
+					logrus.WithField("group", name).WithField("id", id).Debug("group created")
+					group = entity.Group{ID: &id, Name: name}
+				}
+			}
 		}
 
 		grps = append(grps, group)

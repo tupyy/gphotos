@@ -2,14 +2,14 @@ CREATE TYPE role as ENUM('admin','editor','user');
 
 CREATE TABLE groups (
     id SERIAL PRIMARY KEY,
-    name TEXT NOT NULL
+    name VARCHAR(100) NOT NULL UNIQUE
 );
 
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
-    username TEXT NOT NULL,
+    username VARCHAR(100) NOT NULL UNIQUE,
     role role NOT NULL,
-    user_id TEXT NOT NULL,
+    user_id TEXT NOT NULL UNIQUE,
     can_share BOOLEAN
 );
 

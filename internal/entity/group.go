@@ -5,8 +5,9 @@ import (
 )
 
 type Group struct {
-	ID   *int32 `validate:"required"`
-	Name string `validate:"required"`
+	ID    *int32 `validate:"required"`
+	Name  string `validate:"required"`
+	Users []User
 }
 
 func (g Group) Validate() error {

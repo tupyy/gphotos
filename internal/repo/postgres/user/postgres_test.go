@@ -33,6 +33,146 @@ type UserTestSuite struct {
 	pgClient  pgclient.Client
 }
 
+func (u *UserTestSuite) TestUserRepo() {
+	userRepo, err := userrepo.NewPostgresRepo(u.pgClient)
+	if err != nil {
+		u.T().Error("cannot create user repo")
+	}
+
+	u.T().Run("get user", func(t *testing.T) {
+		user, err := userRepo.GetByUsername(context.Background(), "batman")
+		if err != nil {
+			u.T().Error(err)
+		}
+
+		assert.Equal(u.T(), user.Username, "batman")
+		assert.Len(u.T(), user.Groups, 2)
+		assert.Equal(u.T(), user.Groups[0].Name, "admins")
+	})
+
+	u.T().Run("get users", func(t *testing.T) {
+		users, err := userRepo.Get(context.Background())
+		if err != nil {
+			u.T().Error(err)
+		}
+
+		assert.Len(u.T(), users, 4)
+	})
+
+	u.T().Run("get by id", func(t *testing.T) {
+		user, err := userRepo.GetByID(context.Background(), int32(1))
+		if err != nil {
+			u.T().Error(err)
+		}
+
+		assert.Equal(u.T(), user.Username, "batman")
+		assert.Equal(u.T(), user.Groups[0].Name, "admins")
+	})
+
+	u.T().Run("get by group id", func(t *testing.T) {
+		users, err := userRepo.GetByGroupID(context.Background(), int32(2))
+		if err != nil {
+			u.T().Error(err)
+		}
+
+		assert.Len(u.T(), users, 4)
+	})
+
+	u.T().Run("get by group id", func(t *testing.T) {
+		users, err := userRepo.GetByGroupID(context.Background(), int32(1))
+		if err != nil {
+			u.T().Error(err)
+		}
+
+		assert.Len(u.T(), users, 1)
+	})
+
+	u.T().Run("update user", func(t *testing.T) {
+		user, err := userRepo.GetByUsername(context.Background(), "batman")
+		if err != nil {
+			u.T().Error(err)
+		}
+
+		// remove one group from batman user
+		user.Groups = []entity.Group{user.Groups[1]}
+
+		_, err = userRepo.Update(context.Background(), user)
+		if err != nil {
+			u.T().Error(err)
+		}
+
+		user1, err := userRepo.GetByUsername(context.Background(), "batman")
+		if err != nil {
+			u.T().Error(err)
+		}
+
+		assert.Len(u.T(), user1.Groups, 1)
+	})
+
+	u.T().Run("update user2", func(t *testing.T) {
+		user, err := userRepo.GetByUsername(context.Background(), "batman")
+		if err != nil {
+			u.T().Error(err)
+		}
+
+		// add another group
+		var id int32 = 3
+		user.Groups = append(user.Groups, entity.Group{ID: &id, Name: "editor"})
+
+		_, err = userRepo.Update(context.Background(), user)
+		if err != nil {
+			u.T().Error(err)
+		}
+
+		user1, err := userRepo.GetByUsername(context.Background(), "batman")
+		if err != nil {
+			u.T().Error(err)
+		}
+
+		assert.Len(u.T(), user1.Groups, 2)
+		assert.Equal(u.T(), *user1.Groups[1].ID, int32(3))
+	})
+
+	u.T().Run("update user3", func(t *testing.T) {
+		user, err := userRepo.GetByUsername(context.Background(), "batman")
+		if err != nil {
+			u.T().Error(err)
+		}
+
+		user.CanShare = true
+
+		_, err = userRepo.Update(context.Background(), user)
+		if err != nil {
+			u.T().Error(err)
+		}
+
+		user1, err := userRepo.GetByUsername(context.Background(), "batman")
+		if err != nil {
+			u.T().Error(err)
+		}
+
+		assert.True(u.T(), user1.CanShare)
+	})
+
+	u.T().Run("create user", func(t *testing.T) {
+		var id int32 = 100
+		user := entity.User{
+			ID:       &id,
+			Username: "bob",
+			Role:     entity.RoleAdmin,
+			UserID:   "id",
+			CanShare: true,
+		}
+
+		_, err := userRepo.Create(context.Background(), user)
+		if err != nil {
+			u.T().Error(err)
+		}
+
+		assert.Nil(u.T(), err)
+	})
+}
+
 func (u *UserTestSuite) SetupSuite() {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
@@ -78,116 +218,6 @@ func (u *UserTestSuite) TearDownSuite() {
 
 func TestUserTestSuite(t *testing.T) {
 	suite.Run(t, new(UserTestSuite))
-}
-
-func (u *UserTestSuite) TestUserRepo() {
-	userRepo, err := userrepo.New(u.pgClient)
-	if err != nil {
-		u.T().Error("cannot create user repo")
-	}
-
-	u.T().Run("get user", func(t *testing.T) {
-		user, err := userRepo.Get(context.Background(), "batman")
-		if err != nil {
-			u.T().Error(err)
-		}
-
-		assert.Equal(u.T(), user.Username, "batman")
-		assert.Len(u.T(), user.Groups, 2)
-		assert.Equal(u.T(), user.Groups[0].Name, "admins")
-	})
-
-	u.T().Run("get users", func(t *testing.T) {
-		users, err := userRepo.GetUsers(context.Background())
-		if err != nil {
-			u.T().Error(err)
-		}
-
-		assert.Len(u.T(), users, 4)
-	})
-
-	u.T().Run("update user", func(t *testing.T) {
-		user, err := userRepo.Get(context.Background(), "batman")
-		if err != nil {
-			u.T().Error(err)
-		}
-
-		// remove one group from batman user
-		user.Groups = []entity.Group{user.Groups[1]}
-
-		_, err = userRepo.Update(context.Background(), user)
-		if err != nil {
-			u.T().Error(err)
-		}
-
-		user1, err := userRepo.Get(context.Background(), "batman")
-		if err != nil {
-			u.T().Error(err)
-		}
-
-		assert.Len(u.T(), user1.Groups, 1)
-	})
-
-	u.T().Run("update user2", func(t *testing.T) {
-		user, err := userRepo.Get(context.Background(), "batman")
-		if err != nil {
-			u.T().Error(err)
-		}
-
-		// add another group
-		var id int32 = 3
-		user.Groups = append(user.Groups, entity.Group{ID: &id, Name: "editor"})
-
-		_, err = userRepo.Update(context.Background(), user)
-		if err != nil {
-			u.T().Error(err)
-		}
-
-		user1, err := userRepo.Get(context.Background(), "batman")
-		if err != nil {
-			u.T().Error(err)
-		}
-
-		assert.Len(u.T(), user1.Groups, 2)
-		assert.Equal(u.T(), *user1.Groups[1].ID, int32(3))
-	})
-
-	u.T().Run("update user3", func(t *testing.T) {
-		user, err := userRepo.Get(context.Background(), "batman")
-		if err != nil {
-			u.T().Error(err)
-		}
-
-		user.CanShare = true
-
-		_, err = userRepo.Update(context.Background(), user)
-		if err != nil {
-			u.T().Error(err)
-		}
-
-		user1, err := userRepo.Get(context.Background(), "batman")
-		if err != nil {
-			u.T().Error(err)
-		}
-
-		assert.True(u.T(), user1.CanShare)
-	})
-
-	u.T().Run("create user", func(t *testing.T) {
-		user := entity.User{
-			Username: "bob",
-			Role:     entity.RoleAdmin,
-			UserID:   "id",
-			CanShare: true,
-		}
-
-		_, err := userRepo.Create(context.Background(), user)
-		if err != nil {
-			u.T().Error(err)
-		}
-
-		assert.Nil(u.T(), err)
-	})
 }
 
 func getParentFolder() (string, error) {

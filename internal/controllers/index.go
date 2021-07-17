@@ -19,7 +19,7 @@ func Index(r *gin.RouterGroup, albumRepo repo.AlbumRepo) {
 		reqCtx := c.Request.Context()
 		logger := logutil.GetLogger(c)
 
-		ownAlbums, err := albumRepo.GetAlbumsByOwnerID(reqCtx, *session.User.ID)
+		ownAlbums, err := albumRepo.GetByOwnerID(reqCtx, *session.User.ID)
 		if err != nil {
 			if errors.Is(repo.ErrAlbumNotFound, err) {
 				logger.Info("albums not found")
@@ -33,7 +33,7 @@ func Index(r *gin.RouterGroup, albumRepo repo.AlbumRepo) {
 		var sharedAlbums []entity.Album
 
 		if session.User.CanShare {
-			sharedAlbums, err = albumRepo.GetAlbumsByUserID(reqCtx, *session.User.ID)
+			sharedAlbums, err = albumRepo.GetByUserID(reqCtx, *session.User.ID)
 			if err != nil {
 				if errors.Is(repo.ErrAlbumNotFound, err) {
 					logger.Info("user has no shared albums")

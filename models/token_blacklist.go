@@ -27,7 +27,7 @@ Table: token_blacklist
 
 JSON Sample
 -------------------------------------
-{    "id": 70,    "token": "QAUyKmlldJTnkDHACRYgQIyST"}
+{    "id": 80,    "token": "YykxEYZZZSLWdkcLPZTtjVIJr"}
 
 
 

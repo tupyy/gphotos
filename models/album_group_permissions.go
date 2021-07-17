@@ -28,7 +28,7 @@ Table: album_group_permissions
 
 JSON Sample
 -------------------------------------
-{    "group_id": 76,    "album_id": 20,    "permissions": 37}
+{    "group_id": 17,    "album_id": 22,    "permissions": 32}
 
 
 

@@ -89,7 +89,7 @@ func init() {
 func createPostgresRepos(client pgclient.Client) (repo.Repositories, error) {
 	repos := make(repo.Repositories)
 
-	ur, err := userRepo.New(client)
+	ur, err := userRepo.NewPostgresRepo(client)
 	if err != nil {
 		logutil.GetDefaultLogger().WithError(err).Warn("cannot create user repo")
 
@@ -98,7 +98,7 @@ func createPostgresRepos(client pgclient.Client) (repo.Repositories, error) {
 
 	repos[repo.UserRepoName] = ur
 
-	gr, err := groupRepo.New(client)
+	gr, err := groupRepo.NewPostgresRepo(client)
 	if err != nil {
 		logutil.GetDefaultLogger().WithError(err).Warn("cannot create user repo")
 

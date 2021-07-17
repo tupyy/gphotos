@@ -31,7 +31,7 @@ Table: album
 
 JSON Sample
 -------------------------------------
-{    "owner_id": 1,    "description": "LfVQzYhpRYlavadhwyOveEgeU",    "location": "TqDXetPdBALNLwcYiQuVQuZPT",    "id": 38,    "name": "YYXVyCVMDbktaVpQKNGOMJXjc",    "created_at": "2063-03-16T12:57:29.13890703+01:00"}
+{    "id": 38,    "name": "VdSKFRVHAceMFXgNjXVkVJprp",    "created_at": "2156-03-22T00:33:29.069986425+01:00",    "owner_id": 28,    "description": "maRJzeXjnzaPvQZmjCJXigNkX",    "location": "hsSEldZrPHVymvKiruYLhxvSn"}
 
 
 
