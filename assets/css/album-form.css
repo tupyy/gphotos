@@ -1,0 +1,85 @@
+.btn {
+    width: 80px;
+}
+
+.form-container {
+    margin: auto;
+    margin-top: 20px;
+    max-width: 600px;
+}
+
+.form-container-button {
+    display: flex;
+    justify-content: center;
+    margin-top: 50px;
+}
+
+.form-container .title {
+    font-weight: bold;
+}
+
+.form-container-button .btn{
+    margin-left: 10px;
+}
+
+.container-permissions {
+    margin-top: 30px;
+}
+
+.container-permissions-title {
+    margin-bottom: 10px;
+}
+
+.container-permissions-button {  
+    display: flex;
+    justify-content: right;
+}
+
+.container-permissions-button {
+    margin-right: 2px;
+}
+
+.container-permissions-selected-users {
+    margin-top: 12px;
+}
+
+#selected-users li {
+    padding-right: 0;
+    padding-left: 0;
+    padding-bottom: 0.2rem;
+    padding-top: 0.2rem;
+}
+
+#selected-users .row {
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+#selected-users .permission-user {
+    display: flex;
+    align-items: center;
+}
+
+#selected-users .badge {
+    margin-right: 3px;
+}
+
+#selected-users .permission-remove-btn {
+    display: flex;
+    justify-content: right;
+}
+
+@media (max-width: 576px) {
+  .form-container {
+    margin: auto;
+    max-width: 100%;
+  }
+
+  .container-permissions-button {
+    margin-right: 5px;
+  }
+
+  .btn {
+    width: 100px;
+  }
+}

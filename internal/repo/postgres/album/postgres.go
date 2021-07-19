@@ -191,7 +191,7 @@ func (a *albumPostgresRepo) GetByOwnerID(ctx context.Context, ownerID int32) ([]
 	}
 
 	if len(albums) == 0 {
-		return []entity.Album{}, fmt.Errorf("%w no album found with id %d", repo.ErrAlbumNotFound, ownerID)
+		return []entity.Album{}, fmt.Errorf("%w ownerr id %d", repo.ErrAlbumNotFound, ownerID)
 	}
 
 	entities := albums.Merge()

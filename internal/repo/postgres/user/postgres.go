@@ -154,8 +154,8 @@ func (u *userRepo) Get(ctx context.Context) ([]entity.User, error) {
 
 	tx := u.db.WithContext(ctx).Table("users").
 		Select("users.*, STRING_AGG(groups.name, ',') as group_names, ARRAY_REMOVE(ARRAY_AGG(groups.id),NULL) as group_ids").
-		Joins("INNER JOIN users_groups ON ( users_groups.users_id = users.id )").
-		Joins("INNER JOIN groups ON (users_groups.groups_id = groups.id)").
+		Joins("LEFT JOIN users_groups ON ( users_groups.users_id = users.id )").
+		Joins("LEFT JOIN groups ON (users_groups.groups_id = groups.id)").
 		Group("users.id").
 		Find(&results)
 
@@ -226,8 +226,8 @@ func (u *userRepo) GetByID(ctx context.Context, id int32) (entity.User, error) {
 
 	tx := u.db.WithContext(ctx).Table("users").
 		Select("users.*, STRING_AGG(groups.name, ',') as group_names, ARRAY_REMOVE(ARRAY_AGG(groups.id),NULL) as group_ids").
-		Joins("INNER JOIN users_groups ON ( users_groups.users_id = users.id )").
-		Joins("INNER JOIN groups ON (users_groups.groups_id = groups.id)").
+		Joins("LEFT JOIN users_groups ON ( users_groups.users_id = users.id )").
+		Joins("LEFT JOIN groups ON (users_groups.groups_id = groups.id)").
 		Group("users.id").
 		Where("users.id = ?", id).
 		First(&result)

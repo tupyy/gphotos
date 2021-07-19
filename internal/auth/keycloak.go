@@ -258,6 +258,8 @@ func (k *keyCloakAuthenticator) createOrUpdateUserFromClaims(ctx *gin.Context, c
 			logger.WithError(err).Error("failed to create user")
 			return noUser, errInternalError
 		} else {
+			loggedUser.ID = &id
+
 			logger.WithField("user id", id).WithField("username", *username).Debug("user created")
 		}
 	} else {
@@ -276,7 +278,7 @@ func (k *keyCloakAuthenticator) createOrUpdateUserFromClaims(ctx *gin.Context, c
 			return noUser, errInternalError
 		}
 
-		logger.WithField("user", fmt.Sprintf("%+v", user)).Debug("user updated")
+		logger.WithField("user", fmt.Sprintf("%+v", loggedUser)).Debug("user updated")
 	}
 
 	return loggedUser, nil

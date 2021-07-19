@@ -3,6 +3,7 @@ package group
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/internal/repo"
@@ -60,7 +61,20 @@ func (g *groupRepo) Delete(ctx context.Context, groupID int32) error {
 }
 
 func (g *groupRepo) Get(ctx context.Context) ([]entity.Group, error) {
-	return []entity.Group{}, repo.ErrNotImplementated
+	var groups []models.Groups
+
+	tx := g.db.WithContext(ctx).Find(&groups)
+	if tx.Error != nil {
+		return []entity.Group{}, fmt.Errorf("%w %v", repo.ErrInternalError, tx.Error)
+	}
+
+	entities := make([]entity.Group, 0, len(groups))
+
+	for _, g := range groups {
+		entities = append(entities, entity.Group{ID: &g.ID, Name: g.Name})
+	}
+
+	return entities, nil
 }
 
 func (g *groupRepo) GetByID(ctx context.Context, id int32) (entity.Group, error) {

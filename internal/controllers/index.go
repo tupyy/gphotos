@@ -21,7 +21,7 @@ func Index(r *gin.RouterGroup, albumRepo repo.AlbumRepo) {
 
 		ownAlbums, err := albumRepo.GetByOwnerID(reqCtx, *session.User.ID)
 		if err != nil {
-			if errors.Is(repo.ErrAlbumNotFound, err) {
+			if errors.Is(err, repo.ErrAlbumNotFound) {
 				logger.Info("albums not found")
 			} else {
 				panic(err) // TODO 500 page
@@ -35,7 +35,7 @@ func Index(r *gin.RouterGroup, albumRepo repo.AlbumRepo) {
 		if session.User.CanShare {
 			sharedAlbums, err = albumRepo.GetByUserID(reqCtx, *session.User.ID)
 			if err != nil {
-				if errors.Is(repo.ErrAlbumNotFound, err) {
+				if errors.Is(err, repo.ErrAlbumNotFound) {
 					logger.Info("user has no shared albums")
 				} else {
 					panic(err) // TODO 500 page
