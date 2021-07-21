@@ -12,10 +12,10 @@ import (
 )
 
 // POST /album
-func CreateAlbum(r *gin.RouterGroup, repos repo.Repositories) {
+func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
 	//	albumRepo := repos[repo.AlbumRepoName].(repo.AlbumRepo)
-	userRepo := repos[repo.UserRepoName].(repo.UserRepo)
-	groupRepo := repos[repo.GroupRepoName].(repo.GroupRepo)
+	userRepo := repos[UserRepoName].(UserRepo)
+	groupRepo := repos[GroupRepoName].(GroupRepo)
 
 	r.GET("/album/new", func(c *gin.Context) {
 		s, _ := c.Get("sessionData")

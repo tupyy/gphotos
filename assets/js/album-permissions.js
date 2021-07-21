@@ -1,7 +1,7 @@
-$(document).ready(function() {
+$(() => {
     let permissions = {};
 
-    getPermission = function() {
+    const getPermission = function() {
         let result = {};
         result['permissions'] = [];
 
@@ -33,7 +33,7 @@ $(document).ready(function() {
         }
     });
 
-    let addPermissionElement = function(permission) {
+    const addPermissionElement = function(permission) {
         let badges = "";
 
         permission.permissions.forEach(function(item) {

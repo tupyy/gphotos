@@ -44,12 +44,12 @@ type Authenticator interface {
 }
 
 type keyCloakAuthenticator struct {
-	userRepo     repo.UserRepo
-	groupRepo    repo.GroupRepo
+	userRepo     UserRepo
+	groupRepo    GroupRepo
 	oidcProvider *OidcProvider
 }
 
-func NewKeyCloakAuthenticator(oidcProvider *OidcProvider, ur repo.UserRepo, gr repo.GroupRepo) Authenticator {
+func NewKeyCloakAuthenticator(oidcProvider *OidcProvider, ur UserRepo, gr GroupRepo) Authenticator {
 	return &keyCloakAuthenticator{oidcProvider: oidcProvider, userRepo: ur, groupRepo: gr}
 }
 

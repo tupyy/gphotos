@@ -10,7 +10,7 @@ import (
 	"github.com/tupyy/gophoto/utils/logutil"
 )
 
-func Index(r *gin.RouterGroup, albumRepo repo.AlbumRepo) {
+func Index(r *gin.RouterGroup, albumRepo AlbumRepo) {
 	r.GET("/", func(c *gin.Context) {
 		s, _ := c.Get("sessionData")
 

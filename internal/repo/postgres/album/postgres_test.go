@@ -13,7 +13,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/tupyy/gophoto/internal/entity"
-	"github.com/tupyy/gophoto/internal/repo"
 	"github.com/tupyy/gophoto/internal/repo/postgres/album"
 	"github.com/tupyy/gophoto/utils/pgclient"
 	"github.com/tupyy/gophoto/utils/pgtestcontainer"
@@ -32,7 +31,7 @@ type AlbumTestSuite struct {
 	suite.Suite
 	container testcontainers.Container
 	pgClient  pgclient.Client
-	repo      repo.AlbumRepo
+	repo      *album.AlbumPostgresRepo
 }
 
 func (as *AlbumTestSuite) TestGetAllAlbums() {
@@ -59,11 +58,11 @@ func (as *AlbumTestSuite) TestGetAlbumByID() {
 func (as *AlbumTestSuite) TestGetAlbumByOwnerID() {
 	asserter := assert.New(as.T())
 
-	ent, err := as.repo.GetAlbumsByOwnerID(context.Background(), 1)
+	ent, err := as.repo.GetByOwnerID(context.Background(), 1)
 	asserter.Nil(err)
 	asserter.Len(ent, 4)
 
-	_, err = as.repo.GetAlbumsByOwnerID(context.Background(), 100)
+	_, err = as.repo.GetByOwnerID(context.Background(), 100)
 	asserter.NotNil(err)
 }
 
@@ -151,7 +150,7 @@ type AlbumTestSuite1 struct {
 	suite.Suite
 	container testcontainers.Container
 	pgClient  pgclient.Client
-	repo      repo.AlbumRepo
+	repo      *album.AlbumPostgresRepo
 }
 
 func (as *AlbumTestSuite1) SetupSuite() {

@@ -27,7 +27,6 @@ import (
 	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/controllers"
 	"github.com/tupyy/gophoto/internal/entity"
-	"github.com/tupyy/gophoto/internal/repo"
 	"github.com/tupyy/gophoto/internal/repo/postgres/album"
 	groupRepo "github.com/tupyy/gophoto/internal/repo/postgres/group"
 	userRepo "github.com/tupyy/gophoto/internal/repo/postgres/user"
@@ -68,7 +67,7 @@ var serveCmd = &cobra.Command{
 		// initialize oidc provier
 		oidcProvider := auth.NewOidcProvider(keycloakConf, conf.GetServerAuthCallback())
 
-		keyCloakAuthenticator := auth.NewKeyCloakAuthenticator(oidcProvider, repos[repo.UserRepoName].(repo.UserRepo), repos[repo.GroupRepoName].(repo.GroupRepo))
+		keyCloakAuthenticator := auth.NewKeyCloakAuthenticator(oidcProvider, repos[controllers.UserRepoName].(controllers.UserRepo), repos[controllers.GroupRepoName].(controllers.GroupRepo))
 
 		// create new router
 		r := router.NewRouter(store, keyCloakAuthenticator)
@@ -86,8 +85,8 @@ func init() {
 	rootCmd.AddCommand(serveCmd)
 }
 
-func createPostgresRepos(client pgclient.Client) (repo.Repositories, error) {
-	repos := make(repo.Repositories)
+func createPostgresRepos(client pgclient.Client) (controllers.Repositories, error) {
+	repos := make(controllers.Repositories)
 
 	ur, err := userRepo.NewPostgresRepo(client)
 	if err != nil {
@@ -96,7 +95,7 @@ func createPostgresRepos(client pgclient.Client) (repo.Repositories, error) {
 		return repos, err
 	}
 
-	repos[repo.UserRepoName] = ur
+	repos[controllers.UserRepoName] = ur
 
 	gr, err := groupRepo.NewPostgresRepo(client)
 	if err != nil {
@@ -105,7 +104,7 @@ func createPostgresRepos(client pgclient.Client) (repo.Repositories, error) {
 		return repos, err
 	}
 
-	repos[repo.GroupRepoName] = gr
+	repos[controllers.GroupRepoName] = gr
 
 	albumRepo, err := album.NewPostgresRepo(client)
 	if err != nil {
@@ -114,7 +113,7 @@ func createPostgresRepos(client pgclient.Client) (repo.Repositories, error) {
 		return repos, err
 	}
 
-	repos[repo.AlbumRepoName] = albumRepo
+	repos[controllers.AlbumRepoName] = albumRepo
 
 	return repos, nil
 }
