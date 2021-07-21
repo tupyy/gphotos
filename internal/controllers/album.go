@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/tupyy/gophoto/internal/entity"
+	"github.com/tupyy/gophoto/internal/form"
 	"github.com/tupyy/gophoto/internal/repo"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
@@ -54,8 +55,9 @@ func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
 		}
 
 		c.HTML(http.StatusOK, "album_create.html", gin.H{
-			"users":  filteredUsers,
-			"groups": groups,
+			"users":    filteredUsers,
+			"groups":   groups,
+			"canShare": session.User.CanShare,
 		})
 	})
 
@@ -64,12 +66,25 @@ func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
 		session := s.(entity.Session)
 
 		//reqCtx := c.Request.Context()
-		//logger := logutil.GetLogger(c)
+		logger := logutil.GetLogger(c)
 
 		// only editors and admins have the right to create albums
 		if session.User.Role == entity.RoleUser {
 			c.AbortWithError(http.StatusBadRequest, fmt.Errorf("user with user role cannot create albums"))
 		}
+
+		var albumForm form.Album
+		if err := c.ShouldBindJSON(&albumForm); err != nil {
+			logger.WithError(err).Info("fail to bind to json")
+
+			c.HTML(http.StatusBadRequest, "album_create.html", gin.H{"error": err})
+
+			return
+		}
+
+		escapedAlbum := albumForm.Sanitize()
+
+		logger.WithField("form", fmt.Sprintf("%+v", escapedAlbum)).Info("create album request submitted")
 
 		return
 	})

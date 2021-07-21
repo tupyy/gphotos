@@ -43,28 +43,28 @@
     margin-top: 12px;
 }
 
-#selected-users li {
+#selected-groups li, #selected-users li {
     padding-right: 0;
     padding-left: 0;
     padding-bottom: 0.2rem;
     padding-top: 0.2rem;
 }
 
-#selected-users .row {
+#selected-users .row, #selected-groups .row {
     padding-left: 10px;
     padding-right: 10px;
 }
 
-#selected-users .permission-user {
+#selected-users .permission-user, #selected-groups .row {
     display: flex;
     align-items: center;
 }
 
-#selected-users .badge {
+#selected-users .badge, #selected-groups .badge {
     margin-right: 3px;
 }
 
-#selected-users .permission-remove-btn {
+#selected-users .permission-remove-btn, #selected-groups .permission-remove-btn {
     display: flex;
     justify-content: right;
 }
