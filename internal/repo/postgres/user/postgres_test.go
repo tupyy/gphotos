@@ -96,7 +96,7 @@ func (u *UserTestSuite) TestUserRepo() {
 		// remove one group from batman user
 		user.Groups = []entity.Group{user.Groups[1]}
 
-		_, err = userRepo.Update(context.Background(), user)
+		err = userRepo.Update(context.Background(), user)
 		if err != nil {
 			u.T().Error(err)
 		}
@@ -119,7 +119,7 @@ func (u *UserTestSuite) TestUserRepo() {
 		var id int32 = 3
 		user.Groups = append(user.Groups, entity.Group{ID: &id, Name: "editor"})
 
-		_, err = userRepo.Update(context.Background(), user)
+		err = userRepo.Update(context.Background(), user)
 		if err != nil {
 			u.T().Error(err)
 		}
@@ -141,7 +141,7 @@ func (u *UserTestSuite) TestUserRepo() {
 
 		user.CanShare = true
 
-		_, err = userRepo.Update(context.Background(), user)
+		err = userRepo.Update(context.Background(), user)
 		if err != nil {
 			u.T().Error(err)
 		}

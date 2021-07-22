@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        {{ template "base_css" }}
+        <link rel="stylesheet" href="/static/css/album-form.css"/>
+        {{ template "js" }}
+        <script src="/static/js/album/album-permissions.js"></script>
+    </head>
+    <header>
+        {{ template "header" . }}
+    </header>
+    <body>
+    <div class="container-xs container-md form-container row">
+        <form id="create-album" action="/album" method="POST">
+            <div class="container.metadata row ">
+                <div class="mb-3">
+                    <label for="name">Name</label>
+                    <input name="name" type="text" id="name" class="form-control" placeholder="name" required>
+                </div>
+                <div class="mb-3">
+                    <label for="description">Description</label>
+                    <input name="description" type="text" id="description" class="form-control" placeholder="description" required>
+                </div>
+                <div class="mb-3">
+                    <label for="location">Location</label>
+                    <input name="location" type="text" id="location" class="form-control" placeholder="location" required>
+                </div>
+            </div>
+            {{ if .canShare }}
+                <div class="container-permissions container-permissions-user">
+                    <div class="title container-permissions-title">User permission</div>
+                    <div class="mb-3">
+                        <label for="select-users">Users</label>
+                        <select class="form-select" id="select-users">
+                            {{ if .users }}
+                                {{ range $idx, $user := .users }}
+                                    <option value="{{ $idx }}">{{ $user.Username }}</option>
+                                {{ end }}
+                            {{ end }}
+                        </select>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="r" id="readUserPermissionCheck">
+                        <label class="form-check-label" for="readUserPermissionCheck">Read</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="w" id="writeUserPermissionCheck">
+                        <label class="form-check-label" for="writeUserPermissionCheck">Write</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="e" id="editUserPermissionCheck">
+                        <label class="form-check-label" for="editUserPermissionCheck">Edit</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="d" id="deleteUserPermissionCheck">
+                        <label class="form-check-label" for="deleteUserPermissionCheck">Delete</label>
+                    </div>
+                    <div class="container-permissions-button row">
+                        <button type="button" class="btn btn-outline-primary btn-sm" id="userPermissionButton">Add</button>
+                    </div>
+                    <input id="inputUserPermissions" type="hidden" name="user_permissions" value=""/>
+                    <div class="row container-permissions-selected-users">
+                        <span class="title"> Permissions granted </span>
+                        <div class="title no-users-permission">None</div>
+                        <ul class="list-group" id="selected-users">
+                        </ul>
+                    </div>
+                </div>
+                <div class="container-permissions container-permissions-group">
+                    <div class="title container-permissions-title">Group permission</div>
+                    <label for="select-groups">Groups</label>
+                    <div class="mb-3">
+                        <select class="form-select" id="select-groups">
+                            {{ if .groups }}
+                                {{ range $idx, $group := .groups }}
+                                    <option value="{{ $idx }}">{{ $group.Name }}</option>
+                                {{ end }}
+                            {{ end }}
+                        </select>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="r" id="readGroupPermissionCheck">
+                        <label class="form-check-label" for="readGroupPermissionCheck">Read</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="w" id="writeGroupPermissionCheck">
+                        <label class="form-check-label" for="writeGroupPermissionCheck">Write</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="e" id="editGroupPermissionCheck">
+                        <label class="form-check-label" for="editGroupPermissionCheck">Edit</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="d" id="deleteGroupPermissionCheck">
+                        <label class="form-check-label" for="deleteGroupPermissionCheck">Delete</label>
+                    </div>
+                    <div class="container-permissions-button row">
+                        <button type="button" id="groupPermissionButton" class="btn btn-outline-primary btn-sm">Add</button>
+                    </div>
+                    <input id="inputGroupPermissions" type="hidden" name="group_permissions" value=""/>
+                    <div class="row container-permissions-selected-users">
+                        <span class="title"> Permissions granted </span>
+                        <div class="title no-groups-permission">None</div>
+                        <ul class="list-group" id="selected-groups">
+                        </ul>
+                    </div>
+                </div>
+            {{ end }}
+            <div class="row form-container-button">
+                <input type="submit" class="btn btn-primary btn-sm" value="Create">
+                <button type="button" class="btn btn-danger btn-sm">Cancel</button>
+            </div>
+        </form>
+    </div>
+    </body>
+    <footer>
+        {{ template "footer" }}
+    </footer>
+</html>
+

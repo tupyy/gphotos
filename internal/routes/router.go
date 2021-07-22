@@ -10,6 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/tupyy/gophoto/internal/auth"
 	"github.com/tupyy/gophoto/internal/conf"
+	"github.com/tupyy/gophoto/internal/middleware"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
 
@@ -22,14 +23,10 @@ type PhotoRouter struct {
 // NewRouter returns a new gin router.
 func NewRouter(store sessions.Store, authenticator auth.Authenticator) *PhotoRouter {
 	r := gin.Default()
-	r.Use(sessions.Sessions("gophoto", store))
 
-	renderer, err := loadTemplates(conf.GetTemplateFolder())
-	if err != nil {
-		panic(err)
-	}
+	// TODO remove hotreloading in prod
+	r.Use(sessions.Sessions("gophoto", store), middleware.HotReloading(r))
 
-	r.HTMLRender = renderer
 	r.Static("/static", conf.GetStaticsFolder())
 
 	// setup authentication for the priate group.

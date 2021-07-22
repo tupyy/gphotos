@@ -3,6 +3,7 @@ package group
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/internal/repo"
@@ -11,27 +12,27 @@ import (
 	"gorm.io/gorm"
 )
 
-type groupRepo struct {
+type GroupRepo struct {
 	db     *gorm.DB
 	client pgclient.Client
 }
 
-func NewPostgresRepo(client pgclient.Client) (*groupRepo, error) {
+func NewPostgresRepo(client pgclient.Client) (*GroupRepo, error) {
 	config := gorm.Config{
 		SkipDefaultTransaction: true, // No need transaction for those use cases.
 	}
 
 	gormDB, err := client.Open(config)
 	if err != nil {
-		return &groupRepo{}, err
+		return &GroupRepo{}, err
 	}
 
-	return &groupRepo{db: gormDB, client: client}, nil
+	return &GroupRepo{db: gormDB, client: client}, nil
 }
 
 // Create creates the group.
 // TODO should the group contain the users and create also the users_groups entries?
-func (g *groupRepo) Create(ctx context.Context, group entity.Group) (int32, error) {
+func (g *GroupRepo) Create(ctx context.Context, group entity.Group) (int32, error) {
 	var m models.Groups
 
 	// create group
@@ -43,7 +44,7 @@ func (g *groupRepo) Create(ctx context.Context, group entity.Group) (int32, erro
 	return m.ID, nil
 }
 
-func (g *groupRepo) Update(ctx context.Context, group entity.Group) error {
+func (g *GroupRepo) Update(ctx context.Context, group entity.Group) error {
 	var m models.Groups
 
 	// create group
@@ -55,19 +56,32 @@ func (g *groupRepo) Update(ctx context.Context, group entity.Group) error {
 	return nil
 }
 
-func (g *groupRepo) Delete(ctx context.Context, groupID int32) error {
+func (g *GroupRepo) Delete(ctx context.Context, groupID int32) error {
 	return repo.ErrNotImplementated
 }
 
-func (g *groupRepo) Get(ctx context.Context) ([]entity.Group, error) {
-	return []entity.Group{}, repo.ErrNotImplementated
+func (g *GroupRepo) Get(ctx context.Context) ([]entity.Group, error) {
+	var groups []models.Groups
+
+	tx := g.db.WithContext(ctx).Find(&groups)
+	if tx.Error != nil {
+		return []entity.Group{}, fmt.Errorf("%w %v", repo.ErrInternalError, tx.Error)
+	}
+
+	entities := make([]entity.Group, 0, len(groups))
+
+	for _, g := range groups {
+		entities = append(entities, entity.Group{ID: &g.ID, Name: g.Name})
+	}
+
+	return entities, nil
 }
 
-func (g *groupRepo) GetByID(ctx context.Context, id int32) (entity.Group, error) {
+func (g *GroupRepo) GetByID(ctx context.Context, id int32) (entity.Group, error) {
 	return entity.Group{}, repo.ErrNotImplementated
 }
 
-func (g *groupRepo) GetByName(ctx context.Context, name string) (entity.Group, error) {
+func (g *GroupRepo) GetByName(ctx context.Context, name string) (entity.Group, error) {
 	var m models.Groups
 
 	tx := g.db.WithContext(ctx).Where("name = ?", name).First(&m)
@@ -82,7 +96,7 @@ func (g *groupRepo) GetByName(ctx context.Context, name string) (entity.Group, e
 	return entity.Group{ID: &m.ID, Name: m.Name}, nil
 }
 
-func (g *groupRepo) GetByUserID(ctx context.Context, userID string) ([]entity.Group, error) {
+func (g *GroupRepo) GetByUserID(ctx context.Context, userID string) ([]entity.Group, error) {
 	return []entity.Group{}, repo.ErrNotImplementated
 }
 
