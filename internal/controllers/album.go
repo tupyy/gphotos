@@ -4,28 +4,21 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-<<<<<<< Updated upstream
 
-	"github.com/gin-gonic/gin"
-=======
 	"time"
 
 	"github.com/gin-gonic/gin"
+
+	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
->>>>>>> Stashed changes
 	"github.com/tupyy/gophoto/internal/entity"
-	"github.com/tupyy/gophoto/internal/form"
 	"github.com/tupyy/gophoto/internal/repo"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
 
 // POST /album
 func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
-<<<<<<< Updated upstream
-	//	albumRepo := repos[repo.AlbumRepoName].(repo.AlbumRepo)
-=======
 	albumRepo := repos[AlbumRepoName].(AlbumRepo)
->>>>>>> Stashed changes
 	userRepo := repos[UserRepoName].(UserRepo)
 	groupRepo := repos[GroupRepoName].(GroupRepo)
 
@@ -66,9 +59,8 @@ func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
 		}
 
 		c.HTML(http.StatusOK, "album_create.html", gin.H{
-			"users":    filteredUsers,
-			"groups":   groups,
-			"canShare": session.User.CanShare,
+			"users":  filteredUsers,
+			"groups": groups,
 		})
 	})
 
@@ -76,11 +68,7 @@ func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
 		s, _ := c.Get("sessionData")
 		session := s.(entity.Session)
 
-<<<<<<< Updated upstream
-		//reqCtx := c.Request.Context()
-=======
 		reqCtx := c.Request.Context()
->>>>>>> Stashed changes
 		logger := logutil.GetLogger(c)
 
 		// only editors and admins have the right to create albums
@@ -88,12 +76,7 @@ func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
 			c.AbortWithError(http.StatusBadRequest, fmt.Errorf("user with user role cannot create albums"))
 		}
 
-		var albumForm form.Album
-<<<<<<< Updated upstream
-		if err := c.ShouldBindJSON(&albumForm); err != nil {
-=======
 		if err := c.ShouldBind(&albumForm); err != nil {
->>>>>>> Stashed changes
 			logger.WithError(err).Info("fail to bind to json")
 
 			c.HTML(http.StatusBadRequest, "album_create.html", gin.H{"error": err})
@@ -101,15 +84,6 @@ func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
 			return
 		}
 
-<<<<<<< Updated upstream
-		escapedAlbum := albumForm.Sanitize()
-
-		logger.WithField("form", fmt.Sprintf("%+v", escapedAlbum)).Info("create album request submitted")
-
-		return
-	})
-}
-=======
 		escapedFormAlbum := albumForm.Sanitize()
 
 		logger.WithField("form", fmt.Sprintf("%+v", escapedFormAlbum)).Info("create album request submitted")
@@ -223,4 +197,3 @@ func parsePermissions(perms string) map[string][]entity.Permission {
 
 	return permissions
 }
->>>>>>> Stashed changes
