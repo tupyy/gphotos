@@ -11,7 +11,11 @@
     </header>
     <body>
     <div class="container-xs container-md form-container row">
+<<<<<<< Updated upstream
         <form id="create-album">
+=======
+        <form id="create-album" action="/album" method="POST">
+>>>>>>> Stashed changes
             <div class="container.metadata row ">
                 <div class="mb-3">
                     <label for="name">Name</label>
@@ -58,6 +62,10 @@
                     <div class="container-permissions-button row">
                         <button type="button" class="btn btn-outline-primary btn-sm" id="userPermissionButton">Add</button>
                     </div>
+<<<<<<< Updated upstream
+=======
+                    <input id="inputUserPermissions" type="hidden" name="user_permissions" value=""/>
+>>>>>>> Stashed changes
                     <div class="row container-permissions-selected-users">
                         <span class="title"> Permissions granted </span>
                         <div class="title no-users-permission">None</div>
@@ -96,6 +104,10 @@
                     <div class="container-permissions-button row">
                         <button type="button" id="groupPermissionButton" class="btn btn-outline-primary btn-sm">Add</button>
                     </div>
+<<<<<<< Updated upstream
+=======
+                    <input id="inputGroupPermissions" type="hidden" name="group_permissions" value=""/>
+>>>>>>> Stashed changes
                     <div class="row container-permissions-selected-users">
                         <span class="title"> Permissions granted </span>
                         <div class="title no-groups-permission">None</div>

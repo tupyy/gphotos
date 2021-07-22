@@ -199,7 +199,11 @@ func (a *AlbumPostgresRepo) GetByOwnerID(ctx context.Context, ownerID int32) ([]
 	return entities, nil
 }
 
+<<<<<<< Updated upstream
 // GetAlbumsByUser returns a list of albums for which the user has at one permission set.
+=======
+// GetByUserID returns a list of albums for which the user has at one permission set.
+>>>>>>> Stashed changes
 func (a *AlbumPostgresRepo) GetByUserID(ctx context.Context, userID int32) ([]entity.Album, error) {
 	var albums customAlbums
 
@@ -218,7 +222,7 @@ func (a *AlbumPostgresRepo) GetByUserID(ctx context.Context, userID int32) ([]en
 	}
 
 	if len(albums) == 0 {
-		logutil.GetDefaultLogger().WithField("user_id", userID).Warn("no abum found")
+		logutil.GetDefaultLogger().WithField("user_id", userID).Warn("no album found")
 
 		return []entity.Album{}, repo.ErrAlbumNotFound
 	}
