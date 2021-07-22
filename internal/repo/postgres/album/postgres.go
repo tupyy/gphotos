@@ -199,11 +199,7 @@ func (a *AlbumPostgresRepo) GetByOwnerID(ctx context.Context, ownerID int32) ([]
 	return entities, nil
 }
 
-<<<<<<< Updated upstream
-// GetAlbumsByUser returns a list of albums for which the user has at one permission set.
-=======
 // GetByUserID returns a list of albums for which the user has at one permission set.
->>>>>>> Stashed changes
 func (a *AlbumPostgresRepo) GetByUserID(ctx context.Context, userID int32) ([]entity.Album, error) {
 	var albums customAlbums
 

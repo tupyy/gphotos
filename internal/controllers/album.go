@@ -4,14 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-
 	"time"
-
-	"github.com/gin-gonic/gin"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"github.com/tupyy/gophoto/internal/entity"
+	"github.com/tupyy/gophoto/internal/form"
 	"github.com/tupyy/gophoto/internal/repo"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
@@ -59,8 +57,9 @@ func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
 		}
 
 		c.HTML(http.StatusOK, "album_create.html", gin.H{
-			"users":  filteredUsers,
-			"groups": groups,
+			"users":    filteredUsers,
+			"groups":   groups,
+			"canShare": session.User.CanShare,
 		})
 	})
 
@@ -76,6 +75,7 @@ func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
 			c.AbortWithError(http.StatusBadRequest, fmt.Errorf("user with user role cannot create albums"))
 		}
 
+		var albumForm form.Album
 		if err := c.ShouldBind(&albumForm); err != nil {
 			logger.WithError(err).Info("fail to bind to json")
 
