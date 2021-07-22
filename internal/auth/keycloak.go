@@ -44,12 +44,12 @@ type Authenticator interface {
 }
 
 type keyCloakAuthenticator struct {
-	userRepo     repo.UserRepo
-	groupRepo    repo.GroupRepo
+	userRepo     UserRepo
+	groupRepo    GroupRepo
 	oidcProvider *OidcProvider
 }
 
-func NewKeyCloakAuthenticator(oidcProvider *OidcProvider, ur repo.UserRepo, gr repo.GroupRepo) Authenticator {
+func NewKeyCloakAuthenticator(oidcProvider *OidcProvider, ur UserRepo, gr GroupRepo) Authenticator {
 	return &keyCloakAuthenticator{oidcProvider: oidcProvider, userRepo: ur, groupRepo: gr}
 }
 
@@ -258,6 +258,8 @@ func (k *keyCloakAuthenticator) createOrUpdateUserFromClaims(ctx *gin.Context, c
 			logger.WithError(err).Error("failed to create user")
 			return noUser, errInternalError
 		} else {
+			loggedUser.ID = &id
+
 			logger.WithField("user id", id).WithField("username", *username).Debug("user created")
 		}
 	} else {
@@ -276,7 +278,7 @@ func (k *keyCloakAuthenticator) createOrUpdateUserFromClaims(ctx *gin.Context, c
 			return noUser, errInternalError
 		}
 
-		logger.WithField("user", fmt.Sprintf("%+v", user)).Debug("user updated")
+		logger.WithField("user", fmt.Sprintf("%+v", loggedUser)).Debug("user updated")
 	}
 
 	return loggedUser, nil

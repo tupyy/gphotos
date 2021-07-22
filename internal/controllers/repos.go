@@ -1,4 +1,4 @@
-package repo
+package controllers
 
 import (
 	"context"
@@ -63,7 +63,7 @@ type AlbumRepo interface {
 	GetByID(ctx context.Context, id int32) (entity.Album, error)
 	// GetByOwner return all albums of a user for which he is the owner.
 	GetByOwnerID(ctx context.Context, ownerID int32) ([]entity.Album, error)
-	// GetByUser returns a list of album for which the user ether has a permission set or it is the owner.
+	// GetByUserID returns a list of albums for which the user has at least one permission set.
 	GetByUserID(ctx context.Context, userID int32) ([]entity.Album, error)
 	// GetByGroup returns a list of albums for which the group has at least one permission.
 	GetByGroupID(ctx context.Context, groupID int32) ([]entity.Album, error)

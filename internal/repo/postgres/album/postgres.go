@@ -13,25 +13,25 @@ import (
 	"gorm.io/gorm"
 )
 
-type albumPostgresRepo struct {
+type AlbumPostgresRepo struct {
 	db     *gorm.DB
 	client pgclient.Client
 }
 
-func NewPostgresRepo(client pgclient.Client) (*albumPostgresRepo, error) {
+func NewPostgresRepo(client pgclient.Client) (*AlbumPostgresRepo, error) {
 	config := gorm.Config{
 		SkipDefaultTransaction: true, // No need transaction for those use cases.
 	}
 
 	gormDB, err := client.Open(config)
 	if err != nil {
-		return &albumPostgresRepo{}, err
+		return &AlbumPostgresRepo{}, err
 	}
 
-	return &albumPostgresRepo{gormDB, client}, nil
+	return &AlbumPostgresRepo{gormDB, client}, nil
 }
 
-func (a *albumPostgresRepo) Create(ctx context.Context, album entity.Album) (albumID int32, err error) {
+func (a *AlbumPostgresRepo) Create(ctx context.Context, album entity.Album) (albumID int32, err error) {
 	logger := logutil.GetDefaultLogger()
 
 	if err := album.Validate(); err != nil {
@@ -81,7 +81,7 @@ func (a *albumPostgresRepo) Create(ctx context.Context, album entity.Album) (alb
 	return m.ID, nil
 }
 
-func (a *albumPostgresRepo) Delete(ctx context.Context, id int32) error {
+func (a *AlbumPostgresRepo) Delete(ctx context.Context, id int32) error {
 	if res := a.db.WithContext(ctx).Delete(&models.Album{}, id); res.Error != nil {
 		return fmt.Errorf("%w %+v", repo.ErrDeleteAlbum, res.Error)
 	}
@@ -89,7 +89,7 @@ func (a *albumPostgresRepo) Delete(ctx context.Context, id int32) error {
 	return nil
 }
 
-func (a *albumPostgresRepo) Update(ctx context.Context, album entity.Album) error {
+func (a *AlbumPostgresRepo) Update(ctx context.Context, album entity.Album) error {
 	var oldAlbum entity.Album
 
 	if err := album.Validate(); err != nil {
@@ -116,7 +116,7 @@ func (a *albumPostgresRepo) Update(ctx context.Context, album entity.Album) erro
 }
 
 // Get returns all the albums sorted by id.
-func (a *albumPostgresRepo) Get(ctx context.Context) ([]entity.Album, error) {
+func (a *AlbumPostgresRepo) Get(ctx context.Context) ([]entity.Album, error) {
 	var albums customAlbums
 
 	tx := a.db.WithContext(ctx).Table("album").
@@ -147,7 +147,7 @@ func (a *albumPostgresRepo) Get(ctx context.Context) ([]entity.Album, error) {
 }
 
 // GetByID return the album if any with id id.
-func (a *albumPostgresRepo) GetByID(ctx context.Context, id int32) (entity.Album, error) {
+func (a *AlbumPostgresRepo) GetByID(ctx context.Context, id int32) (entity.Album, error) {
 	var albums customAlbums
 
 	tx := a.db.WithContext(ctx).Table("album").
@@ -173,7 +173,7 @@ func (a *albumPostgresRepo) GetByID(ctx context.Context, id int32) (entity.Album
 	return entities[0], nil
 }
 
-func (a *albumPostgresRepo) GetByOwnerID(ctx context.Context, ownerID int32) ([]entity.Album, error) {
+func (a *AlbumPostgresRepo) GetByOwnerID(ctx context.Context, ownerID int32) ([]entity.Album, error) {
 	var albums customAlbums
 
 	tx := a.db.WithContext(ctx).Table("album").
@@ -191,7 +191,7 @@ func (a *albumPostgresRepo) GetByOwnerID(ctx context.Context, ownerID int32) ([]
 	}
 
 	if len(albums) == 0 {
-		return []entity.Album{}, fmt.Errorf("%w no album found with id %d", repo.ErrAlbumNotFound, ownerID)
+		return []entity.Album{}, fmt.Errorf("%w ownerr id %d", repo.ErrAlbumNotFound, ownerID)
 	}
 
 	entities := albums.Merge()
@@ -199,8 +199,12 @@ func (a *albumPostgresRepo) GetByOwnerID(ctx context.Context, ownerID int32) ([]
 	return entities, nil
 }
 
+<<<<<<< Updated upstream
 // GetAlbumsByUser returns a list of albums for which the user has at one permission set.
-func (a *albumPostgresRepo) GetByUserID(ctx context.Context, userID int32) ([]entity.Album, error) {
+=======
+// GetByUserID returns a list of albums for which the user has at one permission set.
+>>>>>>> Stashed changes
+func (a *AlbumPostgresRepo) GetByUserID(ctx context.Context, userID int32) ([]entity.Album, error) {
 	var albums customAlbums
 
 	tx := a.db.WithContext(ctx).Table("album").
@@ -218,7 +222,7 @@ func (a *albumPostgresRepo) GetByUserID(ctx context.Context, userID int32) ([]en
 	}
 
 	if len(albums) == 0 {
-		logutil.GetDefaultLogger().WithField("user_id", userID).Warn("no abum found")
+		logutil.GetDefaultLogger().WithField("user_id", userID).Warn("no album found")
 
 		return []entity.Album{}, repo.ErrAlbumNotFound
 	}
@@ -229,7 +233,7 @@ func (a *albumPostgresRepo) GetByUserID(ctx context.Context, userID int32) ([]en
 }
 
 // GetAlbumsByGroup returns a list of albums for which the group has at one permission set.
-func (a *albumPostgresRepo) GetByGroupID(ctx context.Context, groupID int32) ([]entity.Album, error) {
+func (a *AlbumPostgresRepo) GetByGroupID(ctx context.Context, groupID int32) ([]entity.Album, error) {
 	var albums customAlbums
 
 	tx := a.db.WithContext(ctx).Table("album").

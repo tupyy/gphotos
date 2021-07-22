@@ -15,25 +15,25 @@ import (
 	"gorm.io/gorm"
 )
 
-type userRepo struct {
+type UserRepo struct {
 	db     *gorm.DB
 	client pgclient.Client
 }
 
-func NewPostgresRepo(client pgclient.Client) (*userRepo, error) {
+func NewPostgresRepo(client pgclient.Client) (*UserRepo, error) {
 	config := gorm.Config{
 		SkipDefaultTransaction: true, // No need transaction for those use cases.
 	}
 
 	gormDB, err := client.Open(config)
 	if err != nil {
-		return &userRepo{}, err
+		return &UserRepo{}, err
 	}
 
-	return &userRepo{db: gormDB, client: client}, nil
+	return &UserRepo{db: gormDB, client: client}, nil
 }
 
-func (u *userRepo) Create(ctx context.Context, user entity.User) (int32, error) {
+func (u *UserRepo) Create(ctx context.Context, user entity.User) (int32, error) {
 	tx := u.db.WithContext(ctx).Begin()
 
 	m := fromUserEntity(user)
@@ -73,7 +73,7 @@ func (u *userRepo) Create(ctx context.Context, user entity.User) (int32, error) 
 }
 
 // Update updates an user.
-func (u *userRepo) Update(ctx context.Context, user entity.User) error {
+func (u *UserRepo) Update(ctx context.Context, user entity.User) error {
 	err := user.Validate()
 	if err != nil {
 		return err
@@ -144,18 +144,18 @@ func (u *userRepo) Update(ctx context.Context, user entity.User) error {
 
 }
 
-func (u *userRepo) Delete(ctx context.Context, userID int32) error {
+func (u *UserRepo) Delete(ctx context.Context, userID int32) error {
 	return repo.ErrNotImplementated
 }
 
-func (u *userRepo) Get(ctx context.Context) ([]entity.User, error) {
+func (u *UserRepo) Get(ctx context.Context) ([]entity.User, error) {
 	var results []customUser
 	var users []entity.User
 
 	tx := u.db.WithContext(ctx).Table("users").
 		Select("users.*, STRING_AGG(groups.name, ',') as group_names, ARRAY_REMOVE(ARRAY_AGG(groups.id),NULL) as group_ids").
-		Joins("INNER JOIN users_groups ON ( users_groups.users_id = users.id )").
-		Joins("INNER JOIN groups ON (users_groups.groups_id = groups.id)").
+		Joins("LEFT JOIN users_groups ON ( users_groups.users_id = users.id )").
+		Joins("LEFT JOIN groups ON (users_groups.groups_id = groups.id)").
 		Group("users.id").
 		Find(&results)
 
@@ -180,7 +180,7 @@ func (u *userRepo) Get(ctx context.Context) ([]entity.User, error) {
 	return users, nil
 }
 
-func (u *userRepo) GetByUsername(ctx context.Context, username string) (entity.User, error) {
+func (u *UserRepo) GetByUsername(ctx context.Context, username string) (entity.User, error) {
 	var m models.Users
 	var emptyUser = entity.User{}
 
@@ -220,14 +220,14 @@ func (u *userRepo) GetByUsername(ctx context.Context, username string) (entity.U
 
 }
 
-func (u *userRepo) GetByID(ctx context.Context, id int32) (entity.User, error) {
+func (u *UserRepo) GetByID(ctx context.Context, id int32) (entity.User, error) {
 	var result customUser
 	var emptyUser entity.User
 
 	tx := u.db.WithContext(ctx).Table("users").
 		Select("users.*, STRING_AGG(groups.name, ',') as group_names, ARRAY_REMOVE(ARRAY_AGG(groups.id),NULL) as group_ids").
-		Joins("INNER JOIN users_groups ON ( users_groups.users_id = users.id )").
-		Joins("INNER JOIN groups ON (users_groups.groups_id = groups.id)").
+		Joins("LEFT JOIN users_groups ON ( users_groups.users_id = users.id )").
+		Joins("LEFT JOIN groups ON (users_groups.groups_id = groups.id)").
 		Group("users.id").
 		Where("users.id = ?", id).
 		First(&result)
@@ -247,7 +247,7 @@ func (u *userRepo) GetByID(ctx context.Context, id int32) (entity.User, error) {
 	return result.toEntity(), nil
 }
 
-func (u *userRepo) GetByGroupID(ctx context.Context, groupID int32) ([]entity.User, error) {
+func (u *UserRepo) GetByGroupID(ctx context.Context, groupID int32) ([]entity.User, error) {
 	var results []customUser
 	var users []entity.User
 
