@@ -84,19 +84,19 @@ func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
 			return
 		}
 
-		escapedFormAlbum := albumForm.Sanitize()
+		cleanForm := albumForm.Sanitize()
 
-		logger.WithField("form", fmt.Sprintf("%+v", escapedFormAlbum)).Info("create album request submitted")
+		logger.WithField("form", fmt.Sprintf("%+v", cleanForm)).Info("create album request submitted")
 
 		album := entity.Album{
-			Name:        escapedFormAlbum.Name,
-			Description: &escapedFormAlbum.Description,
+			Name:        cleanForm.Name,
+			Description: &cleanForm.Description,
 			CreatedAt:   time.Now(),
-			Location:    &escapedFormAlbum.Location,
+			Location:    &cleanForm.Location,
 			OwnerID:     *session.User.ID,
 		}
 
-		if len(escapedFormAlbum.UserPermissions) > 0 {
+		if len(cleanForm.UserPermissions) > 0 {
 			album.UserPermissions = make(map[int32][]entity.Permission)
 
 			// get all the users
@@ -114,10 +114,10 @@ func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
 				usersID[u.Username] = *u.ID
 			}
 
-			perms := parsePermissions(escapedFormAlbum.UserPermissions)
+			perms := parsePermissions(cleanForm.UserPermissions)
 
 			if len(perms) == 0 {
-				logger.WithField("permissions_string", escapedFormAlbum.UserPermissions).Warn("cannot user parse permissions")
+				logger.WithField("permissions_string", cleanForm.UserPermissions).Warn("cannot user parse permissions")
 			} else {
 				for k, v := range perms {
 					if userID, found := usersID[k]; found {
@@ -129,7 +129,7 @@ func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
 			}
 		}
 
-		if len(escapedFormAlbum.GroupPermissions) > 0 {
+		if len(cleanForm.GroupPermissions) > 0 {
 			album.GroupPermissions = make(map[int32][]entity.Permission)
 
 			// get all the users
@@ -147,10 +147,10 @@ func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
 				groupsID[u.Name] = *u.ID
 			}
 
-			perms := parsePermissions(escapedFormAlbum.GroupPermissions)
+			perms := parsePermissions(cleanForm.GroupPermissions)
 
 			if len(perms) == 0 {
-				logger.WithField("permissions_string", escapedFormAlbum.GroupPermissions).Warn("cannot group parse permissions")
+				logger.WithField("permissions_string", cleanForm.GroupPermissions).Warn("cannot group parse permissions")
 			} else {
 				for k, v := range perms {
 					if groupID, found := groupsID[k]; found {
