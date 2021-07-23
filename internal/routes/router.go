@@ -1,6 +1,7 @@
 package router
 
 import (
+	"html/template"
 	"net/url"
 	"path/filepath"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/tupyy/gophoto/internal/auth"
 	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/middleware"
+	"github.com/tupyy/gophoto/templates/funcs"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
 
@@ -66,13 +68,17 @@ func loadTemplates(templateDir string) (multitemplate.Renderer, error) {
 		return r, err
 	}
 
+	templateFuncs := template.FuncMap{
+		"day": funcs.Day,
+	}
+
 	for _, t := range templates {
 		layoutCopy := make([]string, len(layouts)+1)
 
 		copy(layoutCopy[1:], layouts)
 		layoutCopy[0] = t
 
-		r.AddFromFiles(filepath.Base(t), layoutCopy...)
+		r.AddFromFilesFuncs(filepath.Base(t), templateFuncs, layoutCopy...)
 
 		logger.WithFields(logrus.Fields{
 			"template": filepath.Base(t),

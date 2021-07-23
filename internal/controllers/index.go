@@ -19,10 +19,10 @@ func Index(r *gin.RouterGroup, albumRepo AlbumRepo) {
 		reqCtx := c.Request.Context()
 		logger := logutil.GetLogger(c)
 
-		ownAlbums, err := albumRepo.GetByOwnerID(reqCtx, *session.User.ID)
+		personalAlbums, err := albumRepo.GetByOwnerID(reqCtx, *session.User.ID)
 		if err != nil {
 			if errors.Is(err, repo.ErrAlbumNotFound) {
-				logger.Info("albums not found")
+				logger.Info("user has no personal albums")
 			} else {
 				panic(err) // TODO 500 page
 			}
@@ -44,10 +44,10 @@ func Index(r *gin.RouterGroup, albumRepo AlbumRepo) {
 		}
 
 		c.HTML(http.StatusOK, "index.html", gin.H{
-			"username":     session.User.Username,
-			"user_role":    session.User.Role.String(),
-			"ownAlbums":    ownAlbums,
-			"sharedAlbums": sharedAlbums,
+			"username":       session.User.Username,
+			"user_role":      session.User.Role.String(),
+			"personalAlbums": personalAlbums,
+			"sharedAlbums":   sharedAlbums,
 		})
 	})
 }

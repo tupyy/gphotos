@@ -2,6 +2,7 @@
 <html>
     <head>
         {{ template "base_css" }}
+        <link rel="stylesheet" href="/static/css/album-card.css"/>
         {{ template "js" }}
     </head>
     <body>
@@ -9,11 +10,11 @@
             {{ template "header" . }}
         </header>
         <p>{{ .username }}</p>
-        {{ if .ownAlbums }}
+        {{ if .personalAlbums }}
             <p> User owns albums: </p>
             <ul>
-            {{ range .ownAlbums }}
-            <li> {{ .Name }} </li>
+            {{ range $idx, $album := .personalAlbums }}
+                {{ template "album-card" $album }}
             {{ end }}
             </ul>
         {{ end }}

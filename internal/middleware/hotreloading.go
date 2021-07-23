@@ -1,12 +1,14 @@
 package middleware
 
 import (
+	"html/template"
 	"path/filepath"
 
 	"github.com/gin-contrib/multitemplate"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"github.com/tupyy/gophoto/internal/conf"
+	"github.com/tupyy/gophoto/templates/funcs"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
 
@@ -37,13 +39,17 @@ func loadTemplates(templateDir string) (multitemplate.Renderer, error) {
 		return r, err
 	}
 
+	templateFuncs := template.FuncMap{
+		"day": funcs.Day,
+	}
+
 	for _, t := range templates {
 		layoutCopy := make([]string, len(layouts)+1)
 
 		copy(layoutCopy[1:], layouts)
 		layoutCopy[0] = t
 
-		r.AddFromFiles(filepath.Base(t), layoutCopy...)
+		r.AddFromFilesFuncs(filepath.Base(t), templateFuncs, layoutCopy...)
 
 		logger.WithFields(logrus.Fields{
 			"template": filepath.Base(t),
