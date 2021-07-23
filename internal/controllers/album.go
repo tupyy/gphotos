@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -179,21 +181,36 @@ func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
 	})
 }
 
+// parsePermissions will parse the permission string (e.g. (username#r,w)(uername2#e,d))
 func parsePermissions(perms string) map[string][]entity.Permission {
+	permRe := regexp.MustCompile(`(\((\w+)#(([rwed],?)+)\))`)
 	permissions := make(map[string][]entity.Permission)
 
-	// for _, p := range perms {
-	// 	switch p {
-	// 	case "r":
-	// 		permissions = append(permissions, entity.PermissionReadAlbum)
-	// 	case "w":
-	// 		permissions = append(permissions, entity.PermissionWriteAlbum)
-	// 	case "e":
-	// 		permissions = append(permissions, entity.PermissionEditAlbum)
-	// 	case "d":
-	// 		permissions = append(permissions, entity.PermissionDeleteAlbum)
-	// 	}
-	// }
+	for matchIdx, match := range permRe.FindAllStringSubmatch(perms, -1) {
+		logutil.GetDefaultLogger().WithFields(logrus.Fields{"idx": matchIdx, "match": fmt.Sprintf("%+v", match)}).Debug("permission matched")
+		// get 2nd and 3rd groups only
+		name := match[2]
+
+		permList := strings.Split(match[3], ",")
+		entities := make([]entity.Permission, 0, len(permList))
+
+		for _, p := range permList {
+			switch p {
+			case "r":
+				entities = append(entities, entity.PermissionReadAlbum)
+			case "w":
+				entities = append(entities, entity.PermissionWriteAlbum)
+			case "e":
+				entities = append(entities, entity.PermissionEditAlbum)
+			case "d":
+				entities = append(entities, entity.PermissionDeleteAlbum)
+			}
+		}
+
+		if len(entities) > 0 {
+			permissions[name] = entities
+		}
+	}
 
 	return permissions
 }
