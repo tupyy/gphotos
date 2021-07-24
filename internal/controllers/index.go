@@ -3,6 +3,7 @@ package controllers
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/tupyy/gophoto/internal/entity"
@@ -50,4 +51,28 @@ func Index(r *gin.RouterGroup, albumRepo AlbumRepo) {
 			"sharedAlbums":   sharedAlbums,
 		})
 	})
+}
+
+type tAlbum struct {
+	Name        string
+	Owner       string
+	Description string
+	Date        time.Time
+	Location    string
+}
+
+func newTAlbum(a entity.Album) tAlbum {
+	t := tAlbum{
+		Name:  a.Name,
+		Date:  a.CreatedAt,
+		Owner: string(a.OwnerID),
+	}
+
+	if a.Description != nil {
+		t.Description = *a.Description
+	}
+
+	if a.Location != nil {
+		t.Location = *a.Location
+	}
 }

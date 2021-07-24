@@ -3,6 +3,7 @@
 
 .container-album-card {
   box-sizing: border-box;
+  padding: 0;
 }
 
 .container-album-card a {
@@ -12,11 +13,12 @@
 .container-album-card h1 {
   font-family: "Open Sans", sans-serif;
   font-weight: 300;
+  font-size: 1.6rem;
 }
 
 .container-album-card {
-  max-width: 900px;
-  margin: 50px auto 0;
+  max-width: 230px;
+  margin: 10px 10px 5px 5px;
 }
 
 .container-album-card .card {
@@ -24,7 +26,6 @@
   padding: 0 1.7rem;
   padding-left: 0;
   padding-right: 0;
-  width: 50%;
 }
 .container-album-card .card .menu-content {
   margin: 0;
@@ -54,8 +55,9 @@
   transform: translate(-50%, 0);
 }
 .container-album-card .card .wrapper {
+    width: 230px;
   background-color: #fff;
-  min-height: 540px;
+  min-height: 300px;
   position: relative;
   overflow: hidden;
   box-shadow: 0 19px 38px rgba(0, 0, 0, 0.3), 0 15px 12px rgba(0, 0, 0, 0.2);
@@ -93,7 +95,7 @@
 }
 
 .container-album-card .album .wrapper {
-  background: url(https://images.unsplash.com/photo-1496979551903-46e46589a88b?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=cda12b505afa1beb06e49d89014cbd65&auto=format&fit=crop&w=634&q=80) 20% 1%/cover no-repeat;
+  background: url(/static/img/image_not_available.png) 50% 50% no-repeat;
 }
 .container-album-card .album .date {
   position: absolute;
