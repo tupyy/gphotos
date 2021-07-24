@@ -98,7 +98,7 @@
                         <button type="button" id="groupPermissionButton" class="btn btn-outline-primary btn-sm">Add</button>
                     </div>
                     <input id="inputGroupPermissions" type="hidden" name="group_permissions" value=""/>
-                    <div class="row container-permissions-selected-users">
+                    <div class="row container-permissions-selected-groups">
                         <span class="title"> Permissions granted </span>
                         <div class="title no-groups-permission">None</div>
                         <ul class="list-group" id="selected-groups">
@@ -108,7 +108,9 @@
             {{ end }}
             <div class="row form-container-button">
                 <input type="submit" class="btn btn-primary btn-sm" value="Create">
-                <button type="button" class="btn btn-danger btn-sm">Cancel</button>
+                <a href="/">
+                    <button href="/" type="button" class="btn btn-danger btn-sm">Cancel</button>
+                </a>
             </div>
         </form>
     </div>

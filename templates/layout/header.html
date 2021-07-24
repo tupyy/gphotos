@@ -11,7 +11,7 @@
             {{ if .user_role }}
                 {{ if or ( eq .user_role "editor" ) ( eq .user_role "admin" ) }}
                     <li class="nav-item active">
-                      <a class="nav-link" href="/album/new">Create album</a>
+                      <a class="nav-link" href="/album">Create album</a>
                     </li>
                 {{ end }}
             {{ end }}

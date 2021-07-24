@@ -22,7 +22,7 @@ func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
 	userRepo := repos[UserRepoName].(UserRepo)
 	groupRepo := repos[GroupRepoName].(GroupRepo)
 
-	r.GET("/album/new", func(c *gin.Context) {
+	r.GET("/album", func(c *gin.Context) {
 		s, _ := c.Get("sessionData")
 		session := s.(entity.Session)
 
@@ -65,6 +65,7 @@ func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
 		})
 	})
 
+	// TODO CRSF protection
 	r.POST("/album", func(c *gin.Context) {
 		s, _ := c.Get("sessionData")
 		session := s.(entity.Session)

@@ -33,6 +33,48 @@ $(() => {
             console.log(e);
         }
     });
+    
+    $("#selected-users").on("click",'.remove-permission', function (e) {
+        e.preventDefault();
+
+        let parent = $(this).parents("li")
+        let username = $(parent).find("input").val();
+
+        if (uPermissions.hasOwnProperty(username)) {
+            delete uPermissions[username];
+            setPermissionInputValue("#inputUserPermissions", uPermissions);
+        }
+
+        if (Object.keys(uPermissions).length === 0) {
+           $(".container-permissions-selected-users").append(`
+                <div class="title no-users-permission">None</div>
+            `); 
+        }
+
+        $(parent).remove();
+
+    });
+    
+    $("#selected-groups").on("click",'.remove-permission', function (e) {
+        e.preventDefault();
+
+        let parent = $(this).parents("li")
+        let name = $(parent).find("input").val();
+
+        if (gPermissions.hasOwnProperty(name)) {
+            delete gPermissions[name];
+            setPermissionInputValue("#inputGroupPermissions", gPermissions);
+        }
+
+        if (Object.keys(gPermissions).length === 0) {
+           $(".container-permissions-selected-groups").append(`
+                <div class="title no-groups-permission">None</div>
+            `); 
+        }
+
+        $(parent).remove();
+
+    });
 
     const getPermission = function(parent, element) {
         let permissions = [];
@@ -75,14 +117,15 @@ $(() => {
         $(dest).append(`
         <li class="list-group-item">
             <div class="row">
+                <input type="hidden" value="` + username + `"/>
                 <div class="col permission-user">` +
-                    "<div class=\"fw-hold\">" + username + "</div>" +
+                    "<div>" + username + "</div>" +
                 `</div>
                 <div class="col permission-user">` +
                 badges +
                 `</div>
                 <div class="col permission-remove-btn">
-                    <button class="btn btn-danger btn-sm" onclick="removePermission(` + username +`)">Remove</button>
+                    <button class="btn btn-danger btn-sm remove-permission">Remove</button>
                 </div>
             </div>
         </li>`
