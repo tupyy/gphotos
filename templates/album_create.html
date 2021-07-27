@@ -15,18 +15,30 @@
             <div class="container.metadata row ">
                 <div class="mb-3">
                     <label for="name">Name</label>
-                    <input name="name" type="text" id="name" class="form-control" placeholder="name" required>
+                    {{ if .album }}
+                        <input name="name" type="text" id="name" class="form-control" placeholder="name" value="{{.album.Name}}"required>
+                    {{ else }}
+                        <input name="name" type="text" id="name" class="form-control" placeholder="name" value="{{.album.Name}}"required>
+                    {{ end }}
                 </div>
                 <div class="mb-3">
                     <label for="description">Description</label>
-                    <input name="description" type="text" id="description" class="form-control" placeholder="description" required>
+                    {{ if .album }}
+                        <input name="description" type="text" id="description" class="form-control" placeholder="description" value="{{.album.Description}}" required>
+                    {{ else }}
+                        <input name="description" type="text" id="description" class="form-control" placeholder="description" required>
+                    {{ end }}
                 </div>
                 <div class="mb-3">
                     <label for="location">Location</label>
-                    <input name="location" type="text" id="location" class="form-control" placeholder="location" required>
+                    {{ if .album }}
+                        <input name="location" type="text" id="location" class="form-control" placeholder="location" value="{{.album.Location}}" required>
+                    {{ else }}
+                        <input name="location" type="text" id="location" class="form-control" placeholder="location" required>
+                    {{ end }}
                 </div>
             </div>
-            {{ if .canShare }}
+            {{ if and ( .canShare ) ( .isOwner )}}
                 <div class="container-permissions container-permissions-user">
                     <div class="title container-permissions-title">User permission</div>
                     <div class="mb-3">

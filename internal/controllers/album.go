@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -180,6 +181,114 @@ func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
 
 		c.Redirect(http.StatusFound, "/")
 	})
+}
+
+func UpdateAlbum(r *gin.RouterGroup, repos Repositories) {
+	albumRepo := repos[AlbumRepoName].(AlbumRepo)
+	userRepo := repos[UserRepoName].(UserRepo)
+	groupRepo := repos[GroupRepoName].(GroupRepo)
+
+	r.GET("/album/:id/edit", func(c *gin.Context) {
+		reqCtx := c.Request.Context()
+		logger := logutil.GetLogger(c)
+
+		s, _ := c.Get("sessionData")
+		session := s.(entity.Session)
+
+		param := c.Param("id")
+
+		id, err := strconv.Atoi(param)
+		if err != nil {
+			logger.WithError(err).Error("cannot parse id to int")
+			c.AbortWithError(http.StatusBadRequest, err)
+
+			return
+		}
+
+		album, err := albumRepo.GetByID(reqCtx, int32(id))
+		if err != nil {
+			logger.WithError(err).WithField("id", id).Error("update album")
+			c.AbortWithError(http.StatusNotFound, err)
+
+			return
+		}
+
+		// check if user is the owner or it has the edit permission set
+		if album.OwnerID == *session.User.ID {
+			logger.Info("edit permission granted. user is the owner")
+
+			users, err := userRepo.Get(reqCtx)
+			if err != nil && errors.Is(err, repo.ErrInternalError) {
+				logger.WithError(err).Error("cannot fetch users")
+				c.AbortWithError(http.StatusInternalServerError, fmt.Errorf("cannot fetch users"))
+
+				return
+			}
+
+			// filter out admins and can_share is false
+			userFilter := entity.NewUserFilter(users)
+			filteredUsers := userFilter.Filter(func(u entity.User) bool {
+				return u.CanShare == true && u.Role != entity.RoleAdmin && u.Username != session.User.Username
+			})
+
+			groups, err := groupRepo.Get(reqCtx)
+			if err != nil && errors.Is(err, repo.ErrInternalError) {
+				logger.WithError(err).Error("cannot fetch groups")
+				c.AbortWithError(http.StatusInternalServerError, fmt.Errorf("cannot fetch groups"))
+
+				return
+			}
+
+			c.HTML(http.StatusOK, "album_create.html", gin.H{
+				"album":    album,
+				"canShare": session.User.CanShare,
+				"isOwner":  true,
+				"users":    filteredUsers,
+				"groups":   groups,
+			})
+
+			return
+		}
+
+		editPermissionFound := false
+
+		// the user is not the owner
+		// check if user has edit permission set
+		if album.HasUserPermission(*session.User.ID, entity.PermissionEditAlbum) {
+			logger.Info("edit permission granted. user has given the edit permission by the owner.")
+			editPermissionFound = true
+		}
+
+		// check if one of user's groups has edit permission set
+		for _, group := range session.User.Groups {
+			if album.HasGroupPermission(*group.ID, entity.PermissionEditAlbum) {
+				logger.Info("edit permission granted. user's group has given the edit permission.")
+				editPermissionFound = true
+				break
+			}
+		}
+
+		if !editPermissionFound {
+			logger.WithFields(logrus.Fields{
+				"request user id": *session.User.ID,
+				"album owner id":  album.OwnerID,
+			}).Error("album cannot be edit either by user with edit permission or the owner")
+			c.AbortWithError(http.StatusForbidden, fmt.Errorf("user has no edit permissions for this album"))
+
+			return
+		}
+
+		c.HTML(http.StatusOK, "album_create.html", gin.H{
+			"album":    album,
+			"canShare": session.User.CanShare,
+			"isOwner":  false,
+		})
+	})
+
+	r.PUT("/album/:id/", func(c *gin.Context) {
+
+	})
+
 }
 
 // parsePermissions will parse the permission string (e.g. (username#r,w)(uername2#e,d))

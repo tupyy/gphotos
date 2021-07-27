@@ -43,6 +43,8 @@ func Index(r *gin.RouterGroup, albumRepo AlbumRepo) {
 			}
 		}
 
+		// TODO add album with permissions given by user's group
+
 		c.HTML(http.StatusOK, "index.html", gin.H{
 			"username":       session.User.Username,
 			"user_role":      session.User.Role.String(),
