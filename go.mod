@@ -3,6 +3,7 @@ module github.com/tupyy/gophoto
 go 1.16
 
 require (
+	github.com/Nerzal/gocloak/v8 v8.5.0
 	github.com/coreos/go-oidc/v3 v3.0.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/docker/go-connections v0.4.0
