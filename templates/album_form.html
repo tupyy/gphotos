@@ -11,7 +11,11 @@
     </header>
     <body>
     <div class="container-xs container-md form-container row">
-        <form id="create-album" action="/album" method="POST">
+        {{ if .album }}
+            <form id="create-album" action="/album/{{.album.ID}}" method="PUT">
+        {{ else }}
+            <form id="create-album" action="/album" method="POST">
+        {{ end }}
             <div class="container.metadata row ">
                 <div class="mb-3">
                     <label for="name">Name</label>

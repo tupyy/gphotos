@@ -59,7 +59,7 @@ func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
 			return
 		}
 
-		c.HTML(http.StatusOK, "album_create.html", gin.H{
+		c.HTML(http.StatusOK, "album_form.html", gin.H{
 			"users":    filteredUsers,
 			"groups":   groups,
 			"canShare": session.User.CanShare,
@@ -83,7 +83,7 @@ func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
 		if err := c.ShouldBind(&albumForm); err != nil {
 			logger.WithError(err).Info("fail to bind to json")
 
-			c.HTML(http.StatusBadRequest, "album_create.html", gin.H{"error": err})
+			c.HTML(http.StatusBadRequest, "album_form.html", gin.H{"error": err})
 
 			return
 		}
@@ -239,7 +239,7 @@ func UpdateAlbum(r *gin.RouterGroup, repos Repositories) {
 				return
 			}
 
-			c.HTML(http.StatusOK, "album_create.html", gin.H{
+			c.HTML(http.StatusOK, "album_form.html", gin.H{
 				"album":    album,
 				"canShare": session.User.CanShare,
 				"isOwner":  true,
@@ -278,7 +278,7 @@ func UpdateAlbum(r *gin.RouterGroup, repos Repositories) {
 			return
 		}
 
-		c.HTML(http.StatusOK, "album_create.html", gin.H{
+		c.HTML(http.StatusOK, "album_form.html", gin.H{
 			"album":    album,
 			"canShare": session.User.CanShare,
 			"isOwner":  false,

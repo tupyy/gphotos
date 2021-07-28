@@ -14,6 +14,7 @@ import (
 	"github.com/tupyy/gophoto/internal/middleware"
 	"github.com/tupyy/gophoto/templates/funcs"
 	"github.com/tupyy/gophoto/utils/logutil"
+	"github.com/utrack/gin-csrf"
 )
 
 type PhotoRouter struct {
@@ -28,6 +29,14 @@ func NewRouter(store sessions.Store, authenticator auth.Authenticator) *PhotoRou
 
 	// TODO remove hotreloading in prod
 	r.Use(sessions.Sessions("gophoto", store), middleware.HotReloading(r))
+
+	r.Use(csrf.Middleware(csrf.Options{
+		Secret: conf.GetServerSecretKey(),
+		ErrorFunc: func(c *gin.Context) {
+			c.String(400, "CSRF token mismatch")
+			c.Abort()
+		},
+	}))
 
 	r.Static("/static", conf.GetStaticsFolder())
 
