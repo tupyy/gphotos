@@ -21,14 +21,14 @@ DB Table Details
 
 
 Table: album_user_permissions
-[ 0] user_id                                        INT4                 null: false  primary: true   isArray: false  auto: false  col: INT4            len: -1      default: []
+[ 0] user_id                                        TEXT                 null: false  primary: true   isArray: false  auto: false  col: TEXT            len: -1      default: []
 [ 1] album_id                                       INT4                 null: false  primary: true   isArray: false  auto: false  col: INT4            len: -1      default: []
 [ 2] permissions                                    USER_DEFINED         null: false  primary: false  isArray: false  auto: false  col: USER_DEFINED    len: -1      default: []
 
 
 JSON Sample
 -------------------------------------
-{    "album_id": 82,    "permissions": 80,    "user_id": 5}
+{    "user_id": "bTcBJZLUvSjrevGaGRyewmuVP",    "album_id": 10,    "permissions": 12}
 
 
 
@@ -36,8 +36,8 @@ JSON Sample
 
 // AlbumUserPermissions struct is a row record of the album_user_permissions table in the gophoto database
 type AlbumUserPermissions struct {
-	//[ 0] user_id                                        INT4                 null: false  primary: true   isArray: false  auto: false  col: INT4            len: -1      default: []
-	UserID int32 `gorm:"primary_key;column:user_id;type:INT4;"`
+	//[ 0] user_id                                        TEXT                 null: false  primary: true   isArray: false  auto: false  col: TEXT            len: -1      default: []
+	UserID string `gorm:"primary_key;column:user_id;type:TEXT;"`
 	//[ 1] album_id                                       INT4                 null: false  primary: true   isArray: false  auto: false  col: INT4            len: -1      default: []
 	AlbumID int32 `gorm:"primary_key;column:album_id;type:INT4;"`
 	//[ 2] permissions                                    USER_DEFINED         null: false  primary: false  isArray: true   auto: false  col: USER_DEFINED    len: -1      default: []
@@ -54,15 +54,15 @@ var album_user_permissionsTableInfo = &TableInfo{
 			Comment:            ``,
 			Notes:              ``,
 			Nullable:           false,
-			DatabaseTypeName:   "INT4",
-			DatabaseTypePretty: "INT4",
+			DatabaseTypeName:   "TEXT",
+			DatabaseTypePretty: "TEXT",
 			IsPrimaryKey:       true,
 			IsAutoIncrement:    false,
 			IsArray:            false,
-			ColumnType:         "INT4",
+			ColumnType:         "TEXT",
 			ColumnLength:       -1,
 			GoFieldName:        "UserID",
-			GoFieldType:        "int32",
+			GoFieldType:        "string",
 			JSONFieldName:      "user_id",
 			ProtobufFieldName:  "user_id",
 			ProtobufType:       "",

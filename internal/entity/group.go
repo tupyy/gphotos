@@ -5,7 +5,6 @@ import (
 )
 
 type Group struct {
-	ID    *int32 `validate:"required"`
 	Name  string `validate:"required"`
 	Users []User
 }

@@ -179,7 +179,7 @@ run.docker.keycloak:
 		-e KEYCLOAK_IMPORT='/tmp/gophoto-realm.json' \
 		-e DB_VENDOR='postgres' \
 		-e DB_ADDR="$(POSTGRES_CONTAINER)" \
-		-e DB_PORT="$(DB_PORT)" \
+		-e DB_PORT="5432" \
 		-e DB_DATABASE='keycloak' \
 		-e DB_USER="$(KEYCLOAK_DB_USER)" \
 		-e DB_PASSWORD="$(KEYCLOAK_DB_PWD)" \

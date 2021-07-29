@@ -17,6 +17,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 package cmd
 
 import (
+	"context"
 	"encoding/gob"
 	"fmt"
 
@@ -27,9 +28,8 @@ import (
 	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/controllers"
 	"github.com/tupyy/gophoto/internal/entity"
+	keycloakRepo "github.com/tupyy/gophoto/internal/repo/keycloak"
 	"github.com/tupyy/gophoto/internal/repo/postgres/album"
-	groupRepo "github.com/tupyy/gophoto/internal/repo/postgres/group"
-	userRepo "github.com/tupyy/gophoto/internal/repo/postgres/user"
 	"github.com/tupyy/gophoto/utils/logutil"
 	"github.com/tupyy/gophoto/utils/pgclient"
 
@@ -67,7 +67,7 @@ var serveCmd = &cobra.Command{
 		// initialize oidc provier
 		oidcProvider := auth.NewOidcProvider(keycloakConf, conf.GetServerAuthCallback())
 
-		keyCloakAuthenticator := auth.NewKeyCloakAuthenticator(oidcProvider, repos[controllers.UserRepoName].(controllers.UserRepo), repos[controllers.GroupRepoName].(controllers.GroupRepo))
+		keyCloakAuthenticator := auth.NewKeyCloakAuthenticator(oidcProvider)
 
 		// create new router
 		r := router.NewRouter(store, keyCloakAuthenticator)
@@ -88,23 +88,14 @@ func init() {
 func createPostgresRepos(client pgclient.Client) (controllers.Repositories, error) {
 	repos := make(controllers.Repositories)
 
-	ur, err := userRepo.NewPostgresRepo(client)
+	kr, err := keycloakRepo.New(context.Background(), conf.GetKeycloakConfig())
 	if err != nil {
 		logutil.GetDefaultLogger().WithError(err).Warn("cannot create user repo")
 
 		return repos, err
 	}
 
-	repos[controllers.UserRepoName] = ur
-
-	gr, err := groupRepo.NewPostgresRepo(client)
-	if err != nil {
-		logutil.GetDefaultLogger().WithError(err).Warn("cannot create user repo")
-
-		return repos, err
-	}
-
-	repos[controllers.GroupRepoName] = gr
+	repos[controllers.KeycloakRepoName] = kr
 
 	albumRepo, err := album.NewPostgresRepo(client)
 	if err != nil {

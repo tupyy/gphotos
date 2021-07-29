@@ -39,7 +39,7 @@ func (as *AlbumTestSuite) TestGetAllAlbums() {
 
 	entities, err := as.repo.Get(context.Background())
 	asserter.Nil(err)
-	asserter.Len(entities, 8)
+	asserter.Len(entities, 10)
 }
 
 func (as *AlbumTestSuite) TestGetAlbumByID() {
@@ -49,7 +49,7 @@ func (as *AlbumTestSuite) TestGetAlbumByID() {
 	asserter.Nil(err)
 	asserter.Len(ent.UserPermissions, 1)
 	asserter.Len(ent.GroupPermissions, 3)
-	asserter.Equal(int32(1), ent.OwnerID)
+	asserter.Equal("user1", ent.OwnerID)
 
 	_, err = as.repo.GetByID(context.Background(), 100)
 	asserter.NotNil(err)
@@ -58,11 +58,11 @@ func (as *AlbumTestSuite) TestGetAlbumByID() {
 func (as *AlbumTestSuite) TestGetAlbumByOwnerID() {
 	asserter := assert.New(as.T())
 
-	ent, err := as.repo.GetByOwnerID(context.Background(), 1)
+	ent, err := as.repo.GetByOwnerID(context.Background(), "user1")
 	asserter.Nil(err)
 	asserter.Len(ent, 4)
 
-	_, err = as.repo.GetByOwnerID(context.Background(), 100)
+	_, err = as.repo.GetByOwnerID(context.Background(), "owner_not_exist")
 	asserter.NotNil(err)
 }
 
@@ -166,9 +166,6 @@ func (as *AlbumTestSuite1) SetupSuite() {
 	setupKey := path.Join(parentFolder, setupFile)
 	initMap[setupKey] = "/docker-entrypoint-initdb.d/setup.sql"
 
-	fixtureKey := path.Join(parentFolder, "sql/fixtures/album_test1.sql")
-	initMap[fixtureKey] = "/docker-entrypoint-initdb.d/zz_fixtures.sql"
-
 	c, err := pgtestcontainer.NewPostgreSQLContainer(ctx, pgtestcontainer.PostgreSQLContainerRequest{
 		BindMounts: initMap,
 	})
@@ -217,16 +214,16 @@ func (as *AlbumTestSuite1) TestCreateAlbum() {
 	album := entity.Album{
 		Name:        "name",
 		CreatedAt:   time.Now(),
-		OwnerID:     1,
+		OwnerID:     "user1",
 		Description: ptrString("test"),
 		Location:    ptrString("test"),
-		UserPermissions: map[int32][]entity.Permission{
-			3: {entity.PermissionDeleteAlbum},
-			4: {entity.PermissionReadAlbum, entity.PermissionEditAlbum},
+		UserPermissions: map[string][]entity.Permission{
+			"user1": {entity.PermissionDeleteAlbum},
+			"user2": {entity.PermissionReadAlbum, entity.PermissionEditAlbum},
 		},
-		GroupPermissions: map[int32][]entity.Permission{
-			1: {entity.PermissionReadAlbum},
-			2: {entity.PermissionDeleteAlbum},
+		GroupPermissions: map[string][]entity.Permission{
+			"group1": {entity.PermissionReadAlbum},
+			"group2": {entity.PermissionDeleteAlbum},
 		},
 	}
 

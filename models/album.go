@@ -24,14 +24,14 @@ Table: album
 [ 0] id                                             INT4                 null: false  primary: true   isArray: false  auto: false  col: INT4            len: -1      default: []
 [ 1] name                                           TEXT                 null: false  primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
 [ 2] created_at                                     TIMESTAMP            null: false  primary: false  isArray: false  auto: false  col: TIMESTAMP       len: -1      default: [timezone('UTC']
-[ 3] owner_id                                       INT4                 null: false  primary: false  isArray: false  auto: false  col: INT4            len: -1      default: []
+[ 3] owner_id                                       TEXT                 null: false  primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
 [ 4] description                                    TEXT                 null: true   primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
 [ 5] location                                       TEXT                 null: true   primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
 
 
 JSON Sample
 -------------------------------------
-{    "id": 38,    "name": "VdSKFRVHAceMFXgNjXVkVJprp",    "created_at": "2156-03-22T00:33:29.069986425+01:00",    "owner_id": 28,    "description": "maRJzeXjnzaPvQZmjCJXigNkX",    "location": "hsSEldZrPHVymvKiruYLhxvSn"}
+{    "description": "UzqkFZRjkPZwWRwkojcmXVrxx",    "location": "tYdBpHDTQAWIawYVZbAoUNbpJ",    "id": 67,    "name": "anvrInVQmINEJhkWJLiSsIllS",    "created_at": "2058-01-30T23:08:07.185600426+01:00",    "owner_id": "mNqgZgfsOZcMUFqEerpgiWwKA"}
 
 
 
@@ -45,8 +45,8 @@ type Album struct {
 	Name string `gorm:"column:name;type:TEXT;"`
 	//[ 2] created_at                                     TIMESTAMP            null: false  primary: false  isArray: false  auto: false  col: TIMESTAMP       len: -1      default: [timezone('UTC']
 	CreatedAt time.Time `gorm:"column:created_at;type:TIMESTAMP;default:timezone('UTC';"`
-	//[ 3] owner_id                                       INT4                 null: false  primary: false  isArray: false  auto: false  col: INT4            len: -1      default: []
-	OwnerID int32 `gorm:"column:owner_id;type:INT4;"`
+	//[ 3] owner_id                                       TEXT                 null: false  primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
+	OwnerID string `gorm:"column:owner_id;type:TEXT;"`
 	//[ 4] description                                    TEXT                 null: true   primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
 	Description *string `gorm:"column:description;type:TEXT;"`
 	//[ 5] location                                       TEXT                 null: true   primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
@@ -126,15 +126,15 @@ var albumTableInfo = &TableInfo{
 			Comment:            ``,
 			Notes:              ``,
 			Nullable:           false,
-			DatabaseTypeName:   "INT4",
-			DatabaseTypePretty: "INT4",
+			DatabaseTypeName:   "TEXT",
+			DatabaseTypePretty: "TEXT",
 			IsPrimaryKey:       false,
 			IsAutoIncrement:    false,
 			IsArray:            false,
-			ColumnType:         "INT4",
+			ColumnType:         "TEXT",
 			ColumnLength:       -1,
 			GoFieldName:        "OwnerID",
-			GoFieldType:        "int32",
+			GoFieldType:        "string",
 			JSONFieldName:      "owner_id",
 			ProtobufFieldName:  "owner_id",
 			ProtobufType:       "",

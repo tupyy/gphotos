@@ -16,6 +16,7 @@
         {{ else }}
             <form id="create-album" action="/album" method="POST">
         {{ end }}
+            {{ .csrfField }}
             <div class="container.metadata row ">
                 <div class="mb-3">
                     <label for="name">Name</label>

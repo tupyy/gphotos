@@ -1,32 +1,10 @@
 CREATE TYPE role as ENUM('admin','editor','user');
 
-CREATE TABLE groups (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL UNIQUE
-);
-
-CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
-    username VARCHAR(100) NOT NULL UNIQUE,
-    role role NOT NULL,
-    user_id TEXT NOT NULL UNIQUE,
-    can_share BOOLEAN
-);
-
-CREATE TABLE users_groups (
-    users_id SERIAL REFERENCES users(id),
-    groups_id SERIAL REFERENCES groups(id),
-    CONSTRAINT users_groups_pk PRIMARY KEY (
-        users_id,
-        groups_id
-    )
-);
-
 CREATE TABLE album (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT (now() AT TIME ZONE 'UTC') NOT NULL,
-    owner_id SERIAL REFERENCES users(id),
+    owner_id TEXT NOT NULL,
     description TEXT,
     location TEXT
 );
@@ -39,7 +17,7 @@ CREATE TYPE permission_id as ENUM (
 );
 
 CREATE TABLE album_user_permissions (
-    user_id SERIAL REFERENCES users(id),
+    user_id TEXT NOT NULL,
     album_id SERIAL REFERENCES album(id),
     permissions permission_id[] NOT NULL,
     CONSTRAINT album_user_permissions_pk PRIMARY KEY (
@@ -48,15 +26,19 @@ CREATE TABLE album_user_permissions (
     )
 );
 
+CREATE INDEX user_id_idx ON album_user_permissions  (user_id);
+
 CREATE TABLE album_group_permissions (
-    "group_id" SERIAL REFERENCES groups(id),
+    group_name TEXT NOT NULL,
     album_id SERIAL REFERENCES album(id),
     permissions permission_id[] NOT NULL,
     CONSTRAINT album_group_permissions_pk PRIMARY KEY (
-        "group_id",
+        group_name,
         album_id
     )
 );
+
+CREATE INDEX group_name_idx ON album_group_permissions (group_name);
 
 CREATE TABLE tag (
     id SERIAL PRIMARY KEY,
@@ -72,7 +54,3 @@ CREATE TABLE albums_tags (
     )
 );
 
-CREATE TABLE token_blacklist (
-    id SERIAL PRIMARY KEY,
-    token TEXT NOT NULL
-)

@@ -17,10 +17,8 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
 	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/entity"
-	"github.com/tupyy/gophoto/internal/repo"
 	"github.com/tupyy/gophoto/utils/logutil"
 	"golang.org/x/oauth2"
 )
@@ -44,13 +42,11 @@ type Authenticator interface {
 }
 
 type keyCloakAuthenticator struct {
-	userRepo     UserRepo
-	groupRepo    GroupRepo
 	oidcProvider *OidcProvider
 }
 
-func NewKeyCloakAuthenticator(oidcProvider *OidcProvider, ur UserRepo, gr GroupRepo) Authenticator {
-	return &keyCloakAuthenticator{oidcProvider: oidcProvider, userRepo: ur, groupRepo: gr}
+func NewKeyCloakAuthenticator(oidcProvider *OidcProvider) Authenticator {
+	return &keyCloakAuthenticator{oidcProvider: oidcProvider}
 }
 
 type gophotoClaims struct {
@@ -154,13 +150,13 @@ func (k *keyCloakAuthenticator) Callback() gin.HandlerFunc {
 			http.Error(c.Writer, "nonce did not match", http.StatusBadRequest)
 		}
 
-		user, err := k.createOrUpdateUserFromClaims(c, normalizeGroupsFromClaims(claims))
-		if err != nil {
-			http.Error(c.Writer, err.Error(), http.StatusBadRequest)
-		}
+		username := getUsernameFromClaims(claims)
+
+		loggedUser := entityFromClaims(*username, claims)
+		loggedUser.Groups = getGroupsFromClaims(claims)
 
 		sessionData := entity.Session{
-			User:      user,
+			User:      loggedUser,
 			TokenID:   claims.StandardClaims.Id,
 			SessionID: claims.SessionState,
 			Token:     oauth2Token,
@@ -226,84 +222,9 @@ func (k *keyCloakAuthenticator) authenticate(ctx *gin.Context, sessionData entit
 
 	ctx.Set("sessionData", sessionData)
 
-	logutil.GetLogger(ctx).Debug("user logged in")
+	logutil.GetLogger(ctx).WithField("user", fmt.Sprintf("%+v", sessionData)).Debug("user logged in")
 
 	return nil
-}
-
-// createOrUpdateUserFromClaims creates or updates an existing user from claims.
-func (k *keyCloakAuthenticator) createOrUpdateUserFromClaims(ctx *gin.Context, claims gophotoClaims) (entity.User, error) {
-	var noUser entity.User
-
-	logger := logutil.GetLogger(ctx)
-
-	username := getUsernameFromClaims(claims)
-
-	loggedUser := entityFromClaims(*username, claims)
-	// create or update user in db
-	user, err := k.userRepo.GetByUsername(ctx, *username)
-	if err != nil {
-		if err != repo.ErrUserNotFound {
-			logger.WithError(err).Error("failed to get user")
-			return noUser, errInternalError
-		}
-
-		if groups, err := k.getGroupsFromClaims(ctx, claims.Groups); err != nil {
-			logger.WithError(err).Error("cannot retrieve groups from claims")
-		} else {
-			loggedUser.Groups = groups
-		}
-
-		if id, err := k.userRepo.Create(ctx.Request.Context(), loggedUser); err != nil {
-			logger.WithError(err).Error("failed to create user")
-			return noUser, errInternalError
-		} else {
-			loggedUser.ID = &id
-
-			logger.WithField("user id", id).WithField("username", *username).Debug("user created")
-		}
-	} else {
-		// update user id
-		loggedUser.ID = user.ID
-
-		if groups, err := k.getGroupsFromClaims(ctx, claims.Groups); err != nil {
-			logger.WithError(err).Error("cannot retrieve groups from claims")
-		} else {
-			loggedUser.Groups = groups
-		}
-
-		err := k.userRepo.Update(ctx.Request.Context(), loggedUser)
-		if err != nil {
-			logger.WithError(err).Error("failed to update user")
-			return noUser, errInternalError
-		}
-
-		logger.WithField("user", fmt.Sprintf("%+v", loggedUser)).Debug("user updated")
-	}
-
-	return loggedUser, nil
-}
-
-func (k *keyCloakAuthenticator) getGroupsFromClaims(ctx context.Context, groups []string) ([]entity.Group, error) {
-	grps := make([]entity.Group, 0, len(groups))
-	for _, name := range groups {
-		group, err := k.groupRepo.GetByName(ctx, name)
-		if err != nil {
-			if errors.Is(err, repo.ErrGroupNotFound) {
-				id, err := k.groupRepo.Create(ctx, entity.Group{Name: name})
-				if err != nil {
-					return []entity.Group{}, err
-				} else {
-					logrus.WithField("group", name).WithField("id", id).Debug("group created")
-					group = entity.Group{ID: &id, Name: name}
-				}
-			}
-		}
-
-		grps = append(grps, group)
-	}
-
-	return grps, nil
 }
 
 func randString(nByte int) (string, error) {
@@ -348,16 +269,14 @@ func getUsernameFromClaims(claims gophotoClaims) *string {
 	return nil
 }
 
-func normalizeGroupsFromClaims(claims gophotoClaims) gophotoClaims {
-
-	groups := make([]string, 0, len(claims.Groups))
-	for _, g := range claims.Groups {
-		groups = append(groups, strings.TrimLeft(g, "/"))
+func getGroupsFromClaims(claims gophotoClaims) []entity.Group {
+	grps := make([]entity.Group, 0, len(claims.Groups))
+	for _, name := range claims.Groups {
+		name = strings.TrimLeft(name, "/")
+		grps = append(grps, entity.Group{Name: name})
 	}
 
-	claims.Groups = groups
-
-	return claims
+	return grps
 }
 
 func entityFromClaims(username string, claims gophotoClaims) entity.User {
@@ -385,7 +304,7 @@ func entityFromClaims(username string, claims gophotoClaims) entity.User {
 
 	return entity.User{
 		Username: username,
-		UserID:   claims.StandardClaims.Subject,
+		ID:       claims.StandardClaims.Subject,
 		Role:     r,
 		CanShare: canShare,
 	}

@@ -58,15 +58,15 @@ type Album struct {
 	ID          int32
 	Name        string    `validate:"required"`
 	CreatedAt   time.Time `validate:"required"`
-	OwnerID     int32     `validate:"required"`
+	OwnerID     string    `validate:"required"`
 	Description *string
 	Location    *string
 	// UserPermissions holds the list of permissions of other users for this album.
 	// The key is the user id.
-	UserPermissions map[int32][]Permission
+	UserPermissions map[string][]Permission
 	// GroupPermissions holds the list of permissions of groups for this album.
 	// The key is the group name.
-	GroupPermissions map[int32][]Permission
+	GroupPermissions map[string][]Permission
 }
 
 func (a Album) Validate() error {
@@ -93,11 +93,11 @@ func (a Album) String() string {
 	}
 
 	for k, v := range a.UserPermissions {
-		fmt.Fprintf(&sb, "user = %d, permisions = %+v\n", k, v)
+		fmt.Fprintf(&sb, "user = %s, permisions = %+v\n", k, v)
 	}
 
 	for k, v := range a.GroupPermissions {
-		fmt.Fprintf(&sb, "group = %d, permisions = %+v\n", k, v)
+		fmt.Fprintf(&sb, "group = %s, permisions = %+v\n", k, v)
 	}
 
 	return sb.String()
@@ -105,13 +105,13 @@ func (a Album) String() string {
 }
 
 // HasUserPermissions returns true if user has at least one permission.
-func (a Album) HasUserPermissions(userID int32) bool {
+func (a Album) HasUserPermissions(userID string) bool {
 	_, found := a.UserPermissions[userID]
 
 	return found
 }
 
-func (a Album) HasUserPermission(userID int32, permission Permission) bool {
+func (a Album) HasUserPermission(userID string, permission Permission) bool {
 	if !a.HasUserPermissions(userID) {
 		return false
 	}
@@ -126,7 +126,7 @@ func (a Album) HasUserPermission(userID int32, permission Permission) bool {
 }
 
 // GetUserPermissions returns all permission of user.
-func (a Album) GetUserPermissions(userID int32) (permissions []Permission, found bool) {
+func (a Album) GetUserPermissions(userID string) (permissions []Permission, found bool) {
 	if _, found = a.UserPermissions[userID]; !found {
 		return
 	}
@@ -134,12 +134,12 @@ func (a Album) GetUserPermissions(userID int32) (permissions []Permission, found
 	return a.UserPermissions[userID], true
 }
 
-func (a Album) HasGroupPermission(groupID int32, permission Permission) bool {
-	if !a.HasGroupPermissions(groupID) {
+func (a Album) HasGroupPermission(groupName string, permission Permission) bool {
+	if !a.HasGroupPermissions(groupName) {
 		return false
 	}
 
-	for _, p := range a.GroupPermissions[groupID] {
+	for _, p := range a.GroupPermissions[groupName] {
 		if p == permission {
 			return true
 		}
@@ -149,14 +149,14 @@ func (a Album) HasGroupPermission(groupID int32, permission Permission) bool {
 }
 
 // HasGroupPermissions returns true if group has at least one permission.
-func (a Album) HasGroupPermissions(groupID int32) bool {
+func (a Album) HasGroupPermissions(groupID string) bool {
 	_, found := a.GroupPermissions[groupID]
 
 	return found
 }
 
 // GetGroupPermissions returns all permission of group.
-func (a Album) GetGroupPermissions(groupID int32) (permissions []Permission, found bool) {
+func (a Album) GetGroupPermissions(groupID string) (permissions []Permission, found bool) {
 	if _, found = a.GroupPermissions[groupID]; !found {
 		return
 	}

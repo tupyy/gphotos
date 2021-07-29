@@ -21,14 +21,14 @@ DB Table Details
 
 
 Table: album_group_permissions
-[ 0] group_id                                       INT4                 null: false  primary: true   isArray: false  auto: false  col: INT4            len: -1      default: []
+[ 0] group_name                                     TEXT                 null: false  primary: true   isArray: false  auto: false  col: TEXT            len: -1      default: []
 [ 1] album_id                                       INT4                 null: false  primary: true   isArray: false  auto: false  col: INT4            len: -1      default: []
 [ 2] permissions                                    USER_DEFINED         null: false  primary: false  isArray: false  auto: false  col: USER_DEFINED    len: -1      default: []
 
 
 JSON Sample
 -------------------------------------
-{    "group_id": 17,    "album_id": 22,    "permissions": 32}
+{    "group_name": "lZABEkDgYJoGMUoKKtSbNftao",    "album_id": 26,    "permissions": 83}
 
 
 
@@ -36,8 +36,8 @@ JSON Sample
 
 // AlbumGroupPermissions struct is a row record of the album_group_permissions table in the gophoto database
 type AlbumGroupPermissions struct {
-	//[ 0] group_id                                       INT4                 null: false  primary: true   isArray: false  auto: false  col: INT4            len: -1      default: []
-	GroupID int32 `gorm:"primary_key;column:group_id;type:INT4;"`
+	//[ 0] group_name                                     TEXT                 null: false  primary: true   isArray: false  auto: false  col: TEXT            len: -1      default: []
+	GroupName string `gorm:"primary_key;column:group_name;type:TEXT;"`
 	//[ 1] album_id                                       INT4                 null: false  primary: true   isArray: false  auto: false  col: INT4            len: -1      default: []
 	AlbumID int32 `gorm:"primary_key;column:album_id;type:INT4;"`
 	//[ 2] permissions                                    USER_DEFINED         null: false  primary: false  isArray: true   auto: false  col: USER_DEFINED    len: -1      default: []
@@ -50,21 +50,21 @@ var album_group_permissionsTableInfo = &TableInfo{
 
 		&ColumnInfo{
 			Index:              0,
-			Name:               "group_id",
+			Name:               "group_name",
 			Comment:            ``,
 			Notes:              ``,
 			Nullable:           false,
-			DatabaseTypeName:   "INT4",
-			DatabaseTypePretty: "INT4",
+			DatabaseTypeName:   "TEXT",
+			DatabaseTypePretty: "TEXT",
 			IsPrimaryKey:       true,
 			IsAutoIncrement:    false,
 			IsArray:            false,
-			ColumnType:         "INT4",
+			ColumnType:         "TEXT",
 			ColumnLength:       -1,
-			GoFieldName:        "GroupID",
-			GoFieldType:        "int32",
-			JSONFieldName:      "group_id",
-			ProtobufFieldName:  "group_id",
+			GoFieldName:        "GroupName",
+			GoFieldType:        "string",
+			JSONFieldName:      "group_name",
+			ProtobufFieldName:  "group_name",
 			ProtobufType:       "",
 			ProtobufPos:        1,
 		},

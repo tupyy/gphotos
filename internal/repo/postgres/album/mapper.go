@@ -26,7 +26,7 @@ func fromModel(m models.Album) entity.Album {
 	}
 }
 
-func toUserPermissionsModels(albumID int32, permissions map[int32][]entity.Permission) []models.AlbumUserPermissions {
+func toUserPermissionsModels(albumID int32, permissions map[string][]entity.Permission) []models.AlbumUserPermissions {
 	if len(permissions) == 0 {
 		return []models.AlbumUserPermissions{}
 	}
@@ -52,7 +52,7 @@ func toUserPermissionsModels(albumID int32, permissions map[int32][]entity.Permi
 	return permModels
 }
 
-func toGroupPermissionsModels(albumID int32, permissions map[int32][]entity.Permission) []models.AlbumGroupPermissions {
+func toGroupPermissionsModels(albumID int32, permissions map[string][]entity.Permission) []models.AlbumGroupPermissions {
 	if len(permissions) == 0 {
 		return []models.AlbumGroupPermissions{}
 	}
@@ -67,7 +67,7 @@ func toGroupPermissionsModels(albumID int32, permissions map[int32][]entity.Perm
 		}
 
 		permModel := models.AlbumGroupPermissions{
-			GroupID:     k,
+			GroupName:   k,
 			AlbumID:     albumID,
 			Permissions: mm,
 		}

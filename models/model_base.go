@@ -34,11 +34,7 @@ func init() {
 	tables["album_group_permissions"] = album_group_permissionsTableInfo
 	tables["album_user_permissions"] = album_user_permissionsTableInfo
 	tables["albums_tags"] = albums_tagsTableInfo
-	tables["groups"] = groupsTableInfo
 	tables["tag"] = tagTableInfo
-	tables["token_blacklist"] = token_blacklistTableInfo
-	tables["users"] = usersTableInfo
-	tables["users_groups"] = users_groupsTableInfo
 }
 
 // String describe the action

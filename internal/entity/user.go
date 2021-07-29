@@ -26,12 +26,13 @@ func (r Role) String() string {
 }
 
 type User struct {
-	ID       *int32 `validate:"required"`
-	UserID   string `validate:"required"`
-	Username string `validate:"required"`
-	Role     Role
-	CanShare bool
-	Groups   []Group
+	ID        string `validate:"required"`
+	Username  string `validate:"required"`
+	FirstName string
+	LastName  string
+	Role      Role
+	CanShare  bool
+	Groups    []Group
 }
 
 func (u User) Validate() error {

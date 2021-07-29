@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gorilla/csrf"
 	"github.com/sirupsen/logrus"
 	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/internal/form"
@@ -20,8 +21,7 @@ import (
 // POST /album
 func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
 	albumRepo := repos[AlbumRepoName].(AlbumRepo)
-	userRepo := repos[UserRepoName].(UserRepo)
-	groupRepo := repos[GroupRepoName].(GroupRepo)
+	keycloakRepo := repos[KeycloakRepoName].(KeycloakRepo)
 
 	r.GET("/album", func(c *gin.Context) {
 		s, _ := c.Get("sessionData")
@@ -37,7 +37,7 @@ func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
 			return
 		}
 
-		users, err := userRepo.Get(reqCtx)
+		users, err := keycloakRepo.GetUsers(reqCtx)
 		if err != nil && errors.Is(err, repo.ErrInternalError) {
 			logger.WithError(err).Error("cannot fetch users")
 			c.AbortWithError(http.StatusInternalServerError, fmt.Errorf("cannot fetch users"))
@@ -51,7 +51,7 @@ func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
 			return u.CanShare == true && u.Role != entity.RoleAdmin && u.Username != session.User.Username
 		})
 
-		groups, err := groupRepo.Get(reqCtx)
+		groups, err := keycloakRepo.GetGroups(reqCtx)
 		if err != nil && errors.Is(err, repo.ErrInternalError) {
 			logger.WithError(err).Error("cannot fetch groups")
 			c.AbortWithError(http.StatusInternalServerError, fmt.Errorf("cannot fetch groups"))
@@ -60,9 +60,11 @@ func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
 		}
 
 		c.HTML(http.StatusOK, "album_form.html", gin.H{
-			"users":    filteredUsers,
-			"groups":   groups,
-			"canShare": session.User.CanShare,
+			"users":          filteredUsers,
+			"groups":         groups,
+			"canShare":       session.User.CanShare,
+			"isOwner":        true,
+			csrf.TemplateTag: csrf.TemplateField(c.Request),
 		})
 	})
 
@@ -97,14 +99,14 @@ func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
 			Description: &cleanForm.Description,
 			CreatedAt:   time.Now(),
 			Location:    &cleanForm.Location,
-			OwnerID:     *session.User.ID,
+			OwnerID:     session.User.ID,
 		}
 
 		if len(cleanForm.UserPermissions) > 0 {
-			album.UserPermissions = make(map[int32][]entity.Permission)
+			album.UserPermissions = make(map[string][]entity.Permission)
 
 			// get all the users
-			users, err := userRepo.Get(reqCtx)
+			users, err := keycloakRepo.GetUsers(reqCtx)
 			if err != nil {
 				logger.WithError(err).Error("error fetching users")
 				c.HTML(http.StatusInternalServerError, "internal_error.html", nil)
@@ -113,9 +115,12 @@ func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
 			}
 
 			// put users into a map
-			usersID := make(map[string]int32)
+			usersID := make(map[string]string)
 			for _, u := range users {
-				usersID[u.Username] = *u.ID
+				// remove the current user
+				if u.ID != album.OwnerID {
+					usersID[u.Username] = u.ID
+				}
 			}
 
 			perms := parsePermissions(cleanForm.UserPermissions)
@@ -134,10 +139,10 @@ func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
 		}
 
 		if len(cleanForm.GroupPermissions) > 0 {
-			album.GroupPermissions = make(map[int32][]entity.Permission)
+			album.GroupPermissions = make(map[string][]entity.Permission)
 
 			// get all the users
-			groups, err := groupRepo.Get(reqCtx)
+			groups, err := keycloakRepo.GetGroups(reqCtx)
 			if err != nil {
 				logger.WithError(err).Error("error fetching groups")
 				c.HTML(http.StatusInternalServerError, "internal_error.html", nil)
@@ -146,9 +151,9 @@ func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
 			}
 
 			// put groups into a map
-			groupsID := make(map[string]int32)
-			for _, u := range groups {
-				groupsID[u.Name] = *u.ID
+			groupsID := make(map[string]string)
+			for _, g := range groups {
+				groupsID[g.Name] = g.Name
 			}
 
 			perms := parsePermissions(cleanForm.GroupPermissions)
@@ -185,8 +190,7 @@ func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
 
 func UpdateAlbum(r *gin.RouterGroup, repos Repositories) {
 	albumRepo := repos[AlbumRepoName].(AlbumRepo)
-	userRepo := repos[UserRepoName].(UserRepo)
-	groupRepo := repos[GroupRepoName].(GroupRepo)
+	keycloakRepo := repos[KeycloakRepoName].(KeycloakRepo)
 
 	r.GET("/album/:id/edit", func(c *gin.Context) {
 		reqCtx := c.Request.Context()
@@ -199,8 +203,8 @@ func UpdateAlbum(r *gin.RouterGroup, repos Repositories) {
 
 		id, err := strconv.Atoi(param)
 		if err != nil {
-			logger.WithError(err).Error("cannot parse id to int")
-			c.AbortWithError(http.StatusBadRequest, err)
+			logger.WithError(err).WithField("id", param).Error("cannot parse album id")
+			c.AbortWithError(http.StatusNotFound, err)
 
 			return
 		}
@@ -214,10 +218,10 @@ func UpdateAlbum(r *gin.RouterGroup, repos Repositories) {
 		}
 
 		// check if user is the owner or it has the edit permission set
-		if album.OwnerID == *session.User.ID {
+		if album.OwnerID == session.User.ID {
 			logger.Info("edit permission granted. user is the owner")
 
-			users, err := userRepo.Get(reqCtx)
+			users, err := keycloakRepo.GetUsers(reqCtx)
 			if err != nil && errors.Is(err, repo.ErrInternalError) {
 				logger.WithError(err).Error("cannot fetch users")
 				c.AbortWithError(http.StatusInternalServerError, fmt.Errorf("cannot fetch users"))
@@ -231,7 +235,7 @@ func UpdateAlbum(r *gin.RouterGroup, repos Repositories) {
 				return u.CanShare == true && u.Role != entity.RoleAdmin && u.Username != session.User.Username
 			})
 
-			groups, err := groupRepo.Get(reqCtx)
+			groups, err := keycloakRepo.GetGroups(reqCtx)
 			if err != nil && errors.Is(err, repo.ErrInternalError) {
 				logger.WithError(err).Error("cannot fetch groups")
 				c.AbortWithError(http.StatusInternalServerError, fmt.Errorf("cannot fetch groups"))
@@ -254,14 +258,14 @@ func UpdateAlbum(r *gin.RouterGroup, repos Repositories) {
 
 		// the user is not the owner
 		// check if user has edit permission set
-		if album.HasUserPermission(*session.User.ID, entity.PermissionEditAlbum) {
+		if album.HasUserPermission(session.User.ID, entity.PermissionEditAlbum) {
 			logger.Info("edit permission granted. user has given the edit permission by the owner.")
 			editPermissionFound = true
 		}
 
 		// check if one of user's groups has edit permission set
 		for _, group := range session.User.Groups {
-			if album.HasGroupPermission(*group.ID, entity.PermissionEditAlbum) {
+			if album.HasGroupPermission(group.Name, entity.PermissionEditAlbum) {
 				logger.Info("edit permission granted. user's group has given the edit permission.")
 				editPermissionFound = true
 				break
@@ -270,7 +274,7 @@ func UpdateAlbum(r *gin.RouterGroup, repos Repositories) {
 
 		if !editPermissionFound {
 			logger.WithFields(logrus.Fields{
-				"request user id": *session.User.ID,
+				"request user id": session.User.ID,
 				"album owner id":  album.OwnerID,
 			}).Error("album cannot be edit either by user with edit permission or the owner")
 			c.AbortWithError(http.StatusForbidden, fmt.Errorf("user has no edit permissions for this album"))

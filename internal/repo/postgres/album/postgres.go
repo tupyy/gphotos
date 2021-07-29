@@ -81,7 +81,7 @@ func (a *AlbumPostgresRepo) Create(ctx context.Context, album entity.Album) (alb
 	return m.ID, nil
 }
 
-func (a *AlbumPostgresRepo) Delete(ctx context.Context, id int32) error {
+func (a *AlbumPostgresRepo) Delete(ctx context.Context, id string) error {
 	if res := a.db.WithContext(ctx).Delete(&models.Album{}, id); res.Error != nil {
 		return fmt.Errorf("%w %+v", repo.ErrDeleteAlbum, res.Error)
 	}
@@ -120,13 +120,10 @@ func (a *AlbumPostgresRepo) Get(ctx context.Context) ([]entity.Album, error) {
 	var albums customAlbums
 
 	tx := a.db.WithContext(ctx).Table("album").
-		Select(`album.*, album_user_permissions.permissions as user_permissions,
-				album_group_permissions.permissions as group_permissions, users.id as user_id,
-				groups.id as group_id`).
+		Select(`album.*, album_user_permissions.permissions as user_permissions, album_user_permissions.user_id as user_id,
+				album_group_permissions.permissions as group_permissions, album_group_permissions.group_name as group_name`).
 		Joins("LEFT JOIN album_user_permissions ON (album.id = album_user_permissions.album_id)").
 		Joins("LEFT JOIN album_group_permissions ON (album.id = album_group_permissions.album_id)").
-		Joins("LEFT JOIN users ON (album_user_permissions.user_id = users.id)").
-		Joins("LEFT JOIN groups ON (album_group_permissions.group_id = groups.id)").
 		Order("album.id").
 		Find(&albums)
 	if tx.Error != nil {
@@ -151,13 +148,10 @@ func (a *AlbumPostgresRepo) GetByID(ctx context.Context, id int32) (entity.Album
 	var albums customAlbums
 
 	tx := a.db.WithContext(ctx).Table("album").
-		Select(`album.*, album_user_permissions.permissions as user_permissions,
-				album_group_permissions.permissions as group_permissions, users.id as user_id,
-				groups.id as group_id`).
+		Select(`album.*, album_user_permissions.permissions as user_permissions, album_user_permissions.user_id as user_id,
+				album_group_permissions.permissions as group_permissions, album_group_permissions.group_name as group_name`).
 		Joins("LEFT JOIN album_user_permissions ON (album.id = album_user_permissions.album_id)").
 		Joins("LEFT JOIN album_group_permissions ON (album.id = album_group_permissions.album_id)").
-		Joins("LEFT JOIN users ON (album_user_permissions.user_id = users.id)").
-		Joins("LEFT JOIN groups ON (album_group_permissions.group_id = groups.id)").
 		Where("album.id = ?", id).
 		Find(&albums)
 	if tx.Error != nil {
@@ -173,17 +167,14 @@ func (a *AlbumPostgresRepo) GetByID(ctx context.Context, id int32) (entity.Album
 	return entities[0], nil
 }
 
-func (a *AlbumPostgresRepo) GetByOwnerID(ctx context.Context, ownerID int32) ([]entity.Album, error) {
+func (a *AlbumPostgresRepo) GetByOwnerID(ctx context.Context, ownerID string) ([]entity.Album, error) {
 	var albums customAlbums
 
 	tx := a.db.WithContext(ctx).Table("album").
-		Select(`album.*, album_user_permissions.permissions as user_permissions,
-				album_group_permissions.permissions as group_permissions, users.id as user_id,
-				groups.id as group_id`).
+		Select(`album.*, album_user_permissions.permissions as user_permissions, album_user_permissions.user_id as user_id,
+				album_group_permissions.permissions as group_permissions, album_group_permissions.group_name as group_name`).
 		Joins("LEFT JOIN album_user_permissions ON (album.id = album_user_permissions.album_id)").
 		Joins("LEFT JOIN album_group_permissions ON (album.id = album_group_permissions.album_id)").
-		Joins("LEFT JOIN users ON (album_user_permissions.user_id = users.id)").
-		Joins("LEFT JOIN groups ON (album_group_permissions.group_id = groups.id)").
 		Where("album.owner_id = ?", ownerID).
 		Find(&albums)
 	if tx.Error != nil {
@@ -191,7 +182,7 @@ func (a *AlbumPostgresRepo) GetByOwnerID(ctx context.Context, ownerID int32) ([]
 	}
 
 	if len(albums) == 0 {
-		return []entity.Album{}, fmt.Errorf("%w ownerr id %d", repo.ErrAlbumNotFound, ownerID)
+		return []entity.Album{}, fmt.Errorf("%w ownerr id %s", repo.ErrAlbumNotFound, ownerID)
 	}
 
 	entities := albums.Merge()
@@ -200,17 +191,14 @@ func (a *AlbumPostgresRepo) GetByOwnerID(ctx context.Context, ownerID int32) ([]
 }
 
 // GetByUserID returns a list of albums for which the user has at one permission set.
-func (a *AlbumPostgresRepo) GetByUserID(ctx context.Context, userID int32) ([]entity.Album, error) {
+func (a *AlbumPostgresRepo) GetByUserID(ctx context.Context, userID string) ([]entity.Album, error) {
 	var albums customAlbums
 
 	tx := a.db.WithContext(ctx).Table("album").
-		Select(`album.*, album_user_permissions.permissions as user_permissions,
-				album_group_permissions.permissions as group_permissions, users.id as user_id,
-				groups.id as group_id`).
+		Select(`album.*, album_user_permissions.permissions as user_permissions, album_user_permissions.user_id as user_id,
+				album_group_permissions.permissions as group_permissions, album_group_permissions.group_name as group_name`).
 		Joins("LEFT JOIN album_user_permissions ON (album.id = album_user_permissions.album_id)").
 		Joins("LEFT JOIN album_group_permissions ON (album.id = album_group_permissions.album_id)").
-		Joins("LEFT JOIN users ON (album_user_permissions.user_id = users.id)").
-		Joins("LEFT JOIN groups ON (album_group_permissions.group_id = groups.id)").
 		Where("album_user_permissions.user_id = ?", userID).
 		Find(&albums)
 	if tx.Error != nil {
@@ -229,25 +217,22 @@ func (a *AlbumPostgresRepo) GetByUserID(ctx context.Context, userID int32) ([]en
 }
 
 // GetAlbumsByGroup returns a list of albums for which the group has at one permission set.
-func (a *AlbumPostgresRepo) GetByGroupID(ctx context.Context, groupID int32) ([]entity.Album, error) {
+func (a *AlbumPostgresRepo) GetByGroupID(ctx context.Context, groupName string) ([]entity.Album, error) {
 	var albums customAlbums
 
 	tx := a.db.WithContext(ctx).Table("album").
-		Select(`album.*, album_user_permissions.permissions as user_permissions,
-				album_group_permissions.permissions as group_permissions, users.id as user_id,
-				groups.id as group_id`).
+		Select(`album.*, album_user_permissions.permissions as user_permissions, album_user_permissions.user_id as user_id,
+				album_group_permissions.permissions as group_permissions, album_group_permissions.group_name as group_name`).
 		Joins("LEFT JOIN album_user_permissions ON (album.id = album_user_permissions.album_id)").
 		Joins("LEFT JOIN album_group_permissions ON (album.id = album_group_permissions.album_id)").
-		Joins("LEFT JOIN users ON (album_user_permissions.user_id = users.id)").
-		Joins("LEFT JOIN groups ON (album_group_permissions.group_id = groups.id)").
-		Where("album_group_permissions.group_id = ?", groupID).
+		Where("album_group_permissions.group_id = ?", groupName).
 		Find(&albums)
 	if tx.Error != nil {
 		return []entity.Album{}, fmt.Errorf("%w internal error: %v", repo.ErrInternalError, tx.Error)
 	}
 
 	if len(albums) == 0 {
-		return []entity.Album{}, fmt.Errorf("%w no album found with id %d", repo.ErrAlbumNotFound, groupID)
+		return []entity.Album{}, fmt.Errorf("%w no album found with id %s", repo.ErrAlbumNotFound, groupName)
 	}
 
 	entities := albums.Merge()

@@ -14,13 +14,13 @@ type customAlbum struct {
 	ID               int32                `gorm:"column_name:id;type:INT4"`
 	Name             string               `gorm:"column:name;type:TEXT;"`
 	CreatedAt        time.Time            `gorm:"column:created_at;type:TIMESTAMP;default:timezone('UTC';"`
-	OwnerID          int32                `gorm:"column:owner_id;type:INT4;"`
+	OwnerID          string               `gorm:"column:owner_id;type:INT4;"`
 	Description      *string              `gorm:"column:description;type:TEXT;"`
 	Location         *string              `gorm:"column:location;type:TEXT;"`
 	UserPermissions  models.PermissionIDs `gorm:"column:user_permissions;type:_PERMISSION_ID;"`
 	GroupPermissions models.PermissionIDs `gorm:"column:group_permissions;type:_PERMISSION_ID;"`
-	UserID           int32                `gorm:"column:user_id;type:TEXT;"`
-	GroupID          int32                `gorm:"column:group_id;type:TEXT;"`
+	UserID           string               `gorm:"column:user_id;type:TEXT;"`
+	GroupName        string               `gorm:"column:group_name;type:TEXT;"`
 }
 
 func (ca customAlbum) ToEntity() (entity.Album, error) {
@@ -36,7 +36,7 @@ func (ca customAlbum) ToEntity() (entity.Album, error) {
 	}
 
 	if len(ca.UserPermissions) > 0 {
-		album.UserPermissions = make(map[int32][]entity.Permission)
+		album.UserPermissions = make(map[string][]entity.Permission)
 
 		permissions := make([]entity.Permission, 0, len(ca.UserPermissions))
 
@@ -54,7 +54,7 @@ func (ca customAlbum) ToEntity() (entity.Album, error) {
 	}
 
 	if len(ca.GroupPermissions) > 0 {
-		album.GroupPermissions = make(map[int32][]entity.Permission)
+		album.GroupPermissions = make(map[string][]entity.Permission)
 
 		permissions := make([]entity.Permission, 0, len(ca.GroupPermissions))
 
@@ -68,7 +68,7 @@ func (ca customAlbum) ToEntity() (entity.Album, error) {
 			}
 		}
 
-		album.GroupPermissions[ca.GroupID] = permissions
+		album.GroupPermissions[ca.GroupName] = permissions
 	}
 
 	return album, nil
