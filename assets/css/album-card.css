@@ -60,7 +60,6 @@
   min-height: 300px;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 19px 38px rgba(0, 0, 0, 0.3), 0 15px 12px rgba(0, 0, 0, 0.2);
 }
 .container-album-card .card .wrapper:hover .data {
   transform: translateY(0);
@@ -79,6 +78,7 @@
 }
 .container-album-card .card .author {
   font-size: 12px;
+  font-weight: bold;
 }
 .container-album-card .card .title {
   margin-top: 10px;
@@ -105,6 +105,19 @@
   color: #fff;
   padding: 0.8em;
 }
+
+.container-album-card .album .location-wrapper {
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding-right: 0.8em;
+}
+
+.container-album-card .album .location-wrapper i {
+    padding-right: 3px;
+    font-size: 11px;
+}
+
 .container-album-card .album .date span {
   display: block;
   text-align: center;

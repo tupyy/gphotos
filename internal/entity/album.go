@@ -59,8 +59,8 @@ type Album struct {
 	Name        string    `validate:"required"`
 	CreatedAt   time.Time `validate:"required"`
 	OwnerID     string    `validate:"required"`
-	Description *string
-	Location    *string
+	Description string
+	Location    string
 	// UserPermissions holds the list of permissions of other users for this album.
 	// The key is the user id.
 	UserPermissions map[string][]Permission
@@ -83,14 +83,8 @@ func (a Album) String() string {
 	fmt.Fprintf(&sb, "id = %d\n", a.ID)
 	fmt.Fprintf(&sb, "name = %s\n", a.Name)
 	fmt.Fprintf(&sb, "created_at = %+v\n", a.CreatedAt)
-
-	if a.Description != nil {
-		fmt.Fprintf(&sb, "description = %s\n", *a.Description)
-	}
-
-	if a.Location != nil {
-		fmt.Fprintf(&sb, "location = %s\n", *a.Location)
-	}
+	fmt.Fprintf(&sb, "description = %s\n", a.Description)
+	fmt.Fprintf(&sb, "location = %s\n", a.Location)
 
 	for k, v := range a.UserPermissions {
 		fmt.Fprintf(&sb, "user = %s, permisions = %+v\n", k, v)

@@ -2,18 +2,24 @@
 <div class="container-album-card col-xs-12 col-lg-9">
     <div class="album card">
         <div class="wrapper">
-          <div class="date">
-              <span class="day">{{day .CreatedAt}}</span>
-              <span class="month">Aug</span>
-              <span class="year">2019</span>
-          </div>
-          <div class="data">
-            <div class="content">
-                <span class="author">.Owner.Role.String()</span>
-                <h1 class="title"><a href="#">{{.Name}}</a></h1>
-                <p class="text">Description</p>
-                <!--  <label for="show-menu" class="menu-button"><span></span></label>-->
+            <div class="date">
+              <span class="day">{{day .Date}}</span>
+              <span class="month">{{month .Date}}</span>
+              <span class="year">{{year .Date}}</span>
             </div>
+            <div class="location-wrapper">
+              <span class="location">
+                    <i class="fas fa-map-marker-alt"></i>
+                    {{.Location}}
+              </span>
+            </div>
+            <div class="data">
+                <div class="content">
+                    <span class="author">{{.Owner}}</span>
+                    <h1 class="title"><a href="#">{{.Name}}</a></h1>
+                    <p class="text">{{.Description}}</p>
+                <!--  <label for="show-menu" class="menu-button"><span></span></label>-->
+                </div>
                 <!--
                 <input type="checkbox" id="show-menu" />
                 <ul class="menu-content">

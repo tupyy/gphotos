@@ -10,20 +10,28 @@ func toModel(e entity.Album) models.Album {
 		Name:        e.Name,
 		CreatedAt:   e.CreatedAt,
 		OwnerID:     e.OwnerID,
-		Description: e.Description,
-		Location:    e.Location,
+		Description: &e.Description,
+		Location:    &e.Location,
 	}
 }
 
 func fromModel(m models.Album) entity.Album {
-	return entity.Album{
-		ID:          m.ID,
-		Name:        m.Name,
-		CreatedAt:   m.CreatedAt,
-		OwnerID:     m.OwnerID,
-		Description: m.Description,
-		Location:    m.Location,
+	e := entity.Album{
+		ID:        m.ID,
+		Name:      m.Name,
+		CreatedAt: m.CreatedAt,
+		OwnerID:   m.OwnerID,
 	}
+
+	if m.Description != nil {
+		e.Description = *m.Description
+	}
+
+	if m.Location != nil {
+		e.Location = *m.Location
+	}
+
+	return e
 }
 
 func toUserPermissionsModels(albumID int32, permissions map[string][]entity.Permission) []models.AlbumUserPermissions {

@@ -8,7 +8,7 @@ import (
 func Register(privateGroup *gin.RouterGroup, publicGroup *gin.RouterGroup, repos Repositories) {
 
 	// register index controller
-	Index(privateGroup, repos[AlbumRepoName].(AlbumRepo))
+	Index(privateGroup, repos)
 	logutil.GetDefaultLogger().Info("index controller registered")
 
 	CreateAlbum(privateGroup, repos)

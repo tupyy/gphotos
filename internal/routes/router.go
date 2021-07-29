@@ -29,14 +29,6 @@ func NewRouter(store sessions.Store, authenticator auth.Authenticator) *PhotoRou
 	// TODO remove hotreloading in prod
 	r.Use(sessions.Sessions("gophoto", store), middleware.HotReloading(r))
 
-	// r.Use(csrf.Middleware(csrf.Options{
-	// 	Secret: conf.GetServerSecretKey(),
-	// 	ErrorFunc: func(c *gin.Context) {
-	// 		c.String(400, "CSRF token mismatch")
-	// 		c.Abort()
-	// 	},
-	// }))
-
 	r.Static("/static", conf.GetStaticsFolder())
 
 	// setup authentication for the priate group.
@@ -77,7 +69,9 @@ func loadTemplates(templateDir string) (multitemplate.Renderer, error) {
 	}
 
 	templateFuncs := template.FuncMap{
-		"day": funcs.Day,
+		"day":   funcs.Day,
+		"month": funcs.Month,
+		"year":  funcs.Year,
 	}
 
 	for _, t := range templates {

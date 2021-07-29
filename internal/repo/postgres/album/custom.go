@@ -27,12 +27,18 @@ func (ca customAlbum) ToEntity() (entity.Album, error) {
 	var emptyAlbum entity.Album
 
 	album := entity.Album{
-		ID:          ca.ID,
-		Name:        ca.Name,
-		CreatedAt:   ca.CreatedAt,
-		OwnerID:     ca.OwnerID,
-		Description: ca.Description,
-		Location:    ca.Location,
+		ID:        ca.ID,
+		Name:      ca.Name,
+		CreatedAt: ca.CreatedAt,
+		OwnerID:   ca.OwnerID,
+	}
+
+	if ca.Description != nil {
+		album.Description = *ca.Description
+	}
+
+	if ca.Location != nil {
+		album.Location = *ca.Location
 	}
 
 	if len(ca.UserPermissions) > 0 {

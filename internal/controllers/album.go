@@ -96,9 +96,9 @@ func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
 
 		album := entity.Album{
 			Name:        cleanForm.Name,
-			Description: &cleanForm.Description,
+			Description: cleanForm.Description,
 			CreatedAt:   time.Now(),
-			Location:    &cleanForm.Location,
+			Location:    cleanForm.Location,
 			OwnerID:     session.User.ID,
 		}
 
