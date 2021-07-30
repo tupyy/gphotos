@@ -207,16 +207,12 @@ func TestAlbumTestSuite1(t *testing.T) {
 func (as *AlbumTestSuite1) TestCreateAlbum() {
 	asserter := assert.New(as.T())
 
-	ptrString := func(s string) *string {
-		return &s
-	}
-
 	album := entity.Album{
 		Name:        "name",
 		CreatedAt:   time.Now(),
 		OwnerID:     "user1",
-		Description: ptrString("test"),
-		Location:    ptrString("test"),
+		Description: "test",
+		Location:    "test",
 		UserPermissions: map[string][]entity.Permission{
 			"user1": {entity.PermissionDeleteAlbum},
 			"user2": {entity.PermissionReadAlbum, entity.PermissionEditAlbum},

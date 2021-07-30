@@ -1,58 +1,10 @@
 package entity
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 	"time"
 )
-
-type Permission int
-
-const (
-	// PermissionReadAlbum gives the user the right to view the album.
-	PermissionReadAlbum Permission = iota
-	// PermissionWriteAlbum gives the user the right to update photos.
-	PermissionWriteAlbum
-	// PermissionEditAlbum gives the user the right to edit album informations.
-	PermissionEditAlbum
-	// PermissionDeleteAlbum gives the user the right to delete the album.
-	PermissionDeleteAlbum
-	// Permission unknown
-	PermissionUnknown
-)
-
-var ErrInvalidPermission = errors.New("invalid permission")
-
-func (p Permission) String() string {
-	switch p {
-	case PermissionReadAlbum:
-		return "album.read"
-	case PermissionWriteAlbum:
-		return "album.write"
-	case PermissionEditAlbum:
-		return "album.edit"
-	case PermissionDeleteAlbum:
-		return "album.delete"
-	}
-
-	return "unknown"
-}
-
-func NewPermission(perm string) (Permission, error) {
-	switch perm {
-	case "album.read":
-		return PermissionReadAlbum, nil
-	case "album.write":
-		return PermissionWriteAlbum, nil
-	case "album.edit":
-		return PermissionEditAlbum, nil
-	case "album.delete":
-		return PermissionDeleteAlbum, nil
-	default:
-		return PermissionUnknown, ErrInvalidPermission
-	}
-}
 
 type Album struct {
 	ID          int32
@@ -63,10 +15,10 @@ type Album struct {
 	Location    string
 	// UserPermissions holds the list of permissions of other users for this album.
 	// The key is the user id.
-	UserPermissions map[string][]Permission
+	UserPermissions Permissions
 	// GroupPermissions holds the list of permissions of groups for this album.
 	// The key is the group name.
-	GroupPermissions map[string][]Permission
+	GroupPermissions Permissions
 }
 
 func (a Album) Validate() error {

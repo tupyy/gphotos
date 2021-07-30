@@ -5,11 +5,11 @@ $(() => {
     $("#userPermissionButton").on("click", function () {
         try {
             p = getPermission(".container-permissions-user", "#select-users");
-            if (!uPermissions.hasOwnProperty(username)) {
+            if (!uPermissions.hasOwnProperty(p.id)) {
                 if (p.permissions.length > 0) { 
                     $(".row .no-users-permission").remove();
-                    uPermissions[p.username] = p.permissions;
-                    addPermissionElement("#selected-users",p.username, p.permissions);
+                    uPermissions[p.id] = p.permissions;
+                    addPermissionElement("#selected-users",p.username,p.id, p.permissions);
                 }       
             } 
             setPermissionInputValue("#inputUserPermissions", uPermissions);
@@ -21,11 +21,11 @@ $(() => {
     $("#groupPermissionButton").on("click", function () {
         try {
             p = getPermission(".container-permissions-group", "#select-groups");
-            if (!gPermissions.hasOwnProperty(username)) {
+            if (!gPermissions.hasOwnProperty(p.username)) {
                 if (p.permissions.length > 0) {
                     $(".row .no-groups-permission").remove();
                     gPermissions[p.username] = p.permissions;
-                    addPermissionElement("#selected-groups",p.username, p.permissions);
+                    addPermissionElement("#selected-groups",p.username, p.username, p.permissions);
                 }
             }
             setPermissionInputValue("#inputGroupPermissions", gPermissions);
@@ -79,7 +79,9 @@ $(() => {
     const getPermission = function(parent, element) {
         let permissions = [];
 
-        username = $(element + " option:selected").val();
+        id = $(element + " option:selected").val();
+        username = $(element + " option:selected").text();
+        
 
         $(parent + " .form-check input").each(function () {
             if ( $(this).is(":checked") ) {
@@ -87,7 +89,7 @@ $(() => {
             }
         });
 
-        return {username: username, permissions: permissions};
+        return {id:id, username: username, permissions: permissions};
     }
 
     const setPermissionInputValue = (inputID, permMap) => {
@@ -107,7 +109,7 @@ $(() => {
         $(inputID).attr("value",p);
     }
 
-    const addPermissionElement = function(dest, username, permissions) {
+    const addPermissionElement = function(dest, username, id, permissions) {
         let badges = "";
 
         permissions.forEach(function(item) {
@@ -117,7 +119,7 @@ $(() => {
         $(dest).append(`
         <li class="list-group-item">
             <div class="row">
-                <input type="hidden" value="` + username + `"/>
+                <input type="hidden" value="` + id + `"/>
                 <div class="col permission-user">` +
                     "<div>" + username + "</div>" +
                 `</div>

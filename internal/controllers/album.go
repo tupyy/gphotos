@@ -4,9 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"regexp"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -135,11 +133,12 @@ func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
 			for _, u := range users {
 				// remove the current user
 				if u.ID != album.OwnerID {
-					usersID[u.Username] = u.ID
+					usersID[u.ID] = u.ID
 				}
 			}
 
-			perms := parsePermissions(cleanForm.UserPermissions)
+			var permissions entity.Permissions
+			perms := permissions.Decode(cleanForm.UserPermissions, true)
 
 			if len(perms) == 0 {
 				logger.WithField("permissions_string", cleanForm.UserPermissions).Warn("cannot user parse permissions")
@@ -176,7 +175,8 @@ func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
 				groupsID[g.Name] = g.Name
 			}
 
-			perms := parsePermissions(cleanForm.GroupPermissions)
+			var permissions entity.Permissions
+			perms := permissions.Decode(cleanForm.GroupPermissions, false)
 
 			if len(perms) == 0 {
 				logger.WithField("permissions_string", cleanForm.GroupPermissions).Warn("cannot group parse permissions")
@@ -268,11 +268,13 @@ func GetUpdateAlbumForm(r *gin.RouterGroup, repos Repositories) {
 			}
 
 			c.HTML(http.StatusOK, "album_form.html", gin.H{
-				"album":    album,
-				"canShare": session.User.CanShare,
-				"isOwner":  true,
-				"users":    userMap,
-				"groups":   groups,
+				"album":              album,
+				"canShare":           session.User.CanShare,
+				"isOwner":            true,
+				"users":              userMap,
+				"groups":             groups,
+				"users_permissions":  album.UserPermissions.Encode(true),
+				"groups_permissions": album.GroupPermissions.Encode(false),
 			})
 
 			return
@@ -332,65 +334,19 @@ func DeleteAlbum(r *gin.RouterGroup, repos Repositories) {
 	})
 }
 
-// parsePermissions will parse the permission string (e.g. (username#r,w)(uername2#e,d))
-func parsePermissions(perms string) map[string][]entity.Permission {
-	permRe := regexp.MustCompile(`(\((\w+)#(([rwed],?)+)\))`)
-	permissions := make(map[string][]entity.Permission)
-
-	gen := encryption.NewGenerator(conf.GetEncryptionKey())
-
-	for matchIdx, match := range permRe.FindAllStringSubmatch(perms, -1) {
-		logutil.GetDefaultLogger().WithFields(logrus.Fields{"idx": matchIdx, "match": fmt.Sprintf("%+v", match)}).Debug("permission matched")
-		// get 2nd and 3rd groups only
-		name, err := gen.DecryptData(match[2])
-		if err != nil {
-			logutil.GetDefaultLogger().WithError(err).WithField("data", match[2]).Error("decrypt name")
-
-			continue
-		}
-
-		permList := strings.Split(match[3], ",")
-		entities := make([]entity.Permission, 0, len(permList))
-
-		for _, p := range permList {
-			switch p {
-			case "r":
-				entities = append(entities, entity.PermissionReadAlbum)
-			case "w":
-				entities = append(entities, entity.PermissionWriteAlbum)
-			case "e":
-				entities = append(entities, entity.PermissionEditAlbum)
-			case "d":
-				entities = append(entities, entity.PermissionDeleteAlbum)
-			}
-		}
-
-		if len(entities) > 0 {
-			permissions[name] = entities
-		}
-	}
-
-	return permissions
-}
-
-// encode the permission map into a string like (e.g. (username#r,w)(uername2#e,d))
-func encodePermissions(perms map[string][]entity.Permission) string {
-	return ""
-}
-
 // return a map with encrypted username as key and First + Last name as value
 func mapNames(users []entity.User) (map[string]string, error) {
 	gen := encryption.NewGenerator(conf.GetEncryptionKey())
 
-	encryptedUsernames := make(map[string]string)
+	encryptedIDs := make(map[string]string)
 	for _, u := range users {
-		encryptedUsername, err := gen.EncryptData(u.Username)
+		encryptedID, err := gen.EncryptData(u.ID)
 		if err != nil {
 			return nil, err
 		}
 
-		encryptedUsernames[encryptedUsername] = fmt.Sprintf("%s %s", u.FirstName, u.LastName)
+		encryptedIDs[encryptedID] = fmt.Sprintf("%s %s", u.FirstName, u.LastName)
 	}
 
-	return encryptedUsernames, nil
+	return encryptedIDs, nil
 }

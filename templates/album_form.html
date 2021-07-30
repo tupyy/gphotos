@@ -75,7 +75,12 @@
                     <div class="container-permissions-button row">
                         <button type="button" class="btn btn-outline-primary btn-sm" id="userPermissionButton">Add</button>
                     </div>
-                    <input id="inputUserPermissions" type="hidden" name="user_permissions" value=""/>
+                    {{ if .users_permissions }}
+                        <input id="inputUserPermissions" type="hidden" name="user_permissions" value="{{.users_permissions}}"/>
+                    {{ else }}
+                        <input id="inputUserPermissions" type="hidden" name="user_permissions" value=""/>
+                    {{ end }}
+
                     <div class="row container-permissions-selected-users">
                         <span class="title"> Permissions granted </span>
                         <div class="title no-users-permission">None</div>
@@ -114,7 +119,11 @@
                     <div class="container-permissions-button row">
                         <button type="button" id="groupPermissionButton" class="btn btn-outline-primary btn-sm">Add</button>
                     </div>
-                    <input id="inputGroupPermissions" type="hidden" name="group_permissions" value=""/>
+                    {{ if .groups_permissions }}
+                        <input id="inputGroupPermissions" type="hidden" name="group_permissions" value="{{.groups_permissions}}"/>
+                    {{ else }}
+                        <input id="inputGroupPermissions" type="hidden" name="group_permissions" value=""/>
+                    {{ end }}
                     <div class="row container-permissions-selected-groups">
                         <span class="title"> Permissions granted </span>
                         <div class="title no-groups-permission">None</div>
