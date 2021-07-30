@@ -35,6 +35,7 @@ const (
 	// server params
 	authCallbackURL = "AUTH_CALLBACK_URL"
 	secretKey       = "SECRET_KEY"
+	encryptionKey   = "ENCRYPTION_KEY"
 
 	// params for postgresql.
 	pgsqlHost   = "POSTGRESQL_HOST"
@@ -117,6 +118,10 @@ func (s KeycloakConfig) String() string {
 
 func GetServerSecretKey() string {
 	return viper.GetString(secretKey)
+}
+
+func GetEncryptionKey() string {
+	return viper.GetString(encryptionKey)
 }
 
 // GetServerAuthCallback returns the url of the authentication callback.

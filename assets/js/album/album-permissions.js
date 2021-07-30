@@ -79,7 +79,7 @@ $(() => {
     const getPermission = function(parent, element) {
         let permissions = [];
 
-        username = $(element + " option:selected").text();
+        username = $(element + " option:selected").val();
 
         $(parent + " .form-check input").each(function () {
             if ( $(this).is(":checked") ) {

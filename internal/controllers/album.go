@@ -12,15 +12,25 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/csrf"
 	"github.com/sirupsen/logrus"
+	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/internal/form"
 	"github.com/tupyy/gophoto/internal/repo"
+	"github.com/tupyy/gophoto/utils/encryption"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
 
-// POST /album
-func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
-	albumRepo := repos[AlbumRepoName].(AlbumRepo)
+// GET /album/:id
+func GetAlbum(r *gin.RouterGroup, repos Repositories) {
+	//albumRepo := repos[AlbumRepoName].(AlbumRepo)
+
+	r.GET("/album/:id", func(c *gin.Context) {
+
+	})
+}
+
+// GET /album
+func GetCreateAlbumForm(r *gin.RouterGroup, repos Repositories) {
 	keycloakRepo := repos[KeycloakRepoName].(KeycloakRepo)
 
 	r.GET("/album", func(c *gin.Context) {
@@ -28,7 +38,6 @@ func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
 		session := s.(entity.Session)
 
 		reqCtx := c.Request.Context()
-		logger := logutil.GetLogger(c)
 
 		// only editors and admins have the right to create albums
 		if session.User.Role == entity.RoleUser {
@@ -39,8 +48,7 @@ func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
 
 		users, err := keycloakRepo.GetUsers(reqCtx)
 		if err != nil && errors.Is(err, repo.ErrInternalError) {
-			logger.WithError(err).Error("cannot fetch users")
-			c.AbortWithError(http.StatusInternalServerError, fmt.Errorf("cannot fetch users"))
+			AbortInternalError(c, err, "cannot fetch users")
 
 			return
 		}
@@ -51,24 +59,35 @@ func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
 			return u.CanShare == true && u.Role != entity.RoleAdmin && u.Username != session.User.Username
 		})
 
+		userMap, err := mapNames(filteredUsers)
+		if err != nil {
+			AbortInternalError(c, err, "cannot encrypt usernames")
+
+			return
+		}
+
 		groups, err := keycloakRepo.GetGroups(reqCtx)
 		if err != nil && errors.Is(err, repo.ErrInternalError) {
-			logger.WithError(err).Error("cannot fetch groups")
-			c.AbortWithError(http.StatusInternalServerError, fmt.Errorf("cannot fetch groups"))
+			AbortInternalError(c, err, "cannot fetch groups")
 
 			return
 		}
 
 		c.HTML(http.StatusOK, "album_form.html", gin.H{
-			"users":          filteredUsers,
+			"users":          userMap,
 			"groups":         groups,
 			"canShare":       session.User.CanShare,
 			"isOwner":        true,
 			csrf.TemplateTag: csrf.TemplateField(c.Request),
 		})
 	})
+}
 
-	// TODO CRSF protection
+// POST /album
+func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
+	albumRepo := repos[AlbumRepoName].(AlbumRepo)
+	keycloakRepo := repos[KeycloakRepoName].(KeycloakRepo)
+
 	r.POST("/album", func(c *gin.Context) {
 		s, _ := c.Get("sessionData")
 		session := s.(entity.Session)
@@ -83,9 +102,7 @@ func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
 
 		var albumForm form.Album
 		if err := c.ShouldBind(&albumForm); err != nil {
-			logger.WithError(err).Info("fail to bind to json")
-
-			c.HTML(http.StatusBadRequest, "album_form.html", gin.H{"error": err})
+			AbortBadRequest(c, err, "fail to bind to form")
 
 			return
 		}
@@ -108,8 +125,7 @@ func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
 			// get all the users
 			users, err := keycloakRepo.GetUsers(reqCtx)
 			if err != nil {
-				logger.WithError(err).Error("error fetching users")
-				c.HTML(http.StatusInternalServerError, "internal_error.html", nil)
+				AbortInternalError(c, err, "error fetching users")
 
 				return
 			}
@@ -130,6 +146,11 @@ func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
 			} else {
 				for k, v := range perms {
 					if userID, found := usersID[k]; found {
+						logger.WithFields(logrus.Fields{
+							"userID":      userID,
+							"permissions": v,
+						}).Trace("permissions added")
+
 						album.UserPermissions[userID] = v
 					} else {
 						logger.WithField("username", k).Warn("username not found in db")
@@ -144,8 +165,7 @@ func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
 			// get all the users
 			groups, err := keycloakRepo.GetGroups(reqCtx)
 			if err != nil {
-				logger.WithError(err).Error("error fetching groups")
-				c.HTML(http.StatusInternalServerError, "internal_error.html", nil)
+				AbortInternalError(c, err, "error fetching groups")
 
 				return
 			}
@@ -173,8 +193,7 @@ func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
 
 		albumID, err := albumRepo.Create(reqCtx, album)
 		if err != nil {
-			logger.WithField("album", fmt.Sprintf("%+v", album)).WithError(err).Error("cannot create album")
-			c.Redirect(http.StatusInternalServerError, "/error")
+			AbortInternalError(c, err, fmt.Sprintf("album: %+v", album))
 
 			return
 		}
@@ -188,7 +207,8 @@ func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
 	})
 }
 
-func UpdateAlbum(r *gin.RouterGroup, repos Repositories) {
+// GET /album/:id/edit
+func GetUpdateAlbumForm(r *gin.RouterGroup, repos Repositories) {
 	albumRepo := repos[AlbumRepoName].(AlbumRepo)
 	keycloakRepo := repos[KeycloakRepoName].(KeycloakRepo)
 
@@ -211,8 +231,7 @@ func UpdateAlbum(r *gin.RouterGroup, repos Repositories) {
 
 		album, err := albumRepo.GetByID(reqCtx, int32(id))
 		if err != nil {
-			logger.WithError(err).WithField("id", id).Error("update album")
-			c.AbortWithError(http.StatusNotFound, err)
+			AbortNotFound(c, err, "update album")
 
 			return
 		}
@@ -223,8 +242,7 @@ func UpdateAlbum(r *gin.RouterGroup, repos Repositories) {
 
 			users, err := keycloakRepo.GetUsers(reqCtx)
 			if err != nil && errors.Is(err, repo.ErrInternalError) {
-				logger.WithError(err).Error("cannot fetch users")
-				c.AbortWithError(http.StatusInternalServerError, fmt.Errorf("cannot fetch users"))
+				AbortInternalError(c, err, "cannot fetch users")
 
 				return
 			}
@@ -235,10 +253,16 @@ func UpdateAlbum(r *gin.RouterGroup, repos Repositories) {
 				return u.CanShare == true && u.Role != entity.RoleAdmin && u.Username != session.User.Username
 			})
 
+			userMap, err := mapNames(filteredUsers)
+			if err != nil {
+				AbortInternalError(c, err, "cannot encrypt usernames")
+
+				return
+			}
+
 			groups, err := keycloakRepo.GetGroups(reqCtx)
 			if err != nil && errors.Is(err, repo.ErrInternalError) {
-				logger.WithError(err).Error("cannot fetch groups")
-				c.AbortWithError(http.StatusInternalServerError, fmt.Errorf("cannot fetch groups"))
+				AbortInternalError(c, err, "cannot fetch groups")
 
 				return
 			}
@@ -247,7 +271,7 @@ func UpdateAlbum(r *gin.RouterGroup, repos Repositories) {
 				"album":    album,
 				"canShare": session.User.CanShare,
 				"isOwner":  true,
-				"users":    filteredUsers,
+				"users":    userMap,
 				"groups":   groups,
 			})
 
@@ -289,10 +313,23 @@ func UpdateAlbum(r *gin.RouterGroup, repos Repositories) {
 		})
 	})
 
+}
+
+// PUT /album/:id/
+func UpdateAlbum(r *gin.RouterGroup, repos Repositories) {
+	//albumRepo := repos[AlbumRepoName].(AlbumRepo)
+	//keycloakRepo := repos[KeycloakRepoName].(KeycloakRepo)
+
 	r.PUT("/album/:id/", func(c *gin.Context) {
 
 	})
+}
 
+// DELETE /album/:id
+func DeleteAlbum(r *gin.RouterGroup, repos Repositories) {
+	r.DELETE("/album/:id", func(c *gin.Context) {
+
+	})
 }
 
 // parsePermissions will parse the permission string (e.g. (username#r,w)(uername2#e,d))
@@ -300,10 +337,17 @@ func parsePermissions(perms string) map[string][]entity.Permission {
 	permRe := regexp.MustCompile(`(\((\w+)#(([rwed],?)+)\))`)
 	permissions := make(map[string][]entity.Permission)
 
+	gen := encryption.NewGenerator(conf.GetEncryptionKey())
+
 	for matchIdx, match := range permRe.FindAllStringSubmatch(perms, -1) {
 		logutil.GetDefaultLogger().WithFields(logrus.Fields{"idx": matchIdx, "match": fmt.Sprintf("%+v", match)}).Debug("permission matched")
 		// get 2nd and 3rd groups only
-		name := match[2]
+		name, err := gen.DecryptData(match[2])
+		if err != nil {
+			logutil.GetDefaultLogger().WithError(err).WithField("data", match[2]).Error("decrypt name")
+
+			continue
+		}
 
 		permList := strings.Split(match[3], ",")
 		entities := make([]entity.Permission, 0, len(permList))
@@ -327,4 +371,26 @@ func parsePermissions(perms string) map[string][]entity.Permission {
 	}
 
 	return permissions
+}
+
+// encode the permission map into a string like (e.g. (username#r,w)(uername2#e,d))
+func encodePermissions(perms map[string][]entity.Permission) string {
+	return ""
+}
+
+// return a map with encrypted username as key and First + Last name as value
+func mapNames(users []entity.User) (map[string]string, error) {
+	gen := encryption.NewGenerator(conf.GetEncryptionKey())
+
+	encryptedUsernames := make(map[string]string)
+	for _, u := range users {
+		encryptedUsername, err := gen.EncryptData(u.Username)
+		if err != nil {
+			return nil, err
+		}
+
+		encryptedUsernames[encryptedUsername] = fmt.Sprintf("%s %s", u.FirstName, u.LastName)
+	}
+
+	return encryptedUsernames, nil
 }

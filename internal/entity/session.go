@@ -9,12 +9,13 @@ import (
 )
 
 type Session struct {
-	User      User
-	TokenID   string
-	SessionID string
-	Token     *oauth2.Token
-	ExpireAt  time.Time
-	IssueAt   time.Time
+	User       User
+	TokenID    string
+	SessionID  string
+	Token      *oauth2.Token
+	ExpireAt   time.Time
+	IssueAt    time.Time
+	Attributes map[string]interface{}
 }
 
 func (s Session) String() string {

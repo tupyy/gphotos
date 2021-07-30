@@ -50,8 +50,8 @@
                         <label for="select-users">Users</label>
                         <select class="form-select" id="select-users">
                             {{ if .users }}
-                                {{ range $idx, $user := .users }}
-                                    <option value="{{ $idx }}">{{ $user.Username }}</option>
+                                {{ range $k, $v := .users }}
+                                    <option value="{{ $k }}">{{ $v }}</option>
                                 {{ end }}
                             {{ end }}
                         </select>
