@@ -19,8 +19,8 @@ import (
 )
 
 // GET /album/:id
-func GetAlbum(r *gin.RouterGroup, repos Repositories) {
-	//albumRepo := repos[AlbumRepoName].(AlbumRepo)
+func GetAlbum(r *gin.RouterGroup, repos repo.Repositories) {
+	//albumRepo := repos[repo.AlbumRepoName].(AlbumRepo)
 
 	r.GET("/album/:id", func(c *gin.Context) {
 
@@ -28,8 +28,8 @@ func GetAlbum(r *gin.RouterGroup, repos Repositories) {
 }
 
 // GET /album
-func GetCreateAlbumForm(r *gin.RouterGroup, repos Repositories) {
-	keycloakRepo := repos[KeycloakRepoName].(KeycloakRepo)
+func GetCreateAlbumForm(r *gin.RouterGroup, repos repo.Repositories) {
+	keycloakRepo := repos[repo.KeycloakRepoName].(repo.KeycloakRepo)
 
 	r.GET("/album", func(c *gin.Context) {
 		s, _ := c.Get("sessionData")
@@ -82,9 +82,9 @@ func GetCreateAlbumForm(r *gin.RouterGroup, repos Repositories) {
 }
 
 // POST /album
-func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
-	albumRepo := repos[AlbumRepoName].(AlbumRepo)
-	keycloakRepo := repos[KeycloakRepoName].(KeycloakRepo)
+func CreateAlbum(r *gin.RouterGroup, repos repo.Repositories) {
+	albumRepo := repos[repo.AlbumRepoName].(repo.AlbumRepo)
+	keycloakRepo := repos[repo.KeycloakRepoName].(repo.KeycloakRepo)
 
 	r.POST("/album", func(c *gin.Context) {
 		s, _ := c.Get("sessionData")
@@ -94,8 +94,16 @@ func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
 		logger := logutil.GetLogger(c)
 
 		// only editors and admins have the right to create albums
-		if session.User.Role == entity.RoleUser {
-			c.AbortWithError(http.StatusBadRequest, fmt.Errorf("user with user role cannot create albums"))
+		apr := NewAlbumPermissionResolver()
+		hasPermission := apr.Policy(RolePolicy{entity.RoleEditor}).
+			Policy(RolePolicy{entity.RoleAdmin}).
+			Strategy(AtLeastOneStrategy).
+			Resolve(entity.Album{}, session.User)
+
+		if !hasPermission {
+			AbortForbidden(c, errors.New("user has no editor of admin role"), "user role forbids the creation of albums")
+
+			return
 		}
 
 		var albumForm form.Album
@@ -208,9 +216,9 @@ func CreateAlbum(r *gin.RouterGroup, repos Repositories) {
 }
 
 // GET /album/:id/edit
-func GetUpdateAlbumForm(r *gin.RouterGroup, repos Repositories) {
-	albumRepo := repos[AlbumRepoName].(AlbumRepo)
-	keycloakRepo := repos[KeycloakRepoName].(KeycloakRepo)
+func GetUpdateAlbumForm(r *gin.RouterGroup, repos repo.Repositories) {
+	albumRepo := repos[repo.AlbumRepoName].(repo.AlbumRepo)
+	keycloakRepo := repos[repo.KeycloakRepoName].(repo.KeycloakRepo)
 
 	r.GET("/album/:id/edit", func(c *gin.Context) {
 		reqCtx := c.Request.Context()
@@ -280,25 +288,15 @@ func GetUpdateAlbumForm(r *gin.RouterGroup, repos Repositories) {
 			return
 		}
 
-		editPermissionFound := false
+		// only users with editPermission set for this album or one of user's group with the same permission
+		// can edit this album
+		apr := NewAlbumPermissionResolver()
+		hasPermission := apr.Policy(UserPermissionPolicy{entity.PermissionEditAlbum}).
+			Policy(GroupPermissionPolicy{entity.PermissionEditAlbum}).
+			Strategy(AtLeastOneStrategy).
+			Resolve(album, session.User)
 
-		// the user is not the owner
-		// check if user has edit permission set
-		if album.HasUserPermission(session.User.ID, entity.PermissionEditAlbum) {
-			logger.Info("edit permission granted. user has given the edit permission by the owner.")
-			editPermissionFound = true
-		}
-
-		// check if one of user's groups has edit permission set
-		for _, group := range session.User.Groups {
-			if album.HasGroupPermission(group.Name, entity.PermissionEditAlbum) {
-				logger.Info("edit permission granted. user's group has given the edit permission.")
-				editPermissionFound = true
-				break
-			}
-		}
-
-		if !editPermissionFound {
+		if !hasPermission {
 			logger.WithFields(logrus.Fields{
 				"request user id": session.User.ID,
 				"album owner id":  album.OwnerID,
@@ -318,9 +316,9 @@ func GetUpdateAlbumForm(r *gin.RouterGroup, repos Repositories) {
 }
 
 // PUT /album/:id/
-func UpdateAlbum(r *gin.RouterGroup, repos Repositories) {
-	//albumRepo := repos[AlbumRepoName].(AlbumRepo)
-	//keycloakRepo := repos[KeycloakRepoName].(KeycloakRepo)
+func UpdateAlbum(r *gin.RouterGroup, repos repo.Repositories) {
+	//albumRepo := repos[repo.AlbumRepoName].(AlbumRepo)
+	//keycloakRepo := repos[repo.KeycloakRepoName].(repo.KeycloakRepo)
 
 	r.PUT("/album/:id/", func(c *gin.Context) {
 
@@ -328,7 +326,7 @@ func UpdateAlbum(r *gin.RouterGroup, repos Repositories) {
 }
 
 // DELETE /album/:id
-func DeleteAlbum(r *gin.RouterGroup, repos Repositories) {
+func DeleteAlbum(r *gin.RouterGroup, repos repo.Repositories) {
 	r.DELETE("/album/:id", func(c *gin.Context) {
 
 	})

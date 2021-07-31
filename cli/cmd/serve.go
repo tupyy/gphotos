@@ -28,6 +28,7 @@ import (
 	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/controllers"
 	"github.com/tupyy/gophoto/internal/entity"
+	"github.com/tupyy/gophoto/internal/repo"
 	keycloakRepo "github.com/tupyy/gophoto/internal/repo/keycloak"
 	"github.com/tupyy/gophoto/internal/repo/postgres/album"
 	"github.com/tupyy/gophoto/utils/logutil"
@@ -85,8 +86,8 @@ func init() {
 	rootCmd.AddCommand(serveCmd)
 }
 
-func createPostgresRepos(client pgclient.Client) (controllers.Repositories, error) {
-	repos := make(controllers.Repositories)
+func createPostgresRepos(client pgclient.Client) (repo.Repositories, error) {
+	repos := make(repo.Repositories)
 
 	kr, err := keycloakRepo.New(context.Background(), conf.GetKeycloakConfig())
 	if err != nil {
@@ -95,7 +96,7 @@ func createPostgresRepos(client pgclient.Client) (controllers.Repositories, erro
 		return repos, err
 	}
 
-	repos[controllers.KeycloakRepoName] = kr
+	repos[repo.KeycloakRepoName] = kr
 
 	albumRepo, err := album.NewPostgresRepo(client)
 	if err != nil {
@@ -104,7 +105,7 @@ func createPostgresRepos(client pgclient.Client) (controllers.Repositories, erro
 		return repos, err
 	}
 
-	repos[controllers.AlbumRepoName] = albumRepo
+	repos[repo.AlbumRepoName] = albumRepo
 
 	return repos, nil
 }

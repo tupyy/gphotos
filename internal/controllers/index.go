@@ -13,9 +13,9 @@ import (
 	"github.com/tupyy/gophoto/utils/logutil"
 )
 
-func Index(r *gin.RouterGroup, repos Repositories) {
-	albumRepo := repos[AlbumRepoName].(AlbumRepo)
-	keycloakRepo := repos[KeycloakRepoName].(KeycloakRepo)
+func Index(r *gin.RouterGroup, repos repo.Repositories) {
+	albumRepo := repos[repo.AlbumRepoName].(repo.AlbumRepo)
+	keycloakRepo := repos[repo.KeycloakRepoName].(repo.KeycloakRepo)
 
 	r.GET("/", func(c *gin.Context) {
 		s, _ := c.Get("sessionData")
@@ -93,7 +93,7 @@ func Index(r *gin.RouterGroup, repos Repositories) {
 	})
 }
 
-func getUsers(ctx context.Context, k KeycloakRepo) (map[string]entity.User, error) {
+func getUsers(ctx context.Context, k repo.KeycloakRepo) (map[string]entity.User, error) {
 	users, err := k.GetUsers(ctx)
 	if err != nil {
 		return nil, err
