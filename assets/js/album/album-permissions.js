@@ -99,7 +99,7 @@ $(() => {
             let pp = "("+k+"#";
 
             permMap[k].forEach(function(item) {
-                pp += item + ",";
+                pp += item;
             });
 
             pp = pp.slice(0,-1);
@@ -133,4 +133,59 @@ $(() => {
         </li>`
         );
     };
+
+
+    if ( $("#inputUserPermissions").val() !== "" ) {
+        let v = $("#inputUserPermissions").val();
+        let r = /\((?<id>\w+)#(?<perms>\w+)\)/mg;
+
+        let match = r.exec(v);
+        do {
+            let perms = [];
+            for (let i = 0; i < match.groups.perms.length; i++) {
+                perms.push(match.groups.perms.charAt(i))
+            }
+
+            uPermissions[match.groups.id] = perms;
+
+
+            let username = "";
+            $("#select-users > option").each(function() {
+                if ( this.value === match.groups.id ) {
+                    username = this.text;
+                }
+            });
+            // add div element
+            addPermissionElement("#selected-users", username, match.groups.id, perms);
+
+            console.log(`${match.groups.id} ${match.groups.perms}`);
+        } while((match = r.exec(v)) !== null);
+    }
+
+    if ( $("#inputGroupPermissions").val() !== "" ) {
+        let v = $("#inputGroupPermissions").val();
+        let r = /\((?<id>\w+)#(?<perms>\w+)\)/mg;
+
+        let match = r.exec(v);
+        do {
+            let perms = [];
+            for (let i = 0; i < match.groups.perms.length; i++) {
+                perms.push(match.groups.perms.charAt(i))
+            }
+
+            uPermissions[match.groups.id] = perms;
+
+
+            let username = "";
+            $("#select-groups > option").each(function() {
+                if ( this.value === match.groups.id ) {
+                    username = this.text;
+                }
+            });
+            // add div element
+            addPermissionElement("#selected-groups", username, match.groups.id, perms);
+
+            console.log(`${match.groups.id} ${match.groups.perms}`);
+        } while((match = r.exec(v)) !== null);
+    }
 });

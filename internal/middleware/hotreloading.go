@@ -40,9 +40,10 @@ func loadTemplates(templateDir string) (multitemplate.Renderer, error) {
 	}
 
 	templateFuncs := template.FuncMap{
-		"day":   funcs.Day,
-		"month": funcs.Month,
-		"year":  funcs.Year,
+		"day":       funcs.Day,
+		"month":     funcs.Month,
+		"year":      funcs.Year,
+		"perm_name": funcs.PermissionName,
 	}
 
 	for _, t := range templates {

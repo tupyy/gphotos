@@ -12,7 +12,7 @@ func TestParsePermissions(t *testing.T) {
 		CapturedPerms map[string][]Permission
 	}{
 		{
-			PermString: "(bob#r,w)(jane#e,d)(joe#r,w,e,d)",
+			PermString: "(bob#rw)(jane#ed)(joe#rwed)",
 			CapturedPerms: map[string][]Permission{
 				"bob":  {PermissionReadAlbum, PermissionWriteAlbum},
 				"jane": {PermissionEditAlbum, PermissionDeleteAlbum},
@@ -20,20 +20,21 @@ func TestParsePermissions(t *testing.T) {
 			},
 		},
 		{
-			PermString: "(bob#r,w)(jane#)(joe#r,w,e,d)",
+			PermString: "(bob#rw)(jane#)(joe#rwed)",
 			CapturedPerms: map[string][]Permission{
 				"bob": {PermissionReadAlbum, PermissionWriteAlbum},
 				"joe": {PermissionReadAlbum, PermissionWriteAlbum, PermissionEditAlbum, PermissionDeleteAlbum},
 			},
 		},
 		{
-			PermString: "(bob#rw)(jane#)(joe#r,w,e,d)",
+			PermString: "(bob#rw)(jane#)(joe#rwed)",
 			CapturedPerms: map[string][]Permission{
+				"bob": {PermissionReadAlbum, PermissionWriteAlbum},
 				"joe": {PermissionReadAlbum, PermissionWriteAlbum, PermissionEditAlbum, PermissionDeleteAlbum},
 			},
 		},
 		{
-			PermString: "(bob#r,w)jane#r,e",
+			PermString: "(bob#rw)jane#re",
 			CapturedPerms: map[string][]Permission{
 				"bob": {PermissionReadAlbum, PermissionWriteAlbum},
 			},
@@ -42,8 +43,8 @@ func TestParsePermissions(t *testing.T) {
 
 	var perms Permissions
 	for _, td := range testData {
-		p := perms.Decode(td.PermString, false)
+		perms.Decode(td.PermString, false)
 
-		assert.EqualValues(t, td.CapturedPerms, p)
+		assert.EqualValues(t, td.CapturedPerms, perms)
 	}
 }

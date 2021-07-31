@@ -149,11 +149,11 @@ func CreateAlbum(r *gin.RouterGroup, repos repo.Repositories) {
 				}
 			}
 
-			var permissions entity.Permissions
-			perms := permissions.Decode(cleanForm.UserPermissions, true)
+			var perms entity.Permissions
+			perms.Decode(cleanForm.UserPermissions, true)
 
 			if len(perms) == 0 {
-				logger.WithField("permissions_string", cleanForm.UserPermissions).Warn("cannot user parse permissions")
+				logger.WithField("permissions_string", cleanForm.UserPermissions).Warn("cannot user decode permissions")
 			} else {
 				for k, v := range perms {
 					if userID, found := usersID[k]; found {
@@ -187,11 +187,11 @@ func CreateAlbum(r *gin.RouterGroup, repos repo.Repositories) {
 				groupsID[g.Name] = g.Name
 			}
 
-			var permissions entity.Permissions
-			perms := permissions.Decode(cleanForm.GroupPermissions, false)
+			var perms entity.Permissions
+			perms.Decode(cleanForm.GroupPermissions, false)
 
 			if len(perms) == 0 {
-				logger.WithField("permissions_string", cleanForm.GroupPermissions).Warn("cannot group parse permissions")
+				logger.WithField("permissions_string", cleanForm.GroupPermissions).Warn("cannot group decode permissions")
 			} else {
 				for k, v := range perms {
 					if groupID, found := groupsID[k]; found {

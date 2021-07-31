@@ -83,7 +83,8 @@ func (p Permissions) Encode(encrypted bool) string {
 
 		permList := ""
 		for _, p := range permissions {
-			permList = permList + strings.ToLower(string(p.String()[0]))
+			str := strings.Split(p.String(), ".")
+			permList = permList + strings.ToLower(string(str[1][0]))
 		}
 
 		permStr = permStr + fmt.Sprintf("(%s#%s)", encryptedKey, permList)
@@ -92,8 +93,8 @@ func (p Permissions) Encode(encrypted bool) string {
 	return permStr
 }
 
-func (p Permissions) Decode(encodedPermissions string, encrypted bool) Permissions {
-	permRe := regexp.MustCompile(`(\((\w+)#(([rwed],?)+)\))`)
+func (p Permissions) Decode(encodedPermissions string, encrypted bool) {
+	permRe := regexp.MustCompile(`(\((\w+)#(([rwed])+)\))`)
 	permissions := make(map[string][]Permission)
 
 	gen := encryption.NewGenerator(conf.GetEncryptionKey())
@@ -114,11 +115,11 @@ func (p Permissions) Decode(encodedPermissions string, encrypted bool) Permissio
 			}
 		}
 
-		permList := strings.Split(match[3], ",")
-		entities := make([]Permission, 0, len(permList))
+		permList := match[3]
+		entities := make([]Permission, 0, 4)
 
-		for _, p := range permList {
-			switch p {
+		for i := range permList {
+			switch string(permList[i]) {
 			case "r":
 				entities = append(entities, PermissionReadAlbum)
 			case "w":
@@ -135,5 +136,5 @@ func (p Permissions) Decode(encodedPermissions string, encrypted bool) Permissio
 		}
 	}
 
-	return permissions
+	p = permissions
 }

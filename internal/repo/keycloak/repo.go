@@ -17,9 +17,10 @@ const (
 )
 
 type KeycloakRepo struct {
-	client keycloak.GoCloak
-	token  *keycloak.JWT
-	realm  string
+	client        keycloak.GoCloak
+	token         *keycloak.JWT
+	realm         string
+	configuration conf.KeycloakConfig
 }
 
 func New(ctx context.Context, c conf.KeycloakConfig) (*KeycloakRepo, error) {
@@ -31,7 +32,7 @@ func New(ctx context.Context, c conf.KeycloakConfig) (*KeycloakRepo, error) {
 
 	logutil.GetDefaultLogger().Info("keycloak client created")
 
-	return &KeycloakRepo{client: client, token: token, realm: c.Realm}, nil
+	return &KeycloakRepo{client: client, token: token, realm: c.Realm, configuration: c}, nil
 }
 
 func (k *KeycloakRepo) GetUsers(ctx context.Context) ([]entity.User, error) {

@@ -77,16 +77,21 @@
                     </div>
                     {{ if .users_permissions }}
                         <input id="inputUserPermissions" type="hidden" name="user_permissions" value="{{.users_permissions}}"/>
+                        <div class="row container-permissions-selected-users">
+                            <span class="title"> Permissions granted </span>
+                            <ul class="list-group" id="selected-users">
+                            </ul>
+                        </div>
                     {{ else }}
                         <input id="inputUserPermissions" type="hidden" name="user_permissions" value=""/>
+                        <div class="row container-permissions-selected-users">
+                            <span class="title"> Permissions granted </span>
+                            <div class="title no-users-permission">None</div>
+                            <ul class="list-group" id="selected-users">
+                            </ul>
+                        </div>
                     {{ end }}
 
-                    <div class="row container-permissions-selected-users">
-                        <span class="title"> Permissions granted </span>
-                        <div class="title no-users-permission">None</div>
-                        <ul class="list-group" id="selected-users">
-                        </ul>
-                    </div>
                 </div>
                 <div class="container-permissions container-permissions-group">
                     <div class="title container-permissions-title">Group permission</div>
@@ -121,15 +126,20 @@
                     </div>
                     {{ if .groups_permissions }}
                         <input id="inputGroupPermissions" type="hidden" name="group_permissions" value="{{.groups_permissions}}"/>
+                        <div class="row container-permissions-selected-groups">
+                            <span class="title"> Permissions granted </span>
+                            <ul class="list-group" id="selected-groups">
+                            </ul>
+                        </div>
                     {{ else }}
                         <input id="inputGroupPermissions" type="hidden" name="group_permissions" value=""/>
+                        <div class="row container-permissions-selected-groups">
+                            <span class="title"> Permissions granted </span>
+                            <div class="title no-groups-permission">None</div>
+                            <ul class="list-group" id="selected-groups">
+                            </ul>
+                        </div>
                     {{ end }}
-                    <div class="row container-permissions-selected-groups">
-                        <span class="title"> Permissions granted </span>
-                        <div class="title no-groups-permission">None</div>
-                        <ul class="list-group" id="selected-groups">
-                        </ul>
-                    </div>
                 </div>
             {{ end }}
             <div class="row form-container-button">

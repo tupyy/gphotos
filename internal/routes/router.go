@@ -28,7 +28,6 @@ func NewRouter(store sessions.Store, authenticator auth.Authenticator) *PhotoRou
 
 	// TODO remove hotreloading in prod
 	r.Use(sessions.Sessions("gophoto", store), middleware.HotReloading(r))
-
 	r.Static("/static", conf.GetStaticsFolder())
 
 	// setup authentication for the priate group.

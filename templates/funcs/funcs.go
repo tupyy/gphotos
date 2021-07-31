@@ -1,6 +1,11 @@
 package funcs
 
-import "time"
+import (
+	"strings"
+	"time"
+
+	"github.com/tupyy/gophoto/internal/entity"
+)
 
 func Day(t time.Time) int {
 	return int(t.Day())
@@ -12,4 +17,9 @@ func Month(t time.Time) string {
 
 func Year(t time.Time) int {
 	return t.Year()
+}
+
+func PermissionName(p entity.Permission) string {
+	str := strings.Split(p.String(), ".")
+	return string(str[1][0])
 }
