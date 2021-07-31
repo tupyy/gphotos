@@ -27,13 +27,13 @@ type KeycloakRepo interface {
 	GetGroups(ctx context.Context) ([]entity.Group, error)
 }
 
-type AlbumRepo interface {
+type Album interface {
 	// Create creates an album.
 	Create(ctx context.Context, album entity.Album) (albumID int32, err error)
 	// Update an album.
 	Update(ctx context.Context, album entity.Album) error
 	// Delete removes an album from postgres.
-	Delete(ctx context.Context, id string) error
+	Delete(ctx context.Context, id int32) error
 	// Get return all the albums.
 	Get(ctx context.Context) ([]entity.Album, error)
 	// GetByID return an album by id.

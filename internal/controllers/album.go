@@ -18,6 +18,10 @@ import (
 	"github.com/tupyy/gophoto/utils/logutil"
 )
 
+const (
+	rootURL = "/"
+)
+
 // GET /album/:id
 func GetAlbum(r *gin.RouterGroup, repos repo.Repositories) {
 	//albumRepo := repos[repo.AlbumRepoName].(AlbumRepo)
@@ -83,7 +87,7 @@ func GetCreateAlbumForm(r *gin.RouterGroup, repos repo.Repositories) {
 
 // POST /album
 func CreateAlbum(r *gin.RouterGroup, repos repo.Repositories) {
-	albumRepo := repos[repo.AlbumRepoName].(repo.AlbumRepo)
+	albumRepo := repos[repo.AlbumRepoName].(repo.Album)
 	keycloakRepo := repos[repo.KeycloakRepoName].(repo.KeycloakRepo)
 
 	r.POST("/album", func(c *gin.Context) {
@@ -211,13 +215,13 @@ func CreateAlbum(r *gin.RouterGroup, repos repo.Repositories) {
 			"id":    albumID,
 		}).Info("album entity created")
 
-		c.Redirect(http.StatusFound, "/")
+		c.Redirect(http.StatusFound, rootURL)
 	})
 }
 
 // GET /album/:id/edit
 func GetUpdateAlbumForm(r *gin.RouterGroup, repos repo.Repositories) {
-	albumRepo := repos[repo.AlbumRepoName].(repo.AlbumRepo)
+	albumRepo := repos[repo.AlbumRepoName].(repo.Album)
 	keycloakRepo := repos[repo.KeycloakRepoName].(repo.KeycloakRepo)
 
 	r.GET("/album/:id/edit", func(c *gin.Context) {
@@ -283,6 +287,7 @@ func GetUpdateAlbumForm(r *gin.RouterGroup, repos repo.Repositories) {
 				"groups":             groups,
 				"users_permissions":  album.UserPermissions.Encode(true),
 				"groups_permissions": album.GroupPermissions.Encode(false),
+				csrf.TemplateTag:     csrf.TemplateField(c.Request),
 			})
 
 			return
@@ -301,15 +306,16 @@ func GetUpdateAlbumForm(r *gin.RouterGroup, repos repo.Repositories) {
 				"request user id": session.User.ID,
 				"album owner id":  album.OwnerID,
 			}).Error("album cannot be edit either by user with edit permission or the owner")
-			c.AbortWithError(http.StatusForbidden, fmt.Errorf("user has no edit permissions for this album"))
+			AbortForbidden(c, NewMissingPermissionError(entity.PermissionEditAlbum, album, session.User), "update album")
 
 			return
 		}
 
 		c.HTML(http.StatusOK, "album_form.html", gin.H{
-			"album":    album,
-			"canShare": session.User.CanShare,
-			"isOwner":  false,
+			"album":          album,
+			"canShare":       session.User.CanShare,
+			"isOwner":        false,
+			csrf.TemplateTag: csrf.TemplateField(c.Request),
 		})
 	})
 
@@ -317,18 +323,109 @@ func GetUpdateAlbumForm(r *gin.RouterGroup, repos repo.Repositories) {
 
 // PUT /album/:id/
 func UpdateAlbum(r *gin.RouterGroup, repos repo.Repositories) {
-	//albumRepo := repos[repo.AlbumRepoName].(AlbumRepo)
+	albumRepo := repos[repo.AlbumRepoName].(repo.Album)
 	//keycloakRepo := repos[repo.KeycloakRepoName].(repo.KeycloakRepo)
 
 	r.PUT("/album/:id/", func(c *gin.Context) {
+		reqCtx := c.Request.Context()
+		logger := logutil.GetLogger(c)
 
+		s, _ := c.Get("sessionData")
+		session := s.(entity.Session)
+
+		param := c.Param("id")
+
+		id, err := strconv.Atoi(param)
+		if err != nil {
+			logger.WithError(err).WithField("id", param).Error("cannot parse album id")
+			c.AbortWithError(http.StatusNotFound, err)
+
+			return
+		}
+
+		album, err := albumRepo.GetByID(reqCtx, int32(id))
+		if err != nil {
+			AbortNotFound(c, err, "update album")
+
+			return
+		}
+
+		// only users with editPermission set for this album or one of user's group with the same permission
+		// can edit this album
+		apr := NewAlbumPermissionResolver()
+		hasPermission := apr.Policy(OwnerPolicy{}).
+			Policy(UserPermissionPolicy{entity.PermissionEditAlbum}).
+			Policy(GroupPermissionPolicy{entity.PermissionEditAlbum}).
+			Strategy(AtLeastOneStrategy).
+			Resolve(album, session.User)
+
+		if !hasPermission {
+			logger.WithFields(logrus.Fields{
+				"request user id": session.User.ID,
+				"album owner id":  album.OwnerID,
+			}).Error("album can be edit either by user with edit permission or the owner")
+			AbortForbidden(c, NewMissingPermissionError(entity.PermissionEditAlbum, album, session.User), "update album")
+
+			return
+		}
 	})
 }
 
 // DELETE /album/:id
 func DeleteAlbum(r *gin.RouterGroup, repos repo.Repositories) {
-	r.DELETE("/album/:id", func(c *gin.Context) {
+	albumRepo := repos[repo.AlbumRepoName].(repo.Album)
 
+	r.DELETE("/album/:id", func(c *gin.Context) {
+		reqCtx := c.Request.Context()
+		logger := logutil.GetLogger(c)
+
+		s, _ := c.Get("sessionData")
+		session := s.(entity.Session)
+
+		param := c.Param("id")
+
+		id, err := strconv.Atoi(param)
+		if err != nil {
+			logger.WithError(err).WithField("id", param).Error("cannot parse album id")
+			c.AbortWithError(http.StatusNotFound, err)
+
+			return
+		}
+
+		album, err := albumRepo.GetByID(reqCtx, int32(id))
+		if err != nil {
+			AbortNotFound(c, err, "update album")
+
+			return
+		}
+
+		// only users with editPermission set for this album or one of user's group with the same permission
+		// can edit this album
+		apr := NewAlbumPermissionResolver()
+		hasPermission := apr.Policy(OwnerPolicy{}).
+			Policy(UserPermissionPolicy{entity.PermissionDeleteAlbum}).
+			Policy(GroupPermissionPolicy{entity.PermissionDeleteAlbum}).
+			Strategy(AtLeastOneStrategy).
+			Resolve(album, session.User)
+
+		if !hasPermission {
+			logger.WithFields(logrus.Fields{
+				"request user id": session.User.ID,
+				"album owner id":  album.OwnerID,
+			}).Error("album can be edit either by user with delete permission or the owner")
+			AbortForbidden(c, NewMissingPermissionError(entity.PermissionDeleteAlbum, album, session.User), "delete album")
+
+			return
+		}
+
+		err = albumRepo.Delete(reqCtx, album.ID)
+		if err != nil {
+			AbortInternalError(c, ErrDeleteAlbum, fmt.Sprintf("album id: %d", id))
+
+			return
+		}
+
+		c.Redirect(http.StatusFound, rootURL)
 	})
 }
 

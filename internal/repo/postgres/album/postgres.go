@@ -81,7 +81,7 @@ func (a *AlbumPostgresRepo) Create(ctx context.Context, album entity.Album) (alb
 	return m.ID, nil
 }
 
-func (a *AlbumPostgresRepo) Delete(ctx context.Context, id string) error {
+func (a *AlbumPostgresRepo) Delete(ctx context.Context, id int32) error {
 	if res := a.db.WithContext(ctx).Delete(&models.Album{}, id); res.Error != nil {
 		return fmt.Errorf("%w %+v", repo.ErrDeleteAlbum, res.Error)
 	}

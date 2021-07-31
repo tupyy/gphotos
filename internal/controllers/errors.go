@@ -1,11 +1,37 @@
 package controllers
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
+
+var (
+	ErrDeleteAlbum = errors.New("error deleting album")
+)
+
+type MissingPermissionError struct {
+	error
+	requiredPermission entity.Permission
+	album              entity.Album
+	user               entity.User
+}
+
+func NewMissingPermissionError(requiredPermission entity.Permission, album entity.Album, user entity.User) *MissingPermissionError {
+	return &MissingPermissionError{
+		requiredPermission: requiredPermission,
+		album:              album,
+		user:               user,
+	}
+}
+
+func (p *MissingPermissionError) Error() string {
+	return fmt.Sprintf("User %s is missing permission %s to access album %v", p.user.ID, p.requiredPermission.String(), p.album)
+}
 
 func Abort(c *gin.Context, status int, err error, msg string) {
 

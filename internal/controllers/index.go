@@ -14,7 +14,7 @@ import (
 )
 
 func Index(r *gin.RouterGroup, repos repo.Repositories) {
-	albumRepo := repos[repo.AlbumRepoName].(repo.AlbumRepo)
+	albumRepo := repos[repo.AlbumRepoName].(repo.Album)
 	keycloakRepo := repos[repo.KeycloakRepoName].(repo.KeycloakRepo)
 
 	r.GET("/", func(c *gin.Context) {

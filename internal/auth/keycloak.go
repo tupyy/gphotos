@@ -49,15 +49,6 @@ func NewKeyCloakAuthenticator(oidcProvider *OidcProvider) Authenticator {
 	return &keyCloakAuthenticator{oidcProvider: oidcProvider}
 }
 
-type gophotoClaims struct {
-	UserName     *string  `json:"preferred_username"`
-	Role         *string  `json:"role"`
-	CanShare     *bool    `json:"can_share"`
-	Groups       []string `json:"groups"`
-	SessionState string   `json:"session_state"`
-	jwt.StandardClaims
-}
-
 // Middleware returns the authentication middleware used for private routes.
 func (k *keyCloakAuthenticator) AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -259,6 +250,15 @@ func redirectToLogin(c *gin.Context, config oauth2.Config) {
 	session.Save()
 
 	http.Redirect(c.Writer, c.Request, config.AuthCodeURL(state, oidc.Nonce(nonce)), http.StatusFound)
+}
+
+type gophotoClaims struct {
+	UserName     *string  `json:"preferred_username"`
+	Role         *string  `json:"role"`
+	CanShare     *bool    `json:"can_share"`
+	Groups       []string `json:"groups"`
+	SessionState string   `json:"session_state"`
+	jwt.StandardClaims
 }
 
 func getUsernameFromClaims(claims gophotoClaims) *string {
