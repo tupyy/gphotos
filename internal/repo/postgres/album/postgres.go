@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/sirupsen/logrus"
 	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/internal/repo"
 	"github.com/tupyy/gophoto/models"
@@ -90,26 +91,86 @@ func (a *AlbumPostgresRepo) Delete(ctx context.Context, id int32) error {
 }
 
 func (a *AlbumPostgresRepo) Update(ctx context.Context, album entity.Album) error {
-	var oldAlbum entity.Album
+	var ca customAlbum
+
+	logger := logutil.GetDefaultLogger()
 
 	if err := album.Validate(); err != nil {
-		return fmt.Errorf("%w cannot create album: %+v", repo.ErrUpdateAlbum, err)
+		return fmt.Errorf("%w %+v album_id=%d", repo.ErrUpdateAlbum, err, album.ID)
 	}
 
-	tx := a.db.WithContext(ctx).Where("id = ?", album.ID).First(&oldAlbum)
+	tx := a.db.WithContext(ctx).Table("album").Where("id = ?", album.ID).First(&ca)
 	if tx.Error != nil {
-		return fmt.Errorf("%w cannot update album: %v", repo.ErrAlbumNotFound, tx.Error)
+		return fmt.Errorf("%w %v album_id=%d", repo.ErrAlbumNotFound, tx.Error, album.ID)
 	}
 
 	// update all fields except the owner
-	oldAlbum.Name = album.Name
-	oldAlbum.CreatedAt = album.CreatedAt
-	oldAlbum.Description = album.Description
-	oldAlbum.Location = album.Location
+	newAlbum := entity.Album{
+		Name:        album.Name,
+		CreatedAt:   album.CreatedAt,
+		Description: album.Description,
+		Location:    album.Location,
+		OwnerID:     album.OwnerID,
+	}
 
-	tx = a.db.WithContext(ctx).Save(&oldAlbum)
-	if tx.Error != nil {
-		return fmt.Errorf("%w cannot update album %v", repo.ErrUpdateAlbum, tx.Error)
+	tx = a.db.WithContext(ctx).Begin()
+
+	m := toModel(newAlbum)
+	m.ID = album.ID
+
+	result := tx.Save(&m)
+	if result.Error != nil {
+		logger.WithError(result.Error).Warnf("cannot update album: %v", album)
+
+		return fmt.Errorf("%w %+v", repo.ErrUpdateAlbum, result.Error)
+	}
+
+	// update user permissions
+	result = tx.Where("album_id = ?", album.ID).Delete(models.AlbumUserPermissions{})
+	if result.Error != nil {
+		logger.WithError(result.Error).Warnf("cannot delete user permissions while updating album: %v", album)
+		tx.Rollback()
+
+		return fmt.Errorf("%w %+v album_id: %d", repo.ErrUpdateAlbum, result.Error, album.ID)
+	}
+
+	if len(album.UserPermissions) != 0 {
+		permModels := toUserPermissionsModels(m.ID, album.UserPermissions)
+
+		if result := tx.CreateInBatches(permModels, len(permModels)); result.Error != nil {
+			logger.WithError(result.Error).Warnf("cannot create album user permissions: %v", permModels)
+			tx.Rollback()
+
+			return fmt.Errorf("%w %+v album_id: %d", repo.ErrUpdateAlbum, result.Error, album.ID)
+		}
+	}
+
+	result = tx.Where("album_id = ?", album.ID).Delete(models.AlbumGroupPermissions{})
+	if result.Error != nil {
+		logger.WithError(result.Error).Warnf("cannot delete group permissions while updating album: %v", album)
+		tx.Rollback()
+
+		return fmt.Errorf("%w %+v album_id: %d", repo.ErrUpdateAlbum, result.Error, album.ID)
+	}
+
+	if len(album.GroupPermissions) != 0 {
+		permModels := toGroupPermissionsModels(m.ID, album.GroupPermissions)
+
+		if result := tx.CreateInBatches(permModels, len(permModels)); result.Error != nil {
+			logger.WithError(result.Error).Warnf("cannot create album group permissions: %v", permModels)
+			tx.Rollback()
+
+			return fmt.Errorf("%w %+v album_id: %d", repo.ErrUpdateAlbum, result.Error, album.ID)
+		}
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		logger.WithError(result.Error).WithFields(logrus.Fields{
+			"new album": fmt.Sprintf("%+v", album),
+			"old album": fmt.Sprintf("%+v", ca),
+		}).Warnf("error commit album: %v", album)
+
+		return fmt.Errorf("%w %+v album_id: %d", repo.ErrUpdateAlbum, result.Error, album.ID)
 	}
 
 	return nil

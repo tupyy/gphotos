@@ -309,9 +309,8 @@ func GetUpdateAlbumForm(r *gin.RouterGroup, repos repo.Repositories) {
 // PUT /album/:id/
 func UpdateAlbum(r *gin.RouterGroup, repos repo.Repositories) {
 	albumRepo := repos[repo.AlbumRepoName].(repo.Album)
-	//keycloakRepo := repos[repo.KeycloakRepoName].(repo.KeycloakRepo)
 
-	r.PUT("/album/:id/", func(c *gin.Context) {
+	r.POST("/album/:id/", func(c *gin.Context) {
 		reqCtx := c.Request.Context()
 		logger := logutil.GetLogger(c)
 
@@ -335,6 +334,13 @@ func UpdateAlbum(r *gin.RouterGroup, repos repo.Repositories) {
 			return
 		}
 
+		var albumForm form.Album
+		if err := c.ShouldBind(&albumForm); err != nil {
+			AbortBadRequest(c, err, "fail to bind to form")
+
+			return
+		}
+
 		// only users with editPermission set for this album or one of user's group with the same permission
 		// can edit this album
 		apr := NewAlbumPermissionResolver()
@@ -353,6 +359,59 @@ func UpdateAlbum(r *gin.RouterGroup, repos repo.Repositories) {
 
 			return
 		}
+
+		// update album
+
+		cleanForm := albumForm.Sanitize()
+		album.Description = cleanForm.Description
+		album.Location = cleanForm.Location
+
+		if cleanForm.Name == "" {
+			AbortBadRequest(c, errors.New("name is missing"), "update album")
+
+			return
+		}
+
+		album.Name = cleanForm.Name
+
+		if session.User.ID == album.OwnerID {
+			// add new permissions if any
+			if len(cleanForm.UserPermissions) > 0 {
+				permForm := make(map[string][]string)
+
+				err := json.Unmarshal(bytes.NewBufferString(cleanForm.UserPermissions).Bytes(), &permForm)
+				if err != nil {
+					logger.WithField("permissions_string", cleanForm.UserPermissions).WithError(err).Warn("unmarshal error")
+				} else {
+					var pp = make(entity.Permissions)
+					pp.Parse(permForm, true)
+					album.UserPermissions = pp
+				}
+			}
+
+			if len(cleanForm.GroupPermissions) > 0 {
+				permForm := make(map[string][]string)
+
+				err := json.Unmarshal(bytes.NewBufferString(cleanForm.GroupPermissions).Bytes(), &permForm)
+				if err != nil {
+					logger.WithField("permissions_string", cleanForm.UserPermissions).WithError(err).Warn("unmarshal error")
+				} else {
+					var pp = make(entity.Permissions)
+					pp.Parse(permForm, false)
+					album.GroupPermissions = pp
+				}
+			}
+		}
+
+		// edit permissions don't allow a user other than the owner to change permissions
+		err = albumRepo.Update(reqCtx, album)
+		if err != nil {
+			AbortInternalError(c, err, "update album")
+
+			return
+		}
+
+		c.Redirect(http.StatusFound, rootURL)
 	})
 }
 

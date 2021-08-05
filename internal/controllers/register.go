@@ -17,6 +17,7 @@ func Register(privateGroup *gin.RouterGroup, publicGroup *gin.RouterGroup, repos
 	GetCreateAlbumForm(privateGroup, repos)
 	GetUpdateAlbumForm(privateGroup, repos)
 	CreateAlbum(privateGroup, repos)
+	UpdateAlbum(privateGroup, repos)
 	DeleteAlbum(privateGroup, repos)
 	logutil.GetDefaultLogger().Info("album controllers registered")
 }
