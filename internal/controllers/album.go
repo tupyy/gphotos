@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -88,7 +90,6 @@ func GetCreateAlbumForm(r *gin.RouterGroup, repos repo.Repositories) {
 // POST /album
 func CreateAlbum(r *gin.RouterGroup, repos repo.Repositories) {
 	albumRepo := repos[repo.AlbumRepoName].(repo.Album)
-	keycloakRepo := repos[repo.KeycloakRepoName].(repo.KeycloakRepo)
 
 	r.POST("/album", func(c *gin.Context) {
 		s, _ := c.Get("sessionData")
@@ -130,76 +131,28 @@ func CreateAlbum(r *gin.RouterGroup, repos repo.Repositories) {
 		}
 
 		if len(cleanForm.UserPermissions) > 0 {
-			album.UserPermissions = make(map[string][]entity.Permission)
+			permForm := make(map[string][]string)
 
-			// get all the users
-			users, err := keycloakRepo.GetUsers(reqCtx)
+			err := json.Unmarshal(bytes.NewBufferString(cleanForm.UserPermissions).Bytes(), &permForm)
 			if err != nil {
-				AbortInternalError(c, err, "error fetching users")
-
-				return
-			}
-
-			// put users into a map
-			usersID := make(map[string]string)
-			for _, u := range users {
-				// remove the current user
-				if u.ID != album.OwnerID {
-					usersID[u.ID] = u.ID
-				}
-			}
-
-			var perms entity.Permissions
-			perms.Decode(cleanForm.UserPermissions, true)
-
-			if len(perms) == 0 {
-				logger.WithField("permissions_string", cleanForm.UserPermissions).Warn("cannot user decode permissions")
+				logger.WithField("permissions_string", cleanForm.UserPermissions).WithError(err).Warn("unmarshal error")
 			} else {
-				for k, v := range perms {
-					if userID, found := usersID[k]; found {
-						logger.WithFields(logrus.Fields{
-							"userID":      userID,
-							"permissions": v,
-						}).Trace("permissions added")
-
-						album.UserPermissions[userID] = v
-					} else {
-						logger.WithField("username", k).Warn("username not found in db")
-					}
-				}
+				var pp = make(entity.Permissions)
+				pp.Parse(permForm, true)
+				album.UserPermissions = pp
 			}
 		}
 
 		if len(cleanForm.GroupPermissions) > 0 {
-			album.GroupPermissions = make(map[string][]entity.Permission)
+			permForm := make(map[string][]string)
 
-			// get all the users
-			groups, err := keycloakRepo.GetGroups(reqCtx)
+			err := json.Unmarshal(bytes.NewBufferString(cleanForm.GroupPermissions).Bytes(), &permForm)
 			if err != nil {
-				AbortInternalError(c, err, "error fetching groups")
-
-				return
-			}
-
-			// put groups into a map
-			groupsID := make(map[string]string)
-			for _, g := range groups {
-				groupsID[g.Name] = g.Name
-			}
-
-			var perms entity.Permissions
-			perms.Decode(cleanForm.GroupPermissions, false)
-
-			if len(perms) == 0 {
-				logger.WithField("permissions_string", cleanForm.GroupPermissions).Warn("cannot group decode permissions")
+				logger.WithField("permissions_string", cleanForm.UserPermissions).WithError(err).Warn("unmarshal error")
 			} else {
-				for k, v := range perms {
-					if groupID, found := groupsID[k]; found {
-						album.GroupPermissions[groupID] = v
-					} else {
-						logger.WithField("group name", k).Warn("group not found in db")
-					}
-				}
+				var pp = make(entity.Permissions)
+				pp.Parse(permForm, false)
+				album.GroupPermissions = pp
 			}
 		}
 
@@ -265,11 +218,26 @@ func GetUpdateAlbumForm(r *gin.RouterGroup, repos repo.Repositories) {
 				return u.CanShare == true && u.Role != entity.RoleAdmin && u.Username != session.User.Username
 			})
 
-			userMap, err := mapNames(filteredUsers)
-			if err != nil {
-				AbortInternalError(c, err, "cannot encrypt usernames")
+			// encrypt user id in permission map
+			gen := encryption.NewGenerator(conf.GetEncryptionKey())
 
-				return
+			userPermissions := make(entity.Permissions)
+			encryptedIDs := make(map[string]string)
+			for _, u := range filteredUsers {
+				encryptedID, err := gen.EncryptData(u.ID)
+				if err != nil {
+					logger.WithError(err).WithField("user_id", u.ID).Error("encrypt id")
+
+					continue
+				}
+
+				if u.FirstName != "" || u.LastName != "" {
+					encryptedIDs[encryptedID] = fmt.Sprintf("%s %s", u.FirstName, u.LastName)
+				}
+
+				if perm, found := album.UserPermissions[u.ID]; found {
+					userPermissions[encryptedID] = perm
+				}
 			}
 
 			groups, err := keycloakRepo.GetGroups(reqCtx)
@@ -279,14 +247,31 @@ func GetUpdateAlbumForm(r *gin.RouterGroup, repos repo.Repositories) {
 				return
 			}
 
+			var permUserJson string
+			if len(album.UserPermissions) > 0 {
+				permUserJson, err = userPermissions.Json()
+				if err != nil {
+					logger.WithField("user permissions", fmt.Sprintf("%+v", userPermissions)).WithError(err).Error("marshal to json")
+				}
+			}
+
+			var permGroupJson string
+			if len(album.GroupPermissions) > 0 {
+				var err error
+				permGroupJson, err = album.GroupPermissions.Json()
+				if err != nil {
+					logger.WithField("group permissions", fmt.Sprintf("%+v", album.GroupPermissions)).WithError(err).Error("marshal to json")
+				}
+			}
+
 			c.HTML(http.StatusOK, "album_form.html", gin.H{
 				"album":              album,
 				"canShare":           session.User.CanShare,
 				"isOwner":            true,
-				"users":              userMap,
+				"users":              encryptedIDs,
 				"groups":             groups,
-				"users_permissions":  album.UserPermissions.Encode(true),
-				"groups_permissions": album.GroupPermissions.Encode(false),
+				"users_permissions":  permUserJson,
+				"groups_permissions": permGroupJson,
 				csrf.TemplateTag:     csrf.TemplateField(c.Request),
 			})
 

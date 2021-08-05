@@ -1,6 +1,8 @@
 package form
 
-import "html"
+import (
+	"html"
+)
 
 type Album struct {
 	Name             string `form:"name" binding:"required"`
@@ -15,8 +17,8 @@ func (a Album) Sanitize() Album {
 		Name:             html.EscapeString(a.Name),
 		Description:      html.EscapeString(a.Description),
 		Location:         html.EscapeString(a.Location),
-		UserPermissions:  html.EscapeString(a.UserPermissions),
-		GroupPermissions: html.EscapeString(a.GroupPermissions),
+		UserPermissions:  a.UserPermissions,
+		GroupPermissions: a.GroupPermissions,
 	}
 
 	return escapedAlbum

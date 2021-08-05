@@ -1,12 +1,11 @@
 package entity
 
 import (
+	"encoding/json"
 	"errors"
-	"fmt"
-	"regexp"
+	"html"
 	"strings"
 
-	"github.com/sirupsen/logrus"
 	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/utils/encryption"
 	"github.com/tupyy/gophoto/utils/logutil"
@@ -62,64 +61,34 @@ func NewPermission(perm string) (Permission, error) {
 // Permissions represents a mapping between an user/group and a set of permissions
 type Permissions map[string][]Permission
 
-// Encode will return a string like "(username#rw)(username2#ed)" to be used in forms
-// If encrypted is set to true username is encrypted with server encryption key.
-func (p Permissions) Encode(encrypted bool) string {
+func (pp Permissions) Parse(permString map[string][]string, encrypted bool) {
 	gen := encryption.NewGenerator(conf.GetEncryptionKey())
 
-	permStr := ""
-	for key, permissions := range p {
-		encryptedKey := key
+	for k, v := range permString {
+		if len(k) == 0 {
+			continue
+		}
+
+		var id string
 		if encrypted {
 			var err error
-
-			encryptedKey, err = gen.EncryptData(key)
+			decryptedID, err := gen.DecryptData(k)
 			if err != nil {
-				logutil.GetDefaultLogger().WithError(err).Error("cannot ecrypt name")
+				logutil.GetDefaultLogger().WithError(err).WithField("key", k).Error("decrypt id")
 
 				continue
 			}
+
+			id = decryptedID
+		} else {
+			// sanitize key
+			id = html.EscapeString(k)
 		}
 
-		permList := ""
-		for _, p := range permissions {
-			str := strings.Split(p.String(), ".")
-			permList = permList + strings.ToLower(string(str[1][0]))
-		}
+		entities := make([]Permission, 0, len(v))
 
-		permStr = permStr + fmt.Sprintf("(%s#%s)", encryptedKey, permList)
-	}
-
-	return permStr
-}
-
-func (p Permissions) Decode(encodedPermissions string, encrypted bool) {
-	permRe := regexp.MustCompile(`(\((\w+)#(([rwed])+)\))`)
-	permissions := make(map[string][]Permission)
-
-	gen := encryption.NewGenerator(conf.GetEncryptionKey())
-
-	for matchIdx, match := range permRe.FindAllStringSubmatch(encodedPermissions, -1) {
-		logutil.GetDefaultLogger().WithFields(logrus.Fields{"idx": matchIdx, "match": fmt.Sprintf("%+v", match)}).Debug("permission matched")
-		// get 2nd and 3rd groups only
-		name := match[2]
-
-		if encrypted {
-			var err error
-
-			name, err = gen.DecryptData(match[2])
-			if err != nil {
-				logutil.GetDefaultLogger().WithError(err).WithField("data", match[2]).Error("decrypt name")
-
-				continue
-			}
-		}
-
-		permList := match[3]
-		entities := make([]Permission, 0, 4)
-
-		for i := range permList {
-			switch string(permList[i]) {
+		for i := range v {
+			switch string(v[i]) {
 			case "r":
 				entities = append(entities, PermissionReadAlbum)
 			case "w":
@@ -132,9 +101,31 @@ func (p Permissions) Decode(encodedPermissions string, encrypted bool) {
 		}
 
 		if len(entities) > 0 {
-			permissions[name] = entities
+			pp[id] = entities
+		}
+	}
+}
+
+func (pp Permissions) Json() (string, error) {
+	permForm := make(map[string][]string)
+
+	for k, v := range pp {
+		vv := make([]string, 0, len(v))
+
+		for _, permission := range v {
+			parts := strings.Split(permission.String(), ".")
+			vv = append(vv, strings.ToLower(string(parts[1][0])))
+		}
+
+		if len(vv) > 0 {
+			permForm[k] = vv
 		}
 	}
 
-	p = permissions
+	j, err := json.Marshal(permForm)
+	if err != nil {
+		return "", err
+	}
+
+	return string(j), nil
 }

@@ -12,7 +12,7 @@ $(() => {
                     addPermissionElement("#selected-users",p.username,p.id, p.permissions);
                 }       
             } 
-            setPermissionInputValue("#inputUserPermissions", uPermissions);
+            $("#inputUserPermissions").attr('value',JSON.stringify(uPermissions));
         } catch (e) {
             console.log(e);
         }
@@ -28,7 +28,7 @@ $(() => {
                     addPermissionElement("#selected-groups",p.username, p.username, p.permissions);
                 }
             }
-            setPermissionInputValue("#inputGroupPermissions", gPermissions);
+            $("#inputGroupPermissions").attr('value', JSON.stringify(gPermissions));
         } catch (e) {
             console.log(e);
         }
@@ -42,7 +42,7 @@ $(() => {
 
         if (uPermissions.hasOwnProperty(username)) {
             delete uPermissions[username];
-            setPermissionInputValue("#inputUserPermissions", uPermissions);
+            $("#inputUserPermissions").attr('value',JSON.stringify(uPermissions));
         }
 
         if (Object.keys(uPermissions).length === 0) {
@@ -63,7 +63,7 @@ $(() => {
 
         if (gPermissions.hasOwnProperty(name)) {
             delete gPermissions[name];
-            setPermissionInputValue("#inputGroupPermissions", gPermissions);
+            $("#inputGroupPermissions").attr('value', JSON.stringify(gPermissions));
         }
 
         if (Object.keys(gPermissions).length === 0) {
@@ -90,23 +90,6 @@ $(() => {
         });
 
         return {id:id, username: username, permissions: permissions};
-    }
-
-    const setPermissionInputValue = (inputID, permMap) => {
-        let p = "";
-
-        Object.keys(permMap).forEach(function(k) {
-            let pp = "("+k+"#";
-
-            permMap[k].forEach(function(item) {
-                pp += item;
-            });
-
-            pp = pp.slice(0,-1);
-            p += pp + ")";
-        });
-
-        $(inputID).attr("value",p);
     }
 
     const addPermissionElement = function(dest, username, id, permissions) {
@@ -136,56 +119,30 @@ $(() => {
 
 
     if ( $("#inputUserPermissions").val() !== "" ) {
-        let v = $("#inputUserPermissions").val();
-        let r = /\((?<id>\w+)#(?<perms>\w+)\)/mg;
-
-        let match = r.exec(v);
-        do {
-            let perms = [];
-            for (let i = 0; i < match.groups.perms.length; i++) {
-                perms.push(match.groups.perms.charAt(i))
-            }
-
-            uPermissions[match.groups.id] = perms;
-
-
+        uPermissions = JSON.parse($("#inputUserPermissions").val());
+        
+        Object.keys(uPermissions).forEach((k) => {
             let username = "";
             $("#select-users > option").each(function() {
-                if ( this.value === match.groups.id ) {
+                if ( this.value === k ) {
                     username = this.text;
                 }
             });
             // add div element
-            addPermissionElement("#selected-users", username, match.groups.id, perms);
-
-            console.log(`${match.groups.id} ${match.groups.perms}`);
-        } while((match = r.exec(v)) !== null);
+            addPermissionElement("#selected-users", username, k, uPermissions[k]);
+        }); 
     }
 
     if ( $("#inputGroupPermissions").val() !== "" ) {
-        let v = $("#inputGroupPermissions").val();
-        let r = /\((?<id>\w+)#(?<perms>\w+)\)/mg;
-
-        let match = r.exec(v);
-        do {
-            let perms = [];
-            for (let i = 0; i < match.groups.perms.length; i++) {
-                perms.push(match.groups.perms.charAt(i))
-            }
-
-            uPermissions[match.groups.id] = perms;
-
-
-            let username = "";
-            $("#select-groups > option").each(function() {
-                if ( this.value === match.groups.id ) {
-                    username = this.text;
-                }
-            });
-            // add div element
-            addPermissionElement("#selected-groups", username, match.groups.id, perms);
-
-            console.log(`${match.groups.id} ${match.groups.perms}`);
-        } while((match = r.exec(v)) !== null);
+        try {
+            gPermissions = JSON.parse($("#inputGroupPermissions").val())
+        
+            Object.keys(gPermissions).forEach((k) => {
+                // add div element
+                addPermissionElement("#selected-groups", k, k, gPermissions[k]);
+            })
+        } catch(err) {
+            console.log(err);
+        }
     }
 });
