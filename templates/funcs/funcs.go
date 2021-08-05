@@ -23,3 +23,7 @@ func PermissionName(p entity.Permission) string {
 	str := strings.Split(p.String(), ".")
 	return string(str[1][0])
 }
+
+func Date(t time.Time) string {
+	return t.Format(time.RFC1123Z)
+}

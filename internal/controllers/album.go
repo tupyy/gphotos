@@ -26,10 +26,53 @@ const (
 
 // GET /album/:id
 func GetAlbum(r *gin.RouterGroup, repos repo.Repositories) {
-	//albumRepo := repos[repo.AlbumRepoName].(AlbumRepo)
+	albumRepo := repos[repo.AlbumRepoName].(repo.Album)
+	//keycloakRepo := repos[repo.KeycloakRepoName].(repo.KeycloakRepo)
 
 	r.GET("/album/:id", func(c *gin.Context) {
+		reqCtx := c.Request.Context()
+		logger := logutil.GetLogger(c)
 
+		s, _ := c.Get("sessionData")
+		session := s.(entity.Session)
+
+		param := c.Param("id")
+
+		id, err := strconv.Atoi(param)
+		if err != nil {
+			logger.WithError(err).WithField("id", param).Error("cannot parse album id")
+			c.AbortWithError(http.StatusNotFound, err)
+
+			return
+		}
+
+		album, err := albumRepo.GetByID(reqCtx, int32(id))
+		if err != nil {
+			AbortNotFound(c, err, "update album")
+
+			return
+		}
+
+		// owner, err := keycloakRepo.GetUserByID(reqCtx, album.OwnerID)
+		// if err != nil {
+		// 	logger.WithError(err).WithField("user id", album.OwnerID).Error("fetch album's owner")
+		// 	AbortInternalError(c, errors.New("fetch user from keyclosk"), fmt.Sprintf("user id: %s", album.OwnerID))
+
+		// 	return
+		// }
+
+		c.HTML(http.StatusOK, "album_view.html", gin.H{
+			"name":              album.Name,
+			"description":       album.Description,
+			"location":          album.Location,
+			"created_at":        album.CreatedAt,
+			"is_owner":          session.User.ID == album.OwnerID,
+			"owner":             fmt.Sprintf("%s %s", "bob", "bob"),
+			"user_permissions":  album.UserPermissions,
+			"group_permissions": album.GroupPermissions,
+			"delete_link":       "test",
+			"edit_link":         "test",
+		})
 	})
 }
 
@@ -63,11 +106,22 @@ func GetCreateAlbumForm(r *gin.RouterGroup, repos repo.Repositories) {
 			return u.CanShare == true && u.Role != entity.RoleAdmin && u.Username != session.User.Username
 		})
 
-		userMap, err := mapNames(filteredUsers)
-		if err != nil {
-			AbortInternalError(c, err, "cannot encrypt usernames")
+		// encrypt user id in permission map
+		gen := encryption.NewGenerator(conf.GetEncryptionKey())
 
-			return
+		encryptedIDs := make(map[string]string)
+		for _, u := range filteredUsers {
+			encryptedID, err := gen.EncryptData(u.ID)
+			if err != nil {
+				logutil.GetDefaultLogger().WithError(err).WithField("user_id", u.ID).Error("encrypt id")
+
+				continue
+			}
+
+			if u.FirstName != "" || u.LastName != "" {
+				encryptedIDs[encryptedID] = fmt.Sprintf("%s %s", u.FirstName, u.LastName)
+			}
+
 		}
 
 		groups, err := keycloakRepo.GetGroups(reqCtx)
@@ -78,7 +132,7 @@ func GetCreateAlbumForm(r *gin.RouterGroup, repos repo.Repositories) {
 		}
 
 		c.HTML(http.StatusOK, "album_form.html", gin.H{
-			"users":          userMap,
+			"users":          encryptedIDs,
 			"groups":         groups,
 			"canShare":       session.User.CanShare,
 			"isOwner":        true,
@@ -471,21 +525,4 @@ func DeleteAlbum(r *gin.RouterGroup, repos repo.Repositories) {
 
 		c.Redirect(http.StatusFound, rootURL)
 	})
-}
-
-// return a map with encrypted username as key and First + Last name as value
-func mapNames(users []entity.User) (map[string]string, error) {
-	gen := encryption.NewGenerator(conf.GetEncryptionKey())
-
-	encryptedIDs := make(map[string]string)
-	for _, u := range users {
-		encryptedID, err := gen.EncryptData(u.ID)
-		if err != nil {
-			return nil, err
-		}
-
-		encryptedIDs[encryptedID] = fmt.Sprintf("%s %s", u.FirstName, u.LastName)
-	}
-
-	return encryptedIDs, nil
 }

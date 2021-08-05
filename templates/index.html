@@ -5,15 +5,18 @@
         <link rel="stylesheet" href="/static/css/index.css"/>
         <link rel="stylesheet" href="/static/css/album-card.css"/>
         {{ template "js" }}
+        <title>Photos</title>
     </head>
     <body>
         <header>
             {{ template "header" . }}
         </header>
-        <div class="row">
-            {{ range .personalAlbums }}
-                {{ template "album-card" . }}
-            {{ end }}
+        <div class="container">
+            <div class="row">
+                {{ range .personalAlbums }}
+                    {{ template "album-card" . }}
+                {{ end }}
+            </div>
         </div>
         <div>
             {{ if .sharedAlbums }}
@@ -26,7 +29,7 @@
             {{ end }}
         </div>
     </body>
-    <footer>
-        {{ template "footer" }}
-    </footer>
+    <!-- <footer> -->
+    <!--     {{ template "footer" }} -->
+    <!-- </footer> -->
 </html>

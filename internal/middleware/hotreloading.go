@@ -44,6 +44,7 @@ func loadTemplates(templateDir string) (multitemplate.Renderer, error) {
 		"month":     funcs.Month,
 		"year":      funcs.Year,
 		"perm_name": funcs.PermissionName,
+		"date":      funcs.Date,
 	}
 
 	for _, t := range templates {

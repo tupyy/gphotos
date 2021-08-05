@@ -118,6 +118,7 @@ func mapTAbum(a entity.Album, user entity.User) tAlbum {
 	}
 
 	return tAlbum{
+		ID:          a.ID,
 		Name:        a.Name,
 		Date:        a.CreatedAt,
 		Location:    a.Location,
@@ -127,6 +128,7 @@ func mapTAbum(a entity.Album, user entity.User) tAlbum {
 }
 
 type tAlbum struct {
+	ID          int32
 	Name        string
 	Owner       string
 	Date        time.Time
