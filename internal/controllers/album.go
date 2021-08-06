@@ -42,7 +42,7 @@ func GetAlbum(r *gin.RouterGroup, repos repo.Repositories) {
 		decryptedID, err := gen.DecryptData(c.Param("id"))
 		if err != nil {
 			logger.WithError(err).Error("cannot decrypt album id")
-			c.AbortWithError(http.StatusInternalServerError, err)
+			c.AbortWithError(http.StatusNotFound, err) // explicit return not found here
 
 			return
 		}
@@ -121,7 +121,7 @@ func GetAlbum(r *gin.RouterGroup, repos repo.Repositories) {
 		}
 
 		// encrypt album id
-		encryptedID, err := gen.EncryptData(string(album.ID))
+		encryptedID, err := gen.EncryptData(fmt.Sprintf("%d", album.ID))
 		if err != nil {
 			logger.WithError(err).Error("encrypt album id")
 			AbortInternalError(c, err, fmt.Sprintf("album id: %d", album.ID))
@@ -316,7 +316,7 @@ func GetUpdateAlbumForm(r *gin.RouterGroup, repos repo.Repositories) {
 		decryptedID, err := gen.DecryptData(c.Param("id"))
 		if err != nil {
 			logger.WithError(err).Error("cannot decrypt album id")
-			c.AbortWithError(http.StatusInternalServerError, err)
+			c.AbortWithError(http.StatusNotFound, err)
 
 			return
 		}
@@ -399,7 +399,16 @@ func GetUpdateAlbumForm(r *gin.RouterGroup, repos repo.Repositories) {
 				}
 			}
 
+			encryptedID, err := gen.EncryptData(fmt.Sprintf("%d", album.ID))
+			if err != nil {
+				logger.WithError(err).WithField("id", album.ID).Error("encrypt album id")
+				AbortInternalError(c, err, "")
+
+				return
+			}
+
 			c.HTML(http.StatusOK, "album_form.html", gin.H{
+				"update_link":        fmt.Sprintf("/album/%s", encryptedID),
 				"album":              album,
 				"canShare":           session.User.CanShare,
 				"isOwner":            true,

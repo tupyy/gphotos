@@ -13,21 +13,25 @@
         </header>
         <div class="container">
             <div class="row">
-                {{ range .personalAlbums }}
+                {{ range .personal_albums }}
                     {{ template "album-card" . }}
                 {{ end }}
             </div>
         </div>
-        <div>
-            {{ if .sharedAlbums }}
-            <div> User shared albums: </div>
-            <ul>
-            {{ range .sharedAlbums }}
-                {{ template "album-card" . }}
-            {{ end }}
-            </ul>
-            {{ end }}
-        </div>
+        {{ if .shared_albums }}
+            <div class="container">
+                <div class="row">
+                    <div> Shared albums: </div>
+                </div>
+                <div class="row">
+                    <ul>
+                        {{ range .shared_albums }}
+                            {{ template "album-card" . }}
+                        {{ end }}
+                    </ul>
+                </div>
+            </div>
+        {{ end }}
     </body>
     <!-- <footer> -->
     <!--     {{ template "footer" }} -->

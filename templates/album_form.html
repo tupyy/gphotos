@@ -12,7 +12,7 @@
     <body>
     <div class="container-xs container-md form-container row">
         {{ if .album }}
-            <form id="create-album" action="/album/{{.album.ID}}/" method="POST">
+            <form id="create-album" action="{{ .update_link }}" method="POST">
         {{ else }}
             <form id="create-album" action="/album" method="POST">
         {{ end }}

@@ -43,5 +43,5 @@ type Album interface {
 	// GetByUserID returns a list of albums for which the user has at least one permission set.
 	GetByUserID(ctx context.Context, userID string) ([]entity.Album, error)
 	// GetByGroup returns a list of albums for which the group has at least one permission.
-	GetByGroupID(ctx context.Context, groupName string) ([]entity.Album, error)
+	GetByGroupName(ctx context.Context, groupName string) ([]entity.Album, error)
 }

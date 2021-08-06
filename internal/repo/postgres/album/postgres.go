@@ -278,7 +278,7 @@ func (a *AlbumPostgresRepo) GetByUserID(ctx context.Context, userID string) ([]e
 }
 
 // GetAlbumsByGroup returns a list of albums for which the group has at one permission set.
-func (a *AlbumPostgresRepo) GetByGroupID(ctx context.Context, groupName string) ([]entity.Album, error) {
+func (a *AlbumPostgresRepo) GetByGroupName(ctx context.Context, groupName string) ([]entity.Album, error) {
 	var albums customAlbums
 
 	tx := a.db.WithContext(ctx).Table("album").
@@ -286,7 +286,7 @@ func (a *AlbumPostgresRepo) GetByGroupID(ctx context.Context, groupName string) 
 				album_group_permissions.permissions as group_permissions, album_group_permissions.group_name as group_name`).
 		Joins("LEFT JOIN album_user_permissions ON (album.id = album_user_permissions.album_id)").
 		Joins("LEFT JOIN album_group_permissions ON (album.id = album_group_permissions.album_id)").
-		Where("album_group_permissions.group_id = ?", groupName).
+		Where("album_group_permissions.group_name= ?", groupName).
 		Find(&albums)
 	if tx.Error != nil {
 		return []entity.Album{}, fmt.Errorf("%w internal error: %v", repo.ErrInternalError, tx.Error)
