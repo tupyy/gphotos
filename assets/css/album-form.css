@@ -26,6 +26,11 @@
     margin-top: 30px;
 }
 
+.container-permissions ul li {
+    background: #f8f9fa;
+    border: 0;
+}
+
 .container-permissions-title {
     margin-bottom: 10px;
 }

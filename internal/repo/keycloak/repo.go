@@ -71,7 +71,20 @@ func (k *KeycloakRepo) GetUsers(ctx context.Context) ([]entity.User, error) {
 }
 
 func (k *KeycloakRepo) GetUserByID(ctx context.Context, id string) (entity.User, error) {
-	return entity.User{}, errors.New("no implementatedrlbu")
+	keycloakUser, err := k.client.GetUserByID(ctx, k.token.AccessToken, k.realm, id)
+	if err != nil {
+		logutil.GetDefaultLogger().WithError(err).WithField("id", id).Error("cannot fetch user from keycloak")
+
+		return entity.User{}, errors.Wrap(err, "user repo")
+	}
+
+	if !*keycloakUser.Enabled {
+		logutil.GetDefaultLogger().WithError(err).WithField("id", id).Error("user disabled")
+
+		return entity.User{}, fmt.Errorf("user %s disabled", id)
+	}
+
+	return mapper(*keycloakUser), nil
 }
 
 func (k *KeycloakRepo) GetGroups(ctx context.Context) ([]entity.Group, error) {

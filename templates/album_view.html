@@ -102,12 +102,12 @@
                             <div class="col-lg-4 col">{{.location}}</div>
                         </div>
                     </div>
-                    {{ if .is_owner }}
-                        {{ if .user_permissions }}
-                            <div class="container container-permissions">
-                                <div class="row row-title">
-                                    <span class="container-title">Users permissions</span>
-                                </div>
+                    {{ if or .is_owner .is_admin }}
+                        <div class="container container-permissions">
+                            <div class="row row-title">
+                                <span class="container-title">Users permissions</span>
+                            </div>
+                            {{ if .user_permissions }}
                                 <div class="row">
                                     {{ range $k,$v := .user_permissions }}
                                         <div class="row">
@@ -120,13 +120,17 @@
                                         </div>
                                     {{ end }}
                                 </div>
-                            </div>
-                        {{ end }}
-                        {{ if .group_permissions }}
-                            <div class="container container-permissions">
-                                <div class="row row-title">
-                                    <span class="container-title">Group permissions</span>
+                            {{ else }}
+                                <div class=row>
+                                    <span class="col title">No user permissions set.</span>
                                 </div>
+                            {{ end }}
+                        </div>
+                        <div class="container container-permissions">
+                            <div class="row row-title">
+                                <span class="container-title">Group permissions</span>
+                            </div>
+                            {{ if .group_permissions }}
                                 <div class="row">
                                     {{ range $k,$v := .group_permissions }}
                                         <div class="row">
@@ -139,8 +143,12 @@
                                         </div>
                                     {{ end }}
                                 </div>
-                            </div>
-                        {{ end }}
+                            {{ else }}
+                                <div class=row>
+                                    <span class="col title">No group permissions set.</span>
+                                </div>
+                            {{ end }}
+                        </div>
                     {{ end }}
                 </div>
             </div>

@@ -65,6 +65,7 @@ func GetAlbum(r *gin.RouterGroup, repos repo.Repositories) {
 		// check permissions to this album
 		atr := NewAlbumPermissionResolver()
 		hasPermission := atr.Policy(OwnerPolicy{}).
+			Policy(RolePolicy{entity.RoleAdmin}).
 			Policy(AnyUserPermissionPolicty{}).
 			Policy(AnyGroupPermissionPolicy{}).
 			Strategy(AtLeastOneStrategy).
@@ -89,6 +90,15 @@ func GetAlbum(r *gin.RouterGroup, repos repo.Repositories) {
 			return
 		}
 
+		// if not owner get the owner from keycloak
+		owner, err := keycloakRepo.GetUserByID(reqCtx, album.OwnerID)
+		if err != nil {
+			logger.WithError(err).WithField("id", id).Error("fetch owner")
+			AbortInternalError(c, errors.New("fetch owner from keyclosk"), "")
+
+			return
+		}
+
 		// replace ids with names in user permissions maps and OwnerID with owner's name
 		userPermissions := make(map[string][]entity.Permission)
 		for _, u := range users {
@@ -107,10 +117,10 @@ func GetAlbum(r *gin.RouterGroup, repos repo.Repositories) {
 
 		// check individual permissions for this album
 		permissions := make(map[entity.Permission]bool)
-		permissions[entity.PermissionReadAlbum] = album.HasUserPermission(session.User.ID, entity.PermissionReadAlbum) || session.User.ID == album.OwnerID
-		permissions[entity.PermissionWriteAlbum] = album.HasUserPermission(session.User.ID, entity.PermissionWriteAlbum) || session.User.ID == album.OwnerID
-		permissions[entity.PermissionEditAlbum] = album.HasUserPermission(session.User.ID, entity.PermissionEditAlbum) || session.User.ID == album.OwnerID
-		permissions[entity.PermissionDeleteAlbum] = album.HasUserPermission(session.User.ID, entity.PermissionDeleteAlbum) || session.User.ID == album.OwnerID
+		permissions[entity.PermissionReadAlbum] = album.HasUserPermission(session.User.ID, entity.PermissionReadAlbum) || session.User.ID == album.OwnerID || session.User.Role == entity.RoleAdmin
+		permissions[entity.PermissionWriteAlbum] = album.HasUserPermission(session.User.ID, entity.PermissionWriteAlbum) || session.User.ID == album.OwnerID || session.User.Role == entity.RoleAdmin
+		permissions[entity.PermissionEditAlbum] = album.HasUserPermission(session.User.ID, entity.PermissionEditAlbum) || session.User.ID == album.OwnerID || session.User.Role == entity.RoleAdmin
+		permissions[entity.PermissionDeleteAlbum] = album.HasUserPermission(session.User.ID, entity.PermissionDeleteAlbum) || session.User.ID == album.OwnerID || session.User.Role == entity.RoleAdmin
 
 		for _, g := range session.User.Groups {
 			if perms, found := album.GroupPermissions[g.Name]; found {
@@ -135,7 +145,7 @@ func GetAlbum(r *gin.RouterGroup, repos repo.Repositories) {
 			"location":          album.Location,
 			"created_at":        album.CreatedAt,
 			"is_owner":          session.User.ID == album.OwnerID,
-			"owner":             fmt.Sprintf("%s %s", session.User.FirstName, session.User.LastName),
+			"owner":             fmt.Sprintf("%s %s", owner.FirstName, owner.LastName),
 			"user_permissions":  userPermissions,
 			"group_permissions": album.GroupPermissions,
 			"delete_link":       fmt.Sprintf("/album/%s", encryptedID),
@@ -144,6 +154,7 @@ func GetAlbum(r *gin.RouterGroup, repos repo.Repositories) {
 			"write_permission":  permissions[entity.PermissionWriteAlbum],
 			"edit_permission":   permissions[entity.PermissionEditAlbum],
 			"delete_permission": permissions[entity.PermissionDeleteAlbum],
+			"is_admin":          session.User.Role == entity.RoleAdmin,
 		})
 	})
 }
@@ -337,7 +348,7 @@ func GetUpdateAlbumForm(r *gin.RouterGroup, repos repo.Repositories) {
 		}
 
 		// check if user is the owner or it has the edit permission set
-		if album.OwnerID == session.User.ID {
+		if album.OwnerID == session.User.ID || session.User.Role == entity.RoleAdmin {
 			logger.Info("edit permission granted. user is the owner")
 
 			users, err := keycloakRepo.GetUsers(reqCtx)
@@ -416,6 +427,7 @@ func GetUpdateAlbumForm(r *gin.RouterGroup, repos repo.Repositories) {
 				"groups":             groups,
 				"users_permissions":  permUserJson,
 				"groups_permissions": permGroupJson,
+				"is_admin":           session.User.Role == entity.RoleAdmin,
 				csrf.TemplateTag:     csrf.TemplateField(c.Request),
 			})
 
@@ -498,6 +510,7 @@ func UpdateAlbum(r *gin.RouterGroup, repos repo.Repositories) {
 		// can edit this album
 		apr := NewAlbumPermissionResolver()
 		hasPermission := apr.Policy(OwnerPolicy{}).
+			Policy(RolePolicy{entity.RoleAdmin}).
 			Policy(UserPermissionPolicy{entity.PermissionEditAlbum}).
 			Policy(GroupPermissionPolicy{entity.PermissionEditAlbum}).
 			Strategy(AtLeastOneStrategy).
@@ -527,7 +540,7 @@ func UpdateAlbum(r *gin.RouterGroup, repos repo.Repositories) {
 
 		album.Name = cleanForm.Name
 
-		if session.User.ID == album.OwnerID {
+		if session.User.ID == album.OwnerID || session.User.Role == entity.RoleAdmin {
 			// add new permissions if any
 			if len(cleanForm.UserPermissions) > 0 {
 				permForm := make(map[string][]string)

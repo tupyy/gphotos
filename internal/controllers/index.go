@@ -48,6 +48,29 @@ func Index(r *gin.RouterGroup, repos repo.Repositories) {
 
 		personalTAlbums := mapUsersToAlbums(personalAlbums, users)
 
+		// if I'm an admin show all other albums
+		if session.User.Role == entity.RoleAdmin {
+			otherAlbums, err := albumRepo.Get(reqCtx)
+			if err != nil {
+				logger.WithError(err).Error("fetch all albums")
+				AbortInternalError(c, err, "")
+
+				return
+			}
+
+			sharedAlbums := substractAlbums(otherAlbums, personalAlbums)
+			sharedTAlbums := mapUsersToAlbums(sharedAlbums, users)
+
+			c.HTML(http.StatusOK, "index.html", gin.H{
+				"username":        session.User.Username,
+				"user_role":       session.User.Role.String(),
+				"personal_albums": personalTAlbums,
+				"shared_albums":   sharedTAlbums,
+			})
+
+			return
+		}
+
 		// user with canShare true can share albums with other users
 		// fetch all albums for which the user has at least one permissions
 		if session.User.CanShare {
@@ -73,9 +96,13 @@ func Index(r *gin.RouterGroup, repos repo.Repositories) {
 				groupSharedAlbums = append(groupSharedAlbums, groupAlbums...)
 			}
 
-			// remove duplicates
-			sharedAlbums := removeDuplicates(sharedUserAlbums, groupSharedAlbums)
+			// remove personal groups which are in group shared albums
+			groupUniqueAlbums := substractAlbums(groupSharedAlbums, personalAlbums)
 
+			// remove duplicates
+			sharedAlbums := addGroups(sharedUserAlbums, groupUniqueAlbums)
+
+			// map them to template album struct
 			sharedTAlbums := mapUsersToAlbums(sharedAlbums, users)
 
 			c.HTML(http.StatusOK, "index.html", gin.H{
@@ -111,7 +138,8 @@ func getUsers(ctx context.Context, k repo.KeycloakRepo) (map[string]entity.User,
 	return mappedUsers, nil
 }
 
-func removeDuplicates(albums1, albums2 []entity.Album) []entity.Album {
+// substractAlbums returns albums1 - albums2
+func substractAlbums(albums1, albums2 []entity.Album) []entity.Album {
 	album1Map := make(map[int32]entity.Album)
 	album2Map := make(map[int32]entity.Album)
 
@@ -132,21 +160,51 @@ func removeDuplicates(albums1, albums2 []entity.Album) []entity.Album {
 		}
 	}
 
-	distinctAlbums := make([]entity.Album, 0, len(albums1)+len(albums2))
+	distinctAlbums := make([]entity.Album, 0, len(albums1))
 	for k, v := range album1Map {
-		if _, found := album2Map[k]; found {
+		if _, found := album2Map[k]; !found {
 			distinctAlbums = append(distinctAlbums, v)
-			delete(album1Map, k)
+		}
+	}
+
+	return distinctAlbums
+}
+
+// addGroups add distinct albums from albums2 to album1
+func addGroups(albums1, albums2 []entity.Album) []entity.Album {
+	album1Map := make(map[int32]entity.Album)
+	album2Map := make(map[int32]entity.Album)
+
+	var iLimit int
+	if len(albums1) > len(albums2) {
+		iLimit = len(albums1)
+	} else {
+		iLimit = len(albums2)
+	}
+
+	for i := 0; i < iLimit; i++ {
+		if i < len(albums1) {
+			album1Map[albums1[i].ID] = albums1[i]
+		}
+
+		if i < len(albums2) {
+			album2Map[albums2[i].ID] = albums2[i]
+		}
+	}
+
+	albumSum := make([]entity.Album, 0, len(albums1)+len(albums2))
+	for k, v := range album1Map {
+		if _, found := album1Map[k]; found {
+			albumSum = append(albumSum, v)
 			delete(album2Map, k)
 		}
 	}
 
-	// put the rest from album2Map
 	for _, v := range album2Map {
-		distinctAlbums = append(distinctAlbums, v)
+		albumSum = append(albumSum, v)
 	}
 
-	return distinctAlbums
+	return albumSum
 }
 
 func mapUsersToAlbums(albums []entity.Album, users map[string]entity.User) []tAlbum {

@@ -23,12 +23,12 @@
                 <div class="row">
                     <div> Shared albums: </div>
                 </div>
-                <div class="row">
-                    <ul>
+                <div class="container container-media">
+                    <div class="row">
                         {{ range .shared_albums }}
                             {{ template "album-card" . }}
                         {{ end }}
-                    </ul>
+                    </div>
                 </div>
             </div>
         {{ end }}
