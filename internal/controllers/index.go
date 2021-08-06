@@ -8,8 +8,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/internal/repo"
+	"github.com/tupyy/gophoto/utils/encryption"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
 
@@ -46,7 +48,14 @@ func Index(r *gin.RouterGroup, repos repo.Repositories) {
 		personalTAlbums := make([]tAlbum, 0, len(personalAlbums))
 		for _, pa := range personalAlbums {
 			if user, found := users[pa.OwnerID]; found {
-				personalTAlbums = append(personalTAlbums, mapTAbum(pa, user))
+				talbum, err := mapTAbum(pa, user)
+				if err != nil {
+					logger.WithError(err).WithField("album", fmt.Sprintf("%+v", pa)).Error("cannot map album")
+
+					continue
+				}
+
+				personalTAlbums = append(personalTAlbums, talbum)
 			} else {
 				logger.WithField("album", fmt.Sprintf("%+v", pa.String())).Warn("owner don't exists anymore")
 			}
@@ -67,7 +76,14 @@ func Index(r *gin.RouterGroup, repos repo.Repositories) {
 			sharedTAlbums := make([]tAlbum, 0, len(personalAlbums))
 			for _, pa := range sharedAlbums {
 				if user, found := users[pa.OwnerID]; found {
-					sharedTAlbums = append(sharedTAlbums, mapTAbum(pa, user))
+					talbum, err := mapTAbum(pa, user)
+					if err != nil {
+						logger.WithError(err).WithField("album", fmt.Sprintf("%+v", pa)).Error("cannot map shared album")
+
+						continue
+					}
+
+					sharedTAlbums = append(sharedTAlbums, talbum)
 				} else {
 					logger.WithField("album", fmt.Sprintf("%+v", pa.String())).Warn("owner don't exists anymore")
 				}
@@ -108,7 +124,7 @@ func getUsers(ctx context.Context, k repo.KeycloakRepo) (map[string]entity.User,
 	return mappedUsers, nil
 }
 
-func mapTAbum(a entity.Album, user entity.User) tAlbum {
+func mapTAbum(a entity.Album, user entity.User) (tAlbum, error) {
 	var owner string
 
 	if len(user.FirstName) == 0 && len(user.LastName) == 0 {
@@ -117,18 +133,25 @@ func mapTAbum(a entity.Album, user entity.User) tAlbum {
 		owner = fmt.Sprintf("%s %s", user.FirstName, user.LastName)
 	}
 
+	// encrypt album id
+	gen := encryption.NewGenerator(conf.GetEncryptionKey())
+	encryptedID, err := gen.EncryptData(string(a.ID))
+	if err != nil {
+		return tAlbum{}, err
+	}
+
 	return tAlbum{
-		ID:          a.ID,
+		ID:          encryptedID,
 		Name:        a.Name,
 		Date:        a.CreatedAt,
 		Location:    a.Location,
 		Description: a.Description,
 		Owner:       owner,
-	}
+	}, nil
 }
 
 type tAlbum struct {
-	ID          int32
+	ID          string
 	Name        string
 	Owner       string
 	Date        time.Time

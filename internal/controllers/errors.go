@@ -11,7 +11,8 @@ import (
 )
 
 var (
-	ErrDeleteAlbum = errors.New("error deleting album")
+	ErrDeleteAlbum    = errors.New("error deleting album")
+	ErrEncryptionData = errors.New("error encrypting data")
 )
 
 type MissingPermissionError struct {

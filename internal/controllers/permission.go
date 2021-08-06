@@ -102,6 +102,12 @@ func (up UserPermissionPolicy) Resolve(a entity.Album, u entity.User) bool {
 	return a.HasUserPermission(u.ID, up.Permission)
 }
 
+type AnyUserPermissionPolicty struct{}
+
+func (ap AnyUserPermissionPolicty) Resolve(a entity.Album, u entity.User) bool {
+	return a.HasUserPermissions(u.ID)
+}
+
 // GroupPermissionPolicy checks if one of the users's group has the permission set.
 type GroupPermissionPolicy struct {
 	Permission entity.Permission
@@ -115,4 +121,16 @@ func (gp GroupPermissionPolicy) Resolve(a entity.Album, u entity.User) bool {
 	}
 
 	return false
+}
+
+type AnyGroupPermissionPolicy struct{}
+
+func (ap AnyGroupPermissionPolicy) Resolve(a entity.Album, u entity.User) bool {
+	hasPermission := false
+
+	for _, g := range u.Groups {
+		hasPermission = a.HasGroupPermissions(g.Name)
+	}
+
+	return hasPermission
 }

@@ -95,19 +95,19 @@ func (a Album) HasGroupPermission(groupName string, permission Permission) bool 
 }
 
 // HasGroupPermissions returns true if group has at least one permission.
-func (a Album) HasGroupPermissions(groupID string) bool {
-	_, found := a.GroupPermissions[groupID]
+func (a Album) HasGroupPermissions(groupName string) bool {
+	_, found := a.GroupPermissions[groupName]
 
 	return found
 }
 
 // GetGroupPermissions returns all permission of group.
-func (a Album) GetGroupPermissions(groupID string) (permissions []Permission, found bool) {
-	if _, found = a.GroupPermissions[groupID]; !found {
+func (a Album) GetGroupPermissions(groupName string) (permissions []Permission, found bool) {
+	if _, found = a.GroupPermissions[groupName]; !found {
 		return
 	}
 
-	return a.GroupPermissions[groupID], true
+	return a.GroupPermissions[groupName], true
 }
 
 type AlbumLessFunc func(a1, a2 Album) bool

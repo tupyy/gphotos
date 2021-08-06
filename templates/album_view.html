@@ -21,125 +21,166 @@
         </div>
         <div class="tab-content">
             <div class="tab-pane fade show active" id="photo" role="tabpanel" aria-labelledby="photo-tab">
-                {{if .photos}}
-                    <div>photos</div>
-                {{ else }}
-                <div class="container">
-                    <div class="row no-photos-row">
-                        <div class="col-12 title no-photos">Nothing to see here!!</div>
-                        <div class="col-12 no-photos">Please upload some photos</div>
-                    </div>
+                <div class="container container-tab">
+                    {{ if not .read_permission }}
+                            <div class="row">
+                                <span class="col-12 title no-permissions">You don't have read permission for this album.</span>
+                            </div>
+                    {{ else }}
+                        {{if .photos}}
+                            <div>photos</div>
+                        {{ else }}
+                        <div class="container">
+                            <div class="row no-photos-row">
+                                <div class="col-12 title no-photos">Nothing to see here!!</div>
+                                <div class="col-12 no-photos">Please upload some photos</div>
+                            </div>
+                        </div>
+                        {{ end }}
+                    {{ end }}
                 </div>
-                {{ end }}
             </div>
             <div class="tab-pane fade" id="video" role="tabpanel" aria-labelledby="video-tab">
-                {{if .videos}}
-                    <div>videos</div>
-                {{ else }}
-                <div class="container">
-                    <div class="row no-photos-row">
-                        <div class="col-12 title no-photos">Nothing to see here!!</div>
-                        <div class="col-12 no-photos">Please upload some videos</div>
-                    </div>
-                </div>
-                {{ end }}
-            </div>
-            <div class="tab-pane fade" id="upload" role="tabpanel" aria-labelledby="upload-tab">upload</div>
-            <div class="tab-pane fade" id="about" role="tabpanel" aria-labelledby="about-tab">
-                <div class="container container-details">
-                    <div class="row row-title">
-                        <h4 class="container-title">Details</h4>
-                    </div>
-                    <div class="row">
-                        <div class="col-lg-2 col title">Owner</div>
-                        {{ if .is_owner }}
-                            <div class="col-lg-4 col">You</div>
+                <div class="container container-tab">
+                    {{ if not .read_permission }}
+                        <div class="row row-button">
+                            <span class="col-12 title no-permissions">You don't have read permission for this album.</span>
+                        </div>
+                    {{ else }}
+                        {{if .videos}}
+                            <div>videos</div>
                         {{ else }}
-                            <div class="col-lg-4 col">{{.owner}}</div>
+                        <div class="container">
+                            <div class="row no-photos-row">
+                                <div class="col-12 title no-photos">Nothing to see here!!</div>
+                                <div class="col-12 no-photos">Please upload some videos</div>
+                            </div>
+                        </div>
                         {{ end }}
-                    </div>
-                    <div class="row">
-                        <div class="col-lg-2 col title">Name</div>
-                        <div class="col-lg-4 col">{{.name}}</div>
-                    </div>
-                    <div class="row">
-                        <div class="col-lg-2 col title">Created at</div>
-                        <div class="col-lg-4 col">{{date .created_at}}</div>
-                    </div>
-                    <div class="row">
-                        <div class="col-lg-2 col title">Description</div>
-                        <div class="col-lg-4 col">{{.description}}</div>
-                    </div>
-                    <div class="row">
-                        <div class="col-lg-2 col title">Location</div>
-                        <div class="col-lg-4 col">{{.location}}</div>
-                    </div>
+                    {{ end }}
                 </div>
-                {{ if .is_owner }}
-                    {{ if .user_permissions }}
-                        <div class="container container-permissions">
-                            <div class="row row-title">
-                                <span class="container-title">Users permissions</span>
-                            </div>
-                            <div class="row">
-                                {{ range $k,$v := .user_permissions }}
-                                    <div class="row">
-                                        <div class="col-lg-2 col title">{{ $k }}</div>
-                                        <div class="col-lg-4 col">
-                                            {{ range $v }}
-                                                <span class="badge bg-success">{{perm_name .}} </span>
-                                            {{ end }}
-                                        </div>
-                                    </div>
-                                {{ end }}
-                            </div>
+            </div>
+            <div class="tab-pane fade" id="upload" role="tabpanel" aria-labelledby="upload-tab">
+                <div class="container container-tab">
+                    {{ if not .write_permission }}
+                        <div class="row row-button">
+                            <span class="col-12 title no-permissions">You don't have write permission for this album.</span>
                         </div>
+                    {{ else }}
+                        upload
                     {{ end }}
-                    {{ if .group_permissions }}
-                        <div class="container container-permissions">
-                            <div class="row row-title">
-                                <span class="container-title">Group permissions</span>
-                            </div>
-                            <div class="row">
-                                {{ range $k,$v := .group_permissions }}
-                                    <div class="row">
-                                        <div class="col-lg-2 col title">{{ $k }}</div>
-                                        <div class="col-lg-4 col">
-                                            {{ range $v }}
-                                                <span class="badge bg-success">{{perm_name .}} </span>
-                                            {{ end }}
-                                        </div>
-                                    </div>
-                                {{ end }}
-                            </div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="about" role="tabpanel" aria-labelledby="about-tab">
+                <div class="container container-tab">
+                    <div class="container container-details">
+                        <div class="row row-title">
+                            <h4 class="container-title">Details</h4>
                         </div>
+                        <div class="row">
+                            <div class="col-lg-2 col title">Owner</div>
+                            {{ if .is_owner }}
+                                <div class="col-lg-4 col">You</div>
+                            {{ else }}
+                                <div class="col-lg-4 col">{{.owner}}</div>
+                            {{ end }}
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-2 col title">Name</div>
+                            <div class="col-lg-4 col">{{.name}}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-2 col title">Created at</div>
+                            <div class="col-lg-4 col">{{date .created_at}}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-2 col title">Description</div>
+                            <div class="col-lg-4 col">{{.description}}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-2 col title">Location</div>
+                            <div class="col-lg-4 col">{{.location}}</div>
+                        </div>
+                    </div>
+                    {{ if .is_owner }}
+                        {{ if .user_permissions }}
+                            <div class="container container-permissions">
+                                <div class="row row-title">
+                                    <span class="container-title">Users permissions</span>
+                                </div>
+                                <div class="row">
+                                    {{ range $k,$v := .user_permissions }}
+                                        <div class="row">
+                                            <div class="col-lg-2 col title">{{ $k }}</div>
+                                            <div class="col-lg-4 col">
+                                                {{ range $v }}
+                                                    <span class="badge bg-success">{{perm_name .}} </span>
+                                                {{ end }}
+                                            </div>
+                                        </div>
+                                    {{ end }}
+                                </div>
+                            </div>
+                        {{ end }}
+                        {{ if .group_permissions }}
+                            <div class="container container-permissions">
+                                <div class="row row-title">
+                                    <span class="container-title">Group permissions</span>
+                                </div>
+                                <div class="row">
+                                    {{ range $k,$v := .group_permissions }}
+                                        <div class="row">
+                                            <div class="col-lg-2 col title">{{ $k }}</div>
+                                            <div class="col-lg-4 col">
+                                                {{ range $v }}
+                                                    <span class="badge bg-success">{{perm_name .}} </span>
+                                                {{ end }}
+                                            </div>
+                                        </div>
+                                    {{ end }}
+                                </div>
+                            </div>
+                        {{ end }}
                     {{ end }}
-                {{ end }}
+                </div>
             </div>
             <div class="tab-pane fade" id="settings" role="tabpanel" aria-labelledby="settings-tab">
-                <div class="container">
-                    <div class="row row-button">
-                        <div class="col-6">
-                            <div class="row">
-                                <span class="col-12 title">Edit this album</span>
-                                <span class="col-12">You can edit the details of this album</span>
+                <div class="container container-tab">
+                    {{ if and ( not .edit_permission ) ( not .delete_permission )}}
+                        <div class="row row-button">
+                            <span class="col-12 title no-permissions">You don't have neither edit or delete permissions for this album.</span>
+                        </div>
+                    {{ end }}
+                    {{ if .edit_permission }}
+                        <div class="row row-button">
+                            <div class="col-6">
+                                <div class="row">
+                                    <span class="col-12 title">Edit this album</span>
+                                    <span class="col-12">You can edit the details of this album</span>
+                                </div>
+                            </div>
+                            <div class="col-2">
+                                <a href="{{.edit_link}}">
+                                    <button class="btn btn-warning">Edit album</button>
+                                </a>
                             </div>
                         </div>
-                        <div class="col-2">
-                            <button class="btn btn-warning href={{.edit_link}}">Edit album</button>
-                        </div>
-                    </div>
-                    <div class="row row-button">
-                        <div class="col-6">
-                            <div class="row">
-                                <span class="col-12 title"> Delete this album</span>
-                                <span class="col-12">Once you delete this album, everything is lost!!</span>
+                    {{ end }}
+                    {{ if .delete_permission }}
+                        <div class="row row-button">
+                            <div class="col-6">
+                                <div class="row">
+                                    <span class="col-12 title"> Delete this album</span>
+                                    <span class="col-12">Once you delete this album, everything is lost!!</span>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <a href="{{.delete_link}}">
+                                    <button class="btn btn-danger">Delete this album</button>
+                                </a>
                             </div>
                         </div>
-                        <div class="col-3">
-                            <button class="btn btn-danger" href="{{.delete_link}}">Delete this album</button>
-                        </div>
-                    </div>
+                    {{ end }}
                 </div>
             </div>
         </div>

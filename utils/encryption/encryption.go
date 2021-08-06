@@ -58,12 +58,17 @@ func (g *Generator) DecryptData(data string) (string, error) {
 		return "", err
 	}
 
-	plaintext, err := aesgcm.Open(nil, nonce, ciphertext, nil)
+	hexEncodedText, err := aesgcm.Open(nil, nonce, ciphertext, nil)
 	if err != nil {
 		return "", err
 	}
 
-	ret := string(plaintext)
+	// b, err := hex.DecodeString(string(hexEncodedText))
+	// if err != nil {
+	// 	return "", err
+	// }
+
+	ret := string(hexEncodedText)
 
 	return ret, nil
 }

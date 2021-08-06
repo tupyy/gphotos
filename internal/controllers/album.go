@@ -27,7 +27,7 @@ const (
 // GET /album/:id
 func GetAlbum(r *gin.RouterGroup, repos repo.Repositories) {
 	albumRepo := repos[repo.AlbumRepoName].(repo.Album)
-	//keycloakRepo := repos[repo.KeycloakRepoName].(repo.KeycloakRepo)
+	keycloakRepo := repos[repo.KeycloakRepoName].(repo.KeycloakRepo)
 
 	r.GET("/album/:id", func(c *gin.Context) {
 		reqCtx := c.Request.Context()
@@ -36,11 +36,20 @@ func GetAlbum(r *gin.RouterGroup, repos repo.Repositories) {
 		s, _ := c.Get("sessionData")
 		session := s.(entity.Session)
 
-		param := c.Param("id")
+		// decrypt album id
+		gen := encryption.NewGenerator(conf.GetEncryptionKey())
 
-		id, err := strconv.Atoi(param)
+		decryptedID, err := gen.DecryptData(c.Param("id"))
 		if err != nil {
-			logger.WithError(err).WithField("id", param).Error("cannot parse album id")
+			logger.WithError(err).Error("cannot decrypt album id")
+			c.AbortWithError(http.StatusInternalServerError, err)
+
+			return
+		}
+
+		id, err := strconv.Atoi(decryptedID)
+		if err != nil {
+			logger.WithError(err).WithField("id", decryptedID).Error("cannot parse album id")
 			c.AbortWithError(http.StatusNotFound, err)
 
 			return
@@ -53,13 +62,72 @@ func GetAlbum(r *gin.RouterGroup, repos repo.Repositories) {
 			return
 		}
 
-		// owner, err := keycloakRepo.GetUserByID(reqCtx, album.OwnerID)
-		// if err != nil {
-		// 	logger.WithError(err).WithField("user id", album.OwnerID).Error("fetch album's owner")
-		// 	AbortInternalError(c, errors.New("fetch user from keyclosk"), fmt.Sprintf("user id: %s", album.OwnerID))
+		// check permissions to this album
+		atr := NewAlbumPermissionResolver()
+		hasPermission := atr.Policy(OwnerPolicy{}).
+			Policy(AnyUserPermissionPolicty{}).
+			Policy(AnyGroupPermissionPolicy{}).
+			Strategy(AtLeastOneStrategy).
+			Resolve(album, session.User)
 
-		// 	return
-		// }
+		if !hasPermission {
+			logger.WithFields(logrus.Fields{
+				"album_id": album.ID,
+				"user_id":  session.User.ID,
+			}).Error("user has no permissions to access this album")
+
+			AbortForbidden(c, NewMissingPermissionError(entity.PermissionReadAlbum, album, session.User), "")
+
+			return
+		}
+
+		users, err := keycloakRepo.GetUsers(reqCtx)
+		if err != nil {
+			logger.WithError(err).Error("fetch users")
+			AbortInternalError(c, errors.New("fetch users from keyclosk"), "")
+
+			return
+		}
+
+		// replace ids with names in user permissions maps and OwnerID with owner's name
+		userPermissions := make(map[string][]entity.Permission)
+		for _, u := range users {
+			if perms, found := album.UserPermissions[u.ID]; found {
+				name := fmt.Sprintf("%s %s", u.FirstName, u.LastName)
+
+				if name == "" {
+					logger.WithField("username", u.Username).Warn("user has not first or last name set")
+
+					continue
+				}
+
+				userPermissions[name] = perms
+			}
+		}
+
+		// check individual permissions for this album
+		permissions := make(map[entity.Permission]bool)
+		permissions[entity.PermissionReadAlbum] = album.HasUserPermission(session.User.ID, entity.PermissionReadAlbum) || session.User.ID == album.OwnerID
+		permissions[entity.PermissionWriteAlbum] = album.HasUserPermission(session.User.ID, entity.PermissionWriteAlbum) || session.User.ID == album.OwnerID
+		permissions[entity.PermissionEditAlbum] = album.HasUserPermission(session.User.ID, entity.PermissionEditAlbum) || session.User.ID == album.OwnerID
+		permissions[entity.PermissionDeleteAlbum] = album.HasUserPermission(session.User.ID, entity.PermissionDeleteAlbum) || session.User.ID == album.OwnerID
+
+		for _, g := range session.User.Groups {
+			if perms, found := album.GroupPermissions[g.Name]; found {
+				for _, p := range perms {
+					permissions[p] = true
+				}
+			}
+		}
+
+		// encrypt album id
+		encryptedID, err := gen.EncryptData(string(album.ID))
+		if err != nil {
+			logger.WithError(err).Error("encrypt album id")
+			AbortInternalError(c, err, fmt.Sprintf("album id: %d", album.ID))
+
+			return
+		}
 
 		c.HTML(http.StatusOK, "album_view.html", gin.H{
 			"name":              album.Name,
@@ -67,11 +135,15 @@ func GetAlbum(r *gin.RouterGroup, repos repo.Repositories) {
 			"location":          album.Location,
 			"created_at":        album.CreatedAt,
 			"is_owner":          session.User.ID == album.OwnerID,
-			"owner":             fmt.Sprintf("%s %s", "bob", "bob"),
-			"user_permissions":  album.UserPermissions,
+			"owner":             fmt.Sprintf("%s %s", session.User.FirstName, session.User.LastName),
+			"user_permissions":  userPermissions,
 			"group_permissions": album.GroupPermissions,
-			"delete_link":       "test",
-			"edit_link":         "test",
+			"delete_link":       fmt.Sprintf("/album/%s", encryptedID),
+			"edit_link":         fmt.Sprintf("/album/%s/edit", encryptedID),
+			"read_permission":   permissions[entity.PermissionReadAlbum],
+			"write_permission":  permissions[entity.PermissionWriteAlbum],
+			"edit_permission":   permissions[entity.PermissionEditAlbum],
+			"delete_permission": permissions[entity.PermissionDeleteAlbum],
 		})
 	})
 }
@@ -238,11 +310,20 @@ func GetUpdateAlbumForm(r *gin.RouterGroup, repos repo.Repositories) {
 		s, _ := c.Get("sessionData")
 		session := s.(entity.Session)
 
-		param := c.Param("id")
+		// decrypt album id
+		gen := encryption.NewGenerator(conf.GetEncryptionKey())
 
-		id, err := strconv.Atoi(param)
+		decryptedID, err := gen.DecryptData(c.Param("id"))
 		if err != nil {
-			logger.WithError(err).WithField("id", param).Error("cannot parse album id")
+			logger.WithError(err).Error("cannot decrypt album id")
+			c.AbortWithError(http.StatusInternalServerError, err)
+
+			return
+		}
+
+		id, err := strconv.Atoi(decryptedID)
+		if err != nil {
+			logger.WithError(err).WithField("id", decryptedID).Error("cannot parse album id")
 			c.AbortWithError(http.StatusNotFound, err)
 
 			return
@@ -371,11 +452,20 @@ func UpdateAlbum(r *gin.RouterGroup, repos repo.Repositories) {
 		s, _ := c.Get("sessionData")
 		session := s.(entity.Session)
 
-		param := c.Param("id")
+		// decrypt album id
+		gen := encryption.NewGenerator(conf.GetEncryptionKey())
 
-		id, err := strconv.Atoi(param)
+		decryptedID, err := gen.DecryptData(c.Param("id"))
 		if err != nil {
-			logger.WithError(err).WithField("id", param).Error("cannot parse album id")
+			logger.WithError(err).Error("cannot decrypt album id")
+			c.AbortWithError(http.StatusInternalServerError, err)
+
+			return
+		}
+
+		id, err := strconv.Atoi(decryptedID)
+		if err != nil {
+			logger.WithError(err).WithField("id", decryptedID).Error("cannot parse album id")
 			c.AbortWithError(http.StatusNotFound, err)
 
 			return
@@ -480,11 +570,20 @@ func DeleteAlbum(r *gin.RouterGroup, repos repo.Repositories) {
 		s, _ := c.Get("sessionData")
 		session := s.(entity.Session)
 
-		param := c.Param("id")
+		// decrypt album id
+		gen := encryption.NewGenerator(conf.GetEncryptionKey())
 
-		id, err := strconv.Atoi(param)
+		decryptedID, err := gen.DecryptData(c.Param("id"))
 		if err != nil {
-			logger.WithError(err).WithField("id", param).Error("cannot parse album id")
+			logger.WithError(err).Error("cannot decrypt album id")
+			c.AbortWithError(http.StatusInternalServerError, err)
+
+			return
+		}
+
+		id, err := strconv.Atoi(decryptedID)
+		if err != nil {
+			logger.WithError(err).WithField("id", decryptedID).Error("cannot parse album id")
 			c.AbortWithError(http.StatusNotFound, err)
 
 			return

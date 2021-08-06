@@ -38,7 +38,6 @@
 }
 
 .container-details {
-    margin-top: 20px;
     margin-bottom: 40px;
 }
 
@@ -58,10 +57,18 @@
 }
 
 #settings .container {
-    margin-top: 20px;
     margin-left: 20px;
+}
+
+.tab-content .container .no-permissions {
+    display: flex;
+    justify-content: center;
 }
 
 .tab-content .container .title {
     font-weight: bold;
+}
+
+.tab-content .container-tab {
+    margin-top: 20px;
 }
