@@ -140,7 +140,7 @@ func (r albumCacheRepo) GetByID(ctx context.Context, id int32) (entity.Album, er
 func (r albumCacheRepo) GetByOwnerID(ctx context.Context, ownerID string, sorter sort.AlbumSorter, filters ...filters.AlbumFilter) ([]entity.Album, error) {
 	items, found := r.cache.Get(ownerID)
 	if !found {
-		ent, err := r.repo.GetByUserID(ctx, ownerID, sorter, filters...)
+		ent, err := r.repo.GetByOwnerID(ctx, ownerID, sorter, filters...)
 		if err != nil {
 			return []entity.Album{}, err
 		}
@@ -236,7 +236,7 @@ func (r albumCacheRepo) GetByUserID(ctx context.Context, userID string, sorter s
 func (r albumCacheRepo) GetByGroupName(ctx context.Context, groupName string, sorter sort.AlbumSorter, filters ...filters.AlbumFilter) ([]entity.Album, error) {
 	items, found := r.cache.Get(groupName)
 	if !found {
-		ent, err := r.repo.GetByUserID(ctx, groupName, sorter, filters...)
+		ent, err := r.repo.GetByGroupName(ctx, groupName, sorter, filters...)
 		if err != nil {
 			return []entity.Album{}, err
 		}
