@@ -153,7 +153,7 @@ generate.models:
 ##################################
 
 KEYCLOAK_IMAGE=jboss/keycloak
-KEYCLOAK_TAG=12.0.4
+KEYCLOAK_TAG=15.0.0
 KEYCLOAK_CONTAINER=keycloak
 KEYCLOAK_PORT=9000
 KEYCLOAK_USER=$(shell cat $(CURDIR)/resources/keycloak/.pass | cut -d":" -f1)
