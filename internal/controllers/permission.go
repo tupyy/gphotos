@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"github.com/tupyy/gophoto/internal/domain/entity"
+	"github.com/tupyy/gophoto/internal/domain/utils"
 )
 
 type StrategyType int
@@ -99,13 +100,13 @@ type UserPermissionPolicy struct {
 }
 
 func (up UserPermissionPolicy) Resolve(a entity.Album, u entity.User) bool {
-	return a.HasUserPermission(u.ID, up.Permission)
+	return utils.HasUserPermission(a, u.ID, up.Permission)
 }
 
 type AnyUserPermissionPolicty struct{}
 
 func (ap AnyUserPermissionPolicty) Resolve(a entity.Album, u entity.User) bool {
-	return a.HasUserPermissions(u.ID)
+	return utils.HasUserPermissions(a, u.ID)
 }
 
 // GroupPermissionPolicy checks if one of the users's group has the permission set.
@@ -115,7 +116,7 @@ type GroupPermissionPolicy struct {
 
 func (gp GroupPermissionPolicy) Resolve(a entity.Album, u entity.User) bool {
 	for _, group := range u.Groups {
-		if a.HasGroupPermission(group.Name, gp.Permission) {
+		if utils.HasGroupPermission(a, group.Name, gp.Permission) {
 			return true
 		}
 	}
@@ -129,7 +130,7 @@ func (ap AnyGroupPermissionPolicy) Resolve(a entity.Album, u entity.User) bool {
 	hasPermission := false
 
 	for _, g := range u.Groups {
-		hasPermission = a.HasGroupPermissions(g.Name)
+		hasPermission = utils.HasGroupPermissions(a, g.Name)
 	}
 
 	return hasPermission
