@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"github.com/tupyy/gophoto/internal/auth"
-	"github.com/tupyy/gophoto/internal/entity"
+	"github.com/tupyy/gophoto/internal/domain/entity"
 )
 
 func Logout(r *gin.RouterGroup, k auth.Authenticator) {

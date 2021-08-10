@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"github.com/tupyy/gophoto/internal/entity"
+	"github.com/tupyy/gophoto/internal/domain/entity"
 )
 
 type StrategyType int

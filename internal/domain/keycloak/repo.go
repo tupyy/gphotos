@@ -8,7 +8,7 @@ import (
 	keycloak "github.com/Nerzal/gocloak/v8"
 	"github.com/pkg/errors"
 	"github.com/tupyy/gophoto/internal/conf"
-	"github.com/tupyy/gophoto/internal/entity"
+	"github.com/tupyy/gophoto/internal/domain/entity"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
 

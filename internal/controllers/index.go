@@ -10,15 +10,15 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"github.com/tupyy/gophoto/internal/conf"
-	"github.com/tupyy/gophoto/internal/entity"
-	"github.com/tupyy/gophoto/internal/repo"
+	"github.com/tupyy/gophoto/internal/domain"
+	"github.com/tupyy/gophoto/internal/domain/entity"
 	"github.com/tupyy/gophoto/utils/encryption"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
 
-func Index(r *gin.RouterGroup, repos repo.Repositories) {
-	albumRepo := repos[repo.AlbumRepoName].(repo.Album)
-	keycloakRepo := repos[repo.KeycloakRepoName].(repo.KeycloakRepo)
+func Index(r *gin.RouterGroup, repos domain.Repositories) {
+	albumRepo := repos[domain.AlbumRepoName].(domain.Album)
+	keycloakRepo := repos[domain.KeycloakRepoName].(domain.KeycloakRepo)
 
 	r.GET("/", func(c *gin.Context) {
 		s, _ := c.Get("sessionData")
@@ -39,7 +39,7 @@ func Index(r *gin.RouterGroup, repos repo.Repositories) {
 
 		personalAlbums, err := albumRepo.GetByOwnerID(reqCtx, session.User.ID)
 		if err != nil {
-			if errors.Is(err, repo.ErrAlbumNotFound) {
+			if errors.Is(err, domain.ErrAlbumNotFound) {
 				logger.Info("user has no personal albums")
 			} else {
 				panic(err) // TODO 500 page
@@ -76,7 +76,7 @@ func Index(r *gin.RouterGroup, repos repo.Repositories) {
 		if session.User.CanShare {
 			sharedUserAlbums, err := albumRepo.GetByUserID(reqCtx, session.User.ID)
 			if err != nil {
-				if errors.Is(err, repo.ErrAlbumNotFound) {
+				if errors.Is(err, domain.ErrAlbumNotFound) {
 					logger.Info("user has no shared albums")
 				} else {
 					panic(err) // TODO 500 page
@@ -123,7 +123,7 @@ func Index(r *gin.RouterGroup, repos repo.Repositories) {
 	})
 }
 
-func getUsers(ctx context.Context, k repo.KeycloakRepo) (map[string]entity.User, error) {
+func getUsers(ctx context.Context, k domain.KeycloakRepo) (map[string]entity.User, error) {
 	users, err := k.GetUsers(ctx)
 	if err != nil {
 		return nil, err

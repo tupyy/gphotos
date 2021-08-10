@@ -1,9 +1,9 @@
-package repo
+package domain
 
 import (
 	"context"
 
-	"github.com/tupyy/gophoto/internal/entity"
+	"github.com/tupyy/gophoto/internal/domain/entity"
 )
 
 type Repositories map[RepoName]interface{}

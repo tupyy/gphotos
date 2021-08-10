@@ -13,9 +13,9 @@ import (
 	"github.com/gorilla/csrf"
 	"github.com/sirupsen/logrus"
 	"github.com/tupyy/gophoto/internal/conf"
-	"github.com/tupyy/gophoto/internal/entity"
+	"github.com/tupyy/gophoto/internal/domain"
+	"github.com/tupyy/gophoto/internal/domain/entity"
 	"github.com/tupyy/gophoto/internal/form"
-	"github.com/tupyy/gophoto/internal/repo"
 	"github.com/tupyy/gophoto/utils/encryption"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
@@ -25,9 +25,9 @@ const (
 )
 
 // GET /album/:id
-func GetAlbum(r *gin.RouterGroup, repos repo.Repositories) {
-	albumRepo := repos[repo.AlbumRepoName].(repo.Album)
-	keycloakRepo := repos[repo.KeycloakRepoName].(repo.KeycloakRepo)
+func GetAlbum(r *gin.RouterGroup, repos domain.Repositories) {
+	albumRepo := repos[domain.AlbumRepoName].(domain.Album)
+	keycloakRepo := repos[domain.KeycloakRepoName].(domain.KeycloakRepo)
 
 	r.GET("/album/:id", func(c *gin.Context) {
 		reqCtx := c.Request.Context()
@@ -160,8 +160,8 @@ func GetAlbum(r *gin.RouterGroup, repos repo.Repositories) {
 }
 
 // GET /album
-func GetCreateAlbumForm(r *gin.RouterGroup, repos repo.Repositories) {
-	keycloakRepo := repos[repo.KeycloakRepoName].(repo.KeycloakRepo)
+func GetCreateAlbumForm(r *gin.RouterGroup, repos domain.Repositories) {
+	keycloakRepo := repos[domain.KeycloakRepoName].(domain.KeycloakRepo)
 
 	r.GET("/album", func(c *gin.Context) {
 		s, _ := c.Get("sessionData")
@@ -177,7 +177,7 @@ func GetCreateAlbumForm(r *gin.RouterGroup, repos repo.Repositories) {
 		}
 
 		users, err := keycloakRepo.GetUsers(reqCtx)
-		if err != nil && errors.Is(err, repo.ErrInternalError) {
+		if err != nil && errors.Is(err, domain.ErrInternalError) {
 			AbortInternalError(c, err, "cannot fetch users")
 
 			return
@@ -208,7 +208,7 @@ func GetCreateAlbumForm(r *gin.RouterGroup, repos repo.Repositories) {
 		}
 
 		groups, err := keycloakRepo.GetGroups(reqCtx)
-		if err != nil && errors.Is(err, repo.ErrInternalError) {
+		if err != nil && errors.Is(err, domain.ErrInternalError) {
 			AbortInternalError(c, err, "cannot fetch groups")
 
 			return
@@ -225,8 +225,8 @@ func GetCreateAlbumForm(r *gin.RouterGroup, repos repo.Repositories) {
 }
 
 // POST /album
-func CreateAlbum(r *gin.RouterGroup, repos repo.Repositories) {
-	albumRepo := repos[repo.AlbumRepoName].(repo.Album)
+func CreateAlbum(r *gin.RouterGroup, repos domain.Repositories) {
+	albumRepo := repos[domain.AlbumRepoName].(domain.Album)
 
 	r.POST("/album", func(c *gin.Context) {
 		s, _ := c.Get("sessionData")
@@ -310,9 +310,9 @@ func CreateAlbum(r *gin.RouterGroup, repos repo.Repositories) {
 }
 
 // GET /album/:id/edit
-func GetUpdateAlbumForm(r *gin.RouterGroup, repos repo.Repositories) {
-	albumRepo := repos[repo.AlbumRepoName].(repo.Album)
-	keycloakRepo := repos[repo.KeycloakRepoName].(repo.KeycloakRepo)
+func GetUpdateAlbumForm(r *gin.RouterGroup, repos domain.Repositories) {
+	albumRepo := repos[domain.AlbumRepoName].(domain.Album)
+	keycloakRepo := repos[domain.KeycloakRepoName].(domain.KeycloakRepo)
 
 	r.GET("/album/:id/edit", func(c *gin.Context) {
 		reqCtx := c.Request.Context()
@@ -352,7 +352,7 @@ func GetUpdateAlbumForm(r *gin.RouterGroup, repos repo.Repositories) {
 			logger.Info("edit permission granted. user is the owner")
 
 			users, err := keycloakRepo.GetUsers(reqCtx)
-			if err != nil && errors.Is(err, repo.ErrInternalError) {
+			if err != nil && errors.Is(err, domain.ErrInternalError) {
 				AbortInternalError(c, err, "cannot fetch users")
 
 				return
@@ -387,7 +387,7 @@ func GetUpdateAlbumForm(r *gin.RouterGroup, repos repo.Repositories) {
 			}
 
 			groups, err := keycloakRepo.GetGroups(reqCtx)
-			if err != nil && errors.Is(err, repo.ErrInternalError) {
+			if err != nil && errors.Is(err, domain.ErrInternalError) {
 				AbortInternalError(c, err, "cannot fetch groups")
 
 				return
@@ -463,8 +463,8 @@ func GetUpdateAlbumForm(r *gin.RouterGroup, repos repo.Repositories) {
 }
 
 // PUT /album/:id/
-func UpdateAlbum(r *gin.RouterGroup, repos repo.Repositories) {
-	albumRepo := repos[repo.AlbumRepoName].(repo.Album)
+func UpdateAlbum(r *gin.RouterGroup, repos domain.Repositories) {
+	albumRepo := repos[domain.AlbumRepoName].(domain.Album)
 
 	r.POST("/album/:id/", func(c *gin.Context) {
 		reqCtx := c.Request.Context()
@@ -582,8 +582,8 @@ func UpdateAlbum(r *gin.RouterGroup, repos repo.Repositories) {
 }
 
 // DELETE /album/:id
-func DeleteAlbum(r *gin.RouterGroup, repos repo.Repositories) {
-	albumRepo := repos[repo.AlbumRepoName].(repo.Album)
+func DeleteAlbum(r *gin.RouterGroup, repos domain.Repositories) {
+	albumRepo := repos[domain.AlbumRepoName].(domain.Album)
 
 	r.DELETE("/album/:id", func(c *gin.Context) {
 		reqCtx := c.Request.Context()

@@ -6,8 +6,8 @@ import (
 	"sort"
 
 	"github.com/sirupsen/logrus"
-	"github.com/tupyy/gophoto/internal/entity"
-	"github.com/tupyy/gophoto/internal/repo"
+	repo "github.com/tupyy/gophoto/internal/domain"
+	"github.com/tupyy/gophoto/internal/domain/entity"
 	"github.com/tupyy/gophoto/models"
 	"github.com/tupyy/gophoto/utils/logutil"
 	"github.com/tupyy/gophoto/utils/pgclient"
