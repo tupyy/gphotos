@@ -35,9 +35,9 @@ func (r albumCacheRepo) Create(ctx context.Context, album entity.Album) (albumID
 		return -1, err
 	}
 
-	// save to cache
-	r.cache.Set(string(id), album, gocache.DefaultExpiration)
-	logutil.GetDefaultLogger().WithField("id", id).Debug("album cached")
+	// clear cache
+	r.cache.Flush()
+	logutil.GetDefaultLogger().Debug("cache flushed after create")
 
 	return id, nil
 }
@@ -48,9 +48,9 @@ func (r albumCacheRepo) Update(ctx context.Context, album entity.Album) error {
 		return err
 	}
 
-	// save to cache
-	r.cache.Set(string(album.ID), album, gocache.DefaultExpiration)
-	logutil.GetDefaultLogger().WithField("id", album.ID).Debug("album cached")
+	// clear cache
+	r.cache.Flush()
+	logutil.GetDefaultLogger().Debug("cache flushed after update")
 
 	return nil
 }
@@ -61,9 +61,9 @@ func (r albumCacheRepo) Delete(ctx context.Context, id int32) error {
 		return err
 	}
 
-	// remove it from cache
-	r.cache.Delete(string(id))
-	logutil.GetDefaultLogger().WithField("id", id).Debug("delete album from cache")
+	// clear cache
+	r.cache.Flush()
+	logutil.GetDefaultLogger().Debug("cache flushed after delete")
 
 	return nil
 }
