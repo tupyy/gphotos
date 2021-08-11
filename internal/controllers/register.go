@@ -2,11 +2,11 @@ package controllers
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/tupyy/gophoto/internal/repo"
+	"github.com/tupyy/gophoto/internal/domain"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
 
-func Register(privateGroup *gin.RouterGroup, publicGroup *gin.RouterGroup, repos repo.Repositories) {
+func Register(privateGroup *gin.RouterGroup, publicGroup *gin.RouterGroup, repos domain.Repositories) {
 
 	// register index controller
 	Index(privateGroup, repos)

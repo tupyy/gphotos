@@ -27,10 +27,10 @@ import (
 	"github.com/tupyy/gophoto/internal/auth"
 	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/controllers"
-	"github.com/tupyy/gophoto/internal/entity"
-	"github.com/tupyy/gophoto/internal/repo"
-	keycloakRepo "github.com/tupyy/gophoto/internal/repo/keycloak"
-	"github.com/tupyy/gophoto/internal/repo/postgres/album"
+	"github.com/tupyy/gophoto/internal/domain"
+	"github.com/tupyy/gophoto/internal/domain/entity"
+	keycloakRepo "github.com/tupyy/gophoto/internal/domain/keycloak"
+	"github.com/tupyy/gophoto/internal/domain/postgres/album"
 	"github.com/tupyy/gophoto/utils/logutil"
 	"github.com/tupyy/gophoto/utils/pgclient"
 
@@ -86,8 +86,8 @@ func init() {
 	rootCmd.AddCommand(serveCmd)
 }
 
-func createPostgresRepos(client pgclient.Client) (repo.Repositories, error) {
-	repos := make(repo.Repositories)
+func createPostgresRepos(client pgclient.Client) (domain.Repositories, error) {
+	repos := make(domain.Repositories)
 
 	kr, err := keycloakRepo.New(context.Background(), conf.GetKeycloakConfig())
 	if err != nil {
@@ -96,7 +96,7 @@ func createPostgresRepos(client pgclient.Client) (repo.Repositories, error) {
 		return repos, err
 	}
 
-	repos[repo.KeycloakRepoName] = kr
+	repos[domain.KeycloakRepoName] = kr
 
 	albumRepo, err := album.NewPostgresRepo(client)
 	if err != nil {
@@ -105,7 +105,8 @@ func createPostgresRepos(client pgclient.Client) (repo.Repositories, error) {
 		return repos, err
 	}
 
-	repos[repo.AlbumRepoName] = albumRepo
+	ttl, interval := conf.GetRepoCacheConfig()
+	repos[domain.AlbumRepoName] = album.NewCacheRepo(albumRepo, ttl, interval)
 
 	return repos, nil
 }

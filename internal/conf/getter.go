@@ -7,6 +7,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"github.com/tupyy/gophoto/utils/logutil"
 	postgres "github.com/tupyy/gophoto/utils/pgclient"
 )
 
@@ -36,6 +37,10 @@ const (
 	authCallbackURL = "AUTH_CALLBACK_URL"
 	secretKey       = "SECRET_KEY"
 	encryptionKey   = "ENCRYPTION_KEY"
+
+	// cache config for repo.
+	repoCacheTTL           = "REPOCACHE_TTL"
+	repoCacheCleanInterval = "REPOCACHE_CLEAN_INTERVAL"
 
 	// params for postgresql.
 	pgsqlHost   = "POSTGRESQL_HOST"
@@ -78,6 +83,10 @@ func ParseConfiguration(confFile string) {
 
 func setDefaults() {
 	viper.SetDefault(gracefulShutdown, defaultGracefulShutdown)
+
+	// repo cache
+	viper.SetDefault(repoCacheTTL, "1h")
+	viper.SetDefault(repoCacheCleanInterval, "6h")
 }
 
 func GetPostgresConf() postgres.ClientParams {
@@ -170,4 +179,15 @@ func GetGracefulShutdownDuration() time.Duration {
 
 func GetHttpRequestTimeout() time.Duration {
 	return defaultHttpTimeout
+}
+
+func GetRepoCacheConfig() (ttl time.Duration, interval time.Duration) {
+	logger := logutil.GetDefaultLogger()
+
+	ttl = viper.GetDuration(repoCacheTTL)
+	interval = viper.GetDuration(repoCacheCleanInterval)
+
+	logger.Infof("repo cache config is: ttl=%s cleanInterval=%s", ttl, interval)
+
+	return ttl, interval
 }
