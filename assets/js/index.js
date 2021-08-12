@@ -1,0 +1,5 @@
+var album = {}
+
+var store = {}
+
+

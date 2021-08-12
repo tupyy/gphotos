@@ -9,7 +9,7 @@ import (
 func Register(privateGroup *gin.RouterGroup, publicGroup *gin.RouterGroup, repos domain.Repositories) {
 
 	// register index controller
-	Index(privateGroup, repos)
+	Index(privateGroup)
 	logutil.GetDefaultLogger().Info("index controller registered")
 
 	// album controllers

@@ -81,7 +81,9 @@ func (r albumCacheRepo) Get(ctx context.Context, sorter sort.AlbumSorter, filter
 		logutil.GetDefaultLogger().WithField("count albums", len(ent)).Debug("albums cached")
 
 		// sort
-		sorter.Sort(ent)
+		if sorter != nil {
+			sorter.Sort(ent)
+		}
 
 		//filter them
 		filteredAlbums := make([]entity.Album, 0, len(ent))
@@ -99,7 +101,9 @@ func (r albumCacheRepo) Get(ctx context.Context, sorter sort.AlbumSorter, filter
 	albums, _ := items.([]entity.Album)
 
 	// sort
-	sorter.Sort(albums)
+	if sorter != nil {
+		sorter.Sort(albums)
+	}
 
 	//filter them
 	filteredAlbums := make([]entity.Album, 0, len(albums))
@@ -150,7 +154,9 @@ func (r albumCacheRepo) GetByOwnerID(ctx context.Context, ownerID string, sorter
 		logutil.GetDefaultLogger().WithField("count albums", len(ent)).Debug("albums cached")
 
 		// sort
-		sorter.Sort(ent)
+		if sorter != nil {
+			sorter.Sort(ent)
+		}
 
 		//filter them
 		filteredAlbums := make([]entity.Album, 0, len(ent))
@@ -168,7 +174,9 @@ func (r albumCacheRepo) GetByOwnerID(ctx context.Context, ownerID string, sorter
 	albums, _ := items.([]entity.Album)
 
 	// sort
-	sorter.Sort(albums)
+	if sorter != nil {
+		sorter.Sort(albums)
+	}
 
 	//filter them
 	filteredAlbums := make([]entity.Album, 0, len(albums))
@@ -198,7 +206,9 @@ func (r albumCacheRepo) GetByUserID(ctx context.Context, userID string, sorter s
 		logutil.GetDefaultLogger().WithField("count albums", len(ent)).Debug("albums cached")
 
 		// sort
-		sorter.Sort(ent)
+		if sorter != nil {
+			sorter.Sort(ent)
+		}
 
 		//filter them
 		filteredAlbums := make([]entity.Album, 0, len(ent))
@@ -216,7 +226,9 @@ func (r albumCacheRepo) GetByUserID(ctx context.Context, userID string, sorter s
 	albums, _ := items.([]entity.Album)
 
 	// sort
-	sorter.Sort(albums)
+	if sorter != nil {
+		sorter.Sort(albums)
+	}
 
 	//filter them
 	filteredAlbums := make([]entity.Album, 0, len(albums))
@@ -246,7 +258,9 @@ func (r albumCacheRepo) GetByGroupName(ctx context.Context, groupName string, so
 		logutil.GetDefaultLogger().WithField("count albums", len(ent)).Debug("albums cached")
 
 		// sort
-		sorter.Sort(ent)
+		if sorter != nil {
+			sorter.Sort(ent)
+		}
 
 		//filter them
 		filteredAlbums := make([]entity.Album, 0, len(ent))
@@ -264,7 +278,9 @@ func (r albumCacheRepo) GetByGroupName(ctx context.Context, groupName string, so
 	albums, _ := items.([]entity.Album)
 
 	// sort
-	sorter.Sort(albums)
+	if sorter != nil {
+		sorter.Sort(albums)
+	}
 
 	//filter them
 	filteredAlbums := make([]entity.Album, 0, len(albums))

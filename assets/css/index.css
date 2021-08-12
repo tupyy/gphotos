@@ -1,10 +1,134 @@
-.row {
-    margin-left: 5px;
+.search-group {
+    margin-top: 30px;
+}
+
+.search-group span {
+    position: absolute;
+    top: 0;
+    left: 15px;
+    background: transparent;
+    border: 0;
+    padding-top: 0.85rem;
+    padding-bottom: 0.75rem;
+    padding-left: 0.75rem;
+    z-index: 20;
+}
+
+.search-group input {
+    border-top-right-radius: 25px;
+    border-top-left-radius: 25px !important;
+    border-bottom-right-radius: 25px;
+    border-bottom-left-radius: 25px !important;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+    padding-left: 2.6rem;
+}
+
+.search-group input:focus {
+    box-shadow: 0 0 0 0;
+    border-width: 1px;
+    border-color: black;
+}
+
+.filter-container-mobile {
+    display: none;
+}
+
+.main-container {
+    margin: 40px auto 10px auto;
+}
+
+.main-container .row {
+    margin: auto;
+}
+
+.main-container .form-check-input:checked {
+    background-color: black;
+}
+
+.main-container select:focus, .form-check-input:focus {
+    box-shadow: 0 0 0 0;
+    border-width: 1px;
+    border-color: black;
+}
+
+.main-container .custom-col {
+    margin-left: 0px;
+    margin-right: 0px;
+}
+
+.main-container .filtre-col {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 2px;
+    padding: 0;
+}
+
+.main-container .filtre-col .title {
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.main-container .filtre-col .filtre-row {
+    margin: 30px 0px 0px 0px;
+}
+
+.main-container .filtre-col .filtre-row:last-child {
+    margin: 30px 0px 30px 0px;
+}
+
+.main-container .sort-row span {
+    text-align: right;
+    line-height: 35px;
+}
+
+.main-container .count-albums {
+    font-weight: bold;
+    margin-right: 5px;
 }
 
 @media screen and (max-width: 576px) {
     .container-media .row {
         display: flex;
         justify-content: center;
+    }
+
+    .row {
+        margin-left: 5px;
+        margin-right: 5px;
+    }
+
+    .main-container {
+        margin: 10px 2px 10px 2px;
+    }
+
+    .main-container .filtre-col {
+        display: none;
+    }
+
+    .filter-container-mobile {
+        display: flex;
+        justify-content: center;
+        margin-top: 15px;
+    }
+
+    .main-container-mobile {
+        margin: auto;
+        padding: 0;
+    }
+
+    .main-container-mobile .title {
+        font-size: 1.1rem;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+    
+    .main-container-mobile .filtre-row  {
+        margin: 30px 0px 0px 0px;
+    }
+    
+    .main-container-mobile .filtre-row:last-child {
+        margin: 30px 0px 30px 0px;
     }
 }
