@@ -6,6 +6,13 @@ import (
 	"github.com/tupyy/gophoto/internal/domain/entity"
 )
 
+type SortOrder int
+
+const (
+	NormalOrder SortOrder = iota
+	ReverseOrder
+)
+
 type AlbumSorter interface {
 	Sort(albums []entity.Album)
 }
@@ -18,49 +25,50 @@ type albumSorter struct {
 }
 
 // NewAlbumSorterById returns a sorter by IDs.
-func NewAlbumSorterById(albums []entity.Album, reverse bool) *albumSorter {
+func NewAlbumSorterById(order SortOrder) *albumSorter {
 	lessFunc := func(a1, a2 entity.Album) bool {
-		if reverse {
+		if order == ReverseOrder {
 			return a1.ID > a2.ID
 		}
 
 		return a1.ID < a2.ID
 	}
 
-	return NewAlbumSorter(albums, lessFunc)
+	return NewAlbumSorter(lessFunc)
 }
 
 // NewAlbumSorterByName returns a sorter by name.
-func NewAlbumSorterByName(albums []entity.Album, reverse bool) *albumSorter {
+func NewAlbumSorterByName(order SortOrder) *albumSorter {
 	nameLessFunc := func(a1, a2 entity.Album) bool {
-		if reverse {
+		if order == ReverseOrder {
 			return a1.Name > a2.Name
 		}
 
 		return a1.Name < a2.Name
 	}
 
-	return NewAlbumSorter(albums, nameLessFunc)
+	return NewAlbumSorter(nameLessFunc)
 }
 
-func NewAlbumSorterByDate(albums []entity.Album, reverse bool) *albumSorter {
+func NewAlbumSorterByDate(order SortOrder) *albumSorter {
 	dateLessFunc := func(a1, a2 entity.Album) bool {
-		if reverse {
+		if order == ReverseOrder {
 			return a1.CreatedAt.After(a2.CreatedAt)
 		}
 
 		return a1.CreatedAt.Before(a2.CreatedAt)
 	}
 
-	return NewAlbumSorter(albums, dateLessFunc)
+	return NewAlbumSorter(dateLessFunc)
 }
 
 // NewAlbumSorter returns a custom sorter. The user must provide a lessFunc.
-func NewAlbumSorter(albums []entity.Album, lessFunc AlbumLessFunc) *albumSorter {
-	return &albumSorter{albums, lessFunc}
+func NewAlbumSorter(lessFunc AlbumLessFunc) *albumSorter {
+	return &albumSorter{lessFunc: lessFunc}
 }
 
 func (as *albumSorter) Sort(albums []entity.Album) {
+	as.album = albums
 	sort.Sort(as)
 }
 
