@@ -6,6 +6,23 @@ const requestURL = "/api/albums"
 
 $(() => {
     // get albums from server
+    $('#datepicker').datepicker({
+        format: "dd/mm/yyyy",
+        weekStart: 1,
+        autoclose: true,
+        clearBtn: true,
+        todayHighlight: true,
+        beforeShowMonth: function(date){
+              if (date.getMonth() == 8) {
+                return false;
+              }
+            },
+        beforeShowYear: function(date){
+              if (date.getFullYear() == 2007) {
+                return false;
+              }
+            }
+    });
 
     bindFilter();
 
