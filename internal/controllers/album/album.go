@@ -1,4 +1,4 @@
-package controllers
+package album
 
 import (
 	"bytes"
@@ -13,6 +13,7 @@ import (
 	"github.com/gorilla/csrf"
 	"github.com/sirupsen/logrus"
 	"github.com/tupyy/gophoto/internal/conf"
+	"github.com/tupyy/gophoto/internal/controllers/common"
 	"github.com/tupyy/gophoto/internal/domain"
 	"github.com/tupyy/gophoto/internal/domain/entity"
 	"github.com/tupyy/gophoto/internal/domain/utils"
@@ -58,7 +59,7 @@ func GetAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 
 		album, err := albumRepo.GetByID(reqCtx, int32(id))
 		if err != nil {
-			AbortNotFound(c, err, "update album")
+			common.AbortNotFound(c, err, "update album")
 
 			return
 		}
@@ -78,15 +79,15 @@ func GetAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 				"user_id":  session.User.ID,
 			}).Error("user has no permissions to access this album")
 
-			AbortForbidden(c, NewMissingPermissionError(entity.PermissionReadAlbum, album, session.User), "")
+			common.AbortForbidden(c, common.NewMissingPermissionError(entity.PermissionReadAlbum, album, session.User), "")
 
 			return
 		}
 
-		users, err := keycloakRepo.GetUsers(reqCtx)
+		users, err := keycloakRepo.GetUsers(reqCtx, nil)
 		if err != nil {
 			logger.WithError(err).Error("fetch users")
-			AbortInternalError(c, errors.New("fetch users from keyclosk"), "")
+			common.AbortInternalError(c, errors.New("fetch users from keyclosk"), "")
 
 			return
 		}
@@ -95,7 +96,7 @@ func GetAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 		owner, err := keycloakRepo.GetUserByID(reqCtx, album.OwnerID)
 		if err != nil {
 			logger.WithError(err).WithField("id", id).Error("fetch owner")
-			AbortInternalError(c, errors.New("fetch owner from keyclosk"), "")
+			common.AbortInternalError(c, errors.New("fetch owner from keyclosk"), "")
 
 			return
 		}
@@ -135,7 +136,7 @@ func GetAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 		encryptedID, err := gen.EncryptData(fmt.Sprintf("%d", album.ID))
 		if err != nil {
 			logger.WithError(err).Error("encrypt album id")
-			AbortInternalError(c, err, fmt.Sprintf("album id: %d", album.ID))
+			common.AbortInternalError(c, err, fmt.Sprintf("album id: %d", album.ID))
 
 			return
 		}
@@ -177,46 +178,31 @@ func GetCreateAlbumForm(r *gin.RouterGroup, repos domain.Repositories) {
 			return
 		}
 
-		users, err := keycloakRepo.GetUsers(reqCtx)
-		if err != nil && errors.Is(err, domain.ErrInternalError) {
-			AbortInternalError(c, err, "cannot fetch users")
+		// filter out current user, admins and with can_share false
+		userFilters, err := generateFilters(session.User)
+		if err != nil {
+			logutil.GetLogger(c).WithError(err).Error("create user fitlers")
+			common.AbortInternalError(c, err, "")
 
 			return
 		}
 
-		// filter out admins and can_share is false
-		userFilter := entity.NewUserFilter(users)
-		filteredUsers := userFilter.Filter(func(u entity.User) bool {
-			return u.CanShare == true && u.Role != entity.RoleAdmin && u.Username != session.User.Username
-		})
+		users, err := keycloakRepo.GetUsers(reqCtx, nil, userFilters...)
+		if err != nil && errors.Is(err, domain.ErrInternalError) {
+			common.AbortInternalError(c, err, "cannot fetch users")
 
-		// encrypt user id in permission map
-		gen := encryption.NewGenerator(conf.GetEncryptionKey())
-
-		encryptedIDs := make(map[string]string)
-		for _, u := range filteredUsers {
-			encryptedID, err := gen.EncryptData(u.ID)
-			if err != nil {
-				logutil.GetDefaultLogger().WithError(err).WithField("user_id", u.ID).Error("encrypt id")
-
-				continue
-			}
-
-			if u.FirstName != "" || u.LastName != "" {
-				encryptedIDs[encryptedID] = fmt.Sprintf("%s %s", u.FirstName, u.LastName)
-			}
-
+			return
 		}
 
 		groups, err := keycloakRepo.GetGroups(reqCtx)
 		if err != nil && errors.Is(err, domain.ErrInternalError) {
-			AbortInternalError(c, err, "cannot fetch groups")
+			common.AbortInternalError(c, err, "cannot fetch groups")
 
 			return
 		}
 
 		c.HTML(http.StatusOK, "album_form.html", gin.H{
-			"users":          encryptedIDs,
+			"users":          serialize(users),
 			"groups":         groups,
 			"canShare":       session.User.CanShare,
 			"isOwner":        true,
@@ -244,14 +230,14 @@ func CreateAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 			Resolve(entity.Album{}, session.User)
 
 		if !hasPermission {
-			AbortForbidden(c, errors.New("user has no editor of admin role"), "user role forbids the creation of albums")
+			common.AbortForbidden(c, errors.New("user has no editor of admin role"), "user role forbids the creation of albums")
 
 			return
 		}
 
 		var albumForm form.Album
 		if err := c.ShouldBind(&albumForm); err != nil {
-			AbortBadRequest(c, err, "fail to bind to form")
+			common.AbortBadRequest(c, err, "fail to bind to form")
 
 			return
 		}
@@ -296,7 +282,7 @@ func CreateAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 
 		albumID, err := albumRepo.Create(reqCtx, album)
 		if err != nil {
-			AbortInternalError(c, err, fmt.Sprintf("album: %+v", album))
+			common.AbortInternalError(c, err, fmt.Sprintf("album: %+v", album))
 
 			return
 		}
@@ -343,7 +329,7 @@ func GetUpdateAlbumForm(r *gin.RouterGroup, repos domain.Repositories) {
 
 		album, err := albumRepo.GetByID(reqCtx, int32(id))
 		if err != nil {
-			AbortNotFound(c, err, "update album")
+			common.AbortNotFound(c, err, "update album")
 
 			return
 		}
@@ -352,44 +338,33 @@ func GetUpdateAlbumForm(r *gin.RouterGroup, repos domain.Repositories) {
 		if album.OwnerID == session.User.ID || session.User.Role == entity.RoleAdmin {
 			logger.Info("edit permission granted. user is the owner")
 
-			users, err := keycloakRepo.GetUsers(reqCtx)
-			if err != nil && errors.Is(err, domain.ErrInternalError) {
-				AbortInternalError(c, err, "cannot fetch users")
+			// filter out current user, admins and with can_share false
+			userFilters, err := generateFilters(session.User)
+			if err != nil {
+				logutil.GetLogger(c).WithError(err).Error("create user fitlers")
+				common.AbortInternalError(c, err, "")
 
 				return
 			}
 
-			// filter out admins and can_share is false
-			userFilter := entity.NewUserFilter(users)
-			filteredUsers := userFilter.Filter(func(u entity.User) bool {
-				return u.CanShare == true && u.Role != entity.RoleAdmin && u.Username != session.User.Username
-			})
+			users, err := keycloakRepo.GetUsers(reqCtx, nil, userFilters...)
+			if err != nil && errors.Is(err, domain.ErrInternalError) {
+				common.AbortInternalError(c, err, "cannot fetch users")
 
-			// encrypt user id in permission map
-			gen := encryption.NewGenerator(conf.GetEncryptionKey())
+				return
+			}
 
+			serializedUsers := serialize(users)
 			userPermissions := make(entity.Permissions)
-			encryptedIDs := make(map[string]string)
-			for _, u := range filteredUsers {
-				encryptedID, err := gen.EncryptData(u.ID)
-				if err != nil {
-					logger.WithError(err).WithField("user_id", u.ID).Error("encrypt id")
-
-					continue
-				}
-
-				if u.FirstName != "" || u.LastName != "" {
-					encryptedIDs[encryptedID] = fmt.Sprintf("%s %s", u.FirstName, u.LastName)
-				}
-
+			for _, u := range serializedUsers {
 				if perm, found := album.UserPermissions[u.ID]; found {
-					userPermissions[encryptedID] = perm
+					userPermissions[u.EncryptedID] = perm
 				}
 			}
 
 			groups, err := keycloakRepo.GetGroups(reqCtx)
 			if err != nil && errors.Is(err, domain.ErrInternalError) {
-				AbortInternalError(c, err, "cannot fetch groups")
+				common.AbortInternalError(c, err, "cannot fetch groups")
 
 				return
 			}
@@ -414,7 +389,7 @@ func GetUpdateAlbumForm(r *gin.RouterGroup, repos domain.Repositories) {
 			encryptedID, err := gen.EncryptData(fmt.Sprintf("%d", album.ID))
 			if err != nil {
 				logger.WithError(err).WithField("id", album.ID).Error("encrypt album id")
-				AbortInternalError(c, err, "")
+				common.AbortInternalError(c, err, "")
 
 				return
 			}
@@ -424,7 +399,7 @@ func GetUpdateAlbumForm(r *gin.RouterGroup, repos domain.Repositories) {
 				"album":              album,
 				"canShare":           session.User.CanShare,
 				"isOwner":            true,
-				"users":              encryptedIDs,
+				"users":              serializedUsers,
 				"groups":             groups,
 				"users_permissions":  permUserJson,
 				"groups_permissions": permGroupJson,
@@ -448,7 +423,7 @@ func GetUpdateAlbumForm(r *gin.RouterGroup, repos domain.Repositories) {
 				"request user id": session.User.ID,
 				"album owner id":  album.OwnerID,
 			}).Error("album cannot be edit either by user with edit permission or the owner")
-			AbortForbidden(c, NewMissingPermissionError(entity.PermissionEditAlbum, album, session.User), "update album")
+			common.AbortForbidden(c, common.NewMissingPermissionError(entity.PermissionEditAlbum, album, session.User), "update album")
 
 			return
 		}
@@ -495,14 +470,14 @@ func UpdateAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 
 		album, err := albumRepo.GetByID(reqCtx, int32(id))
 		if err != nil {
-			AbortNotFound(c, err, "update album")
+			common.AbortNotFound(c, err, "update album")
 
 			return
 		}
 
 		var albumForm form.Album
 		if err := c.ShouldBind(&albumForm); err != nil {
-			AbortBadRequest(c, err, "fail to bind to form")
+			common.AbortBadRequest(c, err, "fail to bind to form")
 
 			return
 		}
@@ -522,7 +497,7 @@ func UpdateAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 				"request user id": session.User.ID,
 				"album owner id":  album.OwnerID,
 			}).Error("album can be edit either by user with edit permission or the owner")
-			AbortForbidden(c, NewMissingPermissionError(entity.PermissionEditAlbum, album, session.User), "update album")
+			common.AbortForbidden(c, common.NewMissingPermissionError(entity.PermissionEditAlbum, album, session.User), "update album")
 
 			return
 		}
@@ -534,7 +509,7 @@ func UpdateAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 		album.Location = cleanForm.Location
 
 		if cleanForm.Name == "" {
-			AbortBadRequest(c, errors.New("name is missing"), "update album")
+			common.AbortBadRequest(c, errors.New("name is missing"), "update album")
 
 			return
 		}
@@ -573,7 +548,7 @@ func UpdateAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 		// edit permissions don't allow a user other than the owner to change permissions
 		err = albumRepo.Update(reqCtx, album)
 		if err != nil {
-			AbortInternalError(c, err, "update album")
+			common.AbortInternalError(c, err, "update album")
 
 			return
 		}
@@ -614,7 +589,7 @@ func DeleteAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 
 		album, err := albumRepo.GetByID(reqCtx, int32(id))
 		if err != nil {
-			AbortNotFound(c, err, "update album")
+			common.AbortNotFound(c, err, "update album")
 
 			return
 		}
@@ -633,14 +608,14 @@ func DeleteAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 				"request user id": session.User.ID,
 				"album owner id":  album.OwnerID,
 			}).Error("album can be edit either by user with delete permission or the owner")
-			AbortForbidden(c, NewMissingPermissionError(entity.PermissionDeleteAlbum, album, session.User), "delete album")
+			common.AbortForbidden(c, common.NewMissingPermissionError(entity.PermissionDeleteAlbum, album, session.User), "delete album")
 
 			return
 		}
 
 		err = albumRepo.Delete(reqCtx, album.ID)
 		if err != nil {
-			AbortInternalError(c, ErrDeleteAlbum, fmt.Sprintf("album id: %d", id))
+			common.AbortInternalError(c, common.ErrDeleteAlbum, fmt.Sprintf("album id: %d", id))
 
 			return
 		}

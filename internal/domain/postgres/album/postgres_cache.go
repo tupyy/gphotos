@@ -2,6 +2,7 @@ package album
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	gocache "github.com/patrickmn/go-cache"
@@ -69,36 +70,23 @@ func (r albumCacheRepo) Delete(ctx context.Context, id int32) error {
 }
 
 func (r albumCacheRepo) Get(ctx context.Context, sorter sort.AlbumSorter, filters ...filters.AlbumFilter) ([]entity.Album, error) {
+	var albums []entity.Album
+
 	items, found := r.cache.Get(allAlbumsKey)
 	if !found {
-		ent, err := r.repo.Get(ctx, sorter, filters...)
+		var err error
+
+		albums, err = r.repo.Get(ctx, sorter, filters...)
 		if err != nil {
 			return []entity.Album{}, err
 		}
 
 		// set cache
-		r.cache.Set(allAlbumsKey, ent, gocache.DefaultExpiration)
-		logutil.GetDefaultLogger().WithField("count albums", len(ent)).Debug("albums cached")
-
-		// sort
-		if sorter != nil {
-			sorter.Sort(ent)
-		}
-
-		//filter them
-		filteredAlbums := make([]entity.Album, 0, len(ent))
-		for _, filter := range filters {
-			for _, e := range ent {
-				if filter(e) {
-					filteredAlbums = append(filteredAlbums, e)
-				}
-			}
-		}
-
-		return filteredAlbums, nil
+		r.cache.Set(allAlbumsKey, albums, gocache.DefaultExpiration)
+		logutil.GetDefaultLogger().WithField("count albums", len(albums)).Debug("albums cached")
+	} else {
+		albums, _ = items.([]entity.Album)
 	}
-
-	albums, _ := items.([]entity.Album)
 
 	// sort
 	if sorter != nil {
@@ -106,18 +94,16 @@ func (r albumCacheRepo) Get(ctx context.Context, sorter sort.AlbumSorter, filter
 	}
 
 	//filter them
-	filteredAlbums := make([]entity.Album, 0, len(albums))
-	for _, filter := range filters {
-		for _, e := range albums {
-			if filter(e) {
-				filteredAlbums = append(filteredAlbums, e)
-			}
-		}
+	if len(filters) > 0 {
+		filteredAlbums := filterAlbums(filters, albums)
+		logutil.GetDefaultLogger().WithField("count filtered albums", len(filteredAlbums)).Debug("served album from cache")
+
+		return filteredAlbums, nil
 	}
 
 	logutil.GetDefaultLogger().WithField("count albums", len(albums)).Debug("served album from cache")
 
-	return filteredAlbums, nil
+	return albums, nil
 
 }
 
@@ -142,36 +128,25 @@ func (r albumCacheRepo) GetByID(ctx context.Context, id int32) (entity.Album, er
 }
 
 func (r albumCacheRepo) GetByOwnerID(ctx context.Context, ownerID string, sorter sort.AlbumSorter, filters ...filters.AlbumFilter) ([]entity.Album, error) {
-	items, found := r.cache.Get(ownerID)
+	cacheKey := fmt.Sprintf("owner%s", ownerID)
+
+	var albums []entity.Album
+
+	items, found := r.cache.Get(cacheKey)
 	if !found {
-		ent, err := r.repo.GetByOwnerID(ctx, ownerID, sorter, filters...)
+		var err error
+
+		albums, err = r.repo.GetByOwnerID(ctx, ownerID, sorter, filters...)
 		if err != nil {
 			return []entity.Album{}, err
 		}
 
 		// set cache
-		r.cache.Set(ownerID, ent, gocache.DefaultExpiration)
-		logutil.GetDefaultLogger().WithField("count albums", len(ent)).Debug("albums cached")
-
-		// sort
-		if sorter != nil {
-			sorter.Sort(ent)
-		}
-
-		//filter them
-		filteredAlbums := make([]entity.Album, 0, len(ent))
-		for _, filter := range filters {
-			for _, e := range ent {
-				if filter(e) {
-					filteredAlbums = append(filteredAlbums, e)
-				}
-			}
-		}
-
-		return filteredAlbums, nil
+		r.cache.Set(cacheKey, albums, gocache.DefaultExpiration)
+		logutil.GetDefaultLogger().WithField("count albums", len(albums)).Debug("albums cached")
+	} else {
+		albums, _ = items.([]entity.Album)
 	}
-
-	albums, _ := items.([]entity.Album)
 
 	// sort
 	if sorter != nil {
@@ -179,51 +154,34 @@ func (r albumCacheRepo) GetByOwnerID(ctx context.Context, ownerID string, sorter
 	}
 
 	//filter them
-	filteredAlbums := make([]entity.Album, 0, len(albums))
-	for _, filter := range filters {
-		for _, e := range albums {
-			if filter(e) {
-				filteredAlbums = append(filteredAlbums, e)
-			}
-		}
+	if len(filters) > 0 {
+		filteredAlbums := filterAlbums(filters, albums)
+		logutil.GetDefaultLogger().WithField("count filtered albums", len(filteredAlbums)).Debug("served album from cache")
+
+		return filteredAlbums, nil
 	}
 
-	logutil.GetDefaultLogger().WithField("count albums", len(albums)).Debug("served album from cache")
-
-	return filteredAlbums, nil
+	return albums, nil
 }
 
 func (r albumCacheRepo) GetByUserID(ctx context.Context, userID string, sorter sort.AlbumSorter, filters ...filters.AlbumFilter) ([]entity.Album, error) {
+	var albums []entity.Album
+
 	items, found := r.cache.Get(userID)
 	if !found {
-		ent, err := r.repo.GetByUserID(ctx, userID, sorter, filters...)
+		var err error
+
+		albums, err = r.repo.GetByUserID(ctx, userID, sorter, filters...)
 		if err != nil {
 			return []entity.Album{}, err
 		}
 
 		// set cache
-		r.cache.Set(userID, ent, gocache.DefaultExpiration)
-		logutil.GetDefaultLogger().WithField("count albums", len(ent)).Debug("albums cached")
-
-		// sort
-		if sorter != nil {
-			sorter.Sort(ent)
-		}
-
-		//filter them
-		filteredAlbums := make([]entity.Album, 0, len(ent))
-		for _, filter := range filters {
-			for _, e := range ent {
-				if filter(e) {
-					filteredAlbums = append(filteredAlbums, e)
-				}
-			}
-		}
-
-		return filteredAlbums, nil
+		r.cache.Set(userID, albums, gocache.DefaultExpiration)
+		logutil.GetDefaultLogger().WithField("count albums", len(albums)).Debug("albums cached")
+	} else {
+		albums, _ = items.([]entity.Album)
 	}
-
-	albums, _ := items.([]entity.Album)
 
 	// sort
 	if sorter != nil {
@@ -231,51 +189,36 @@ func (r albumCacheRepo) GetByUserID(ctx context.Context, userID string, sorter s
 	}
 
 	//filter them
-	filteredAlbums := make([]entity.Album, 0, len(albums))
-	for _, filter := range filters {
-		for _, e := range albums {
-			if filter(e) {
-				filteredAlbums = append(filteredAlbums, e)
-			}
-		}
+	if len(filters) > 0 {
+		filteredAlbums := filterAlbums(filters, albums)
+		logutil.GetDefaultLogger().WithField("count filtered albums", len(filteredAlbums)).Debug("served album from cache")
+
+		return filteredAlbums, nil
 	}
 
 	logutil.GetDefaultLogger().WithField("count albums", len(albums)).Debug("served album from cache")
 
-	return filteredAlbums, nil
+	return albums, nil
 }
 
 func (r albumCacheRepo) GetByGroupName(ctx context.Context, groupName string, sorter sort.AlbumSorter, filters ...filters.AlbumFilter) ([]entity.Album, error) {
+	var albums []entity.Album
+
 	items, found := r.cache.Get(groupName)
 	if !found {
-		ent, err := r.repo.GetByGroupName(ctx, groupName, sorter, filters...)
+		var err error
+
+		albums, err = r.repo.GetByGroupName(ctx, groupName, sorter, filters...)
 		if err != nil {
 			return []entity.Album{}, err
 		}
 
 		// set cache
-		r.cache.Set(groupName, ent, gocache.DefaultExpiration)
-		logutil.GetDefaultLogger().WithField("count albums", len(ent)).Debug("albums cached")
-
-		// sort
-		if sorter != nil {
-			sorter.Sort(ent)
-		}
-
-		//filter them
-		filteredAlbums := make([]entity.Album, 0, len(ent))
-		for _, filter := range filters {
-			for _, e := range ent {
-				if filter(e) {
-					filteredAlbums = append(filteredAlbums, e)
-				}
-			}
-		}
-
-		return filteredAlbums, nil
+		r.cache.Set(groupName, albums, gocache.DefaultExpiration)
+		logutil.GetDefaultLogger().WithField("count albums", len(albums)).Debug("albums cached")
+	} else {
+		albums, _ = items.([]entity.Album)
 	}
-
-	albums, _ := items.([]entity.Album)
 
 	// sort
 	if sorter != nil {
@@ -283,16 +226,34 @@ func (r albumCacheRepo) GetByGroupName(ctx context.Context, groupName string, so
 	}
 
 	//filter them
-	filteredAlbums := make([]entity.Album, 0, len(albums))
-	for _, filter := range filters {
-		for _, e := range albums {
-			if filter(e) {
-				filteredAlbums = append(filteredAlbums, e)
-			}
-		}
+	if len(filters) > 0 {
+		filteredAlbums := filterAlbums(filters, albums)
+		logutil.GetDefaultLogger().WithField("count filtered albums", len(filteredAlbums)).Debug("served album from cache")
+
+		return filteredAlbums, nil
 	}
 
 	logutil.GetDefaultLogger().WithField("count albums", len(albums)).Debug("served album from cache")
 
-	return filteredAlbums, nil
+	return albums, nil
+}
+
+func filterAlbums(filters []filters.AlbumFilter, albums []entity.Album) []entity.Album {
+	filteredAlbums := make([]entity.Album, 0, len(albums))
+	for _, a := range albums {
+		pass := true
+		for _, filter := range filters {
+			if !filter(a) {
+				pass = false
+				break
+			}
+		}
+
+		if pass {
+			filteredAlbums = append(filteredAlbums, a)
+		}
+	}
+
+	return filteredAlbums
+
 }

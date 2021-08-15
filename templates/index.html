@@ -5,6 +5,8 @@
         <link rel="stylesheet" href="/static/css/index.css"/>
         <link rel="stylesheet" href="/static/css/album-card.css"/>
         {{ template "js" }}
+        <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
         <script src="/static/js/index.js"></script>
         <title>Photos</title>
     </head>
@@ -27,36 +29,41 @@
         </div>
         <div class="container-xl main-container">
             <div class="row gx-5">
-                <div class="col-3 custom-col filtre-col">
-                    <div class="row filtre-row">
-                        <span class="title">Album type</span>
-                        <div class="container">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="" id="personalAlbumCheck">
-                                <label class="form-check-label" for="personalAlbumCheck">
-                                  Personal
-                                </label>
-                            </div>
-                            <div class="form-check">
-                              <input class="form-check-input" type="checkbox" value="" id="personalAlbumCheck" checked>
-                              <label class="form-check-label" for="personalAlbumCheck">
-                                Shared
-                              </label>
+                <div class="col-xl-2 col-3 custom-col filtre-col">
+                    {{ if .can_share }}
+                        <div class="row filtre-row">
+                            <span class="title">Album type</span>
+                            <div class="container">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="" id="personalAlbumCheck" checked>
+                                    <label class="form-check-label" for="personalAlbumCheck">
+                                      Personal
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                  <input class="form-check-input" type="checkbox" value="" id="sharedAlbumCheck" checked>
+                                  <label class="form-check-label" for="sharedAlbumCheck">
+                                    Shared
+                                  </label>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    {{ end }}
                     <div class="row filtre-row">
                         <span class="title">Date</span>
                     </div>
-                    <div class="row filtre-row">
-                        <span class="title">Owner</span>
-                        <div class="input-group col-12">
-                            <select class="form-select">
-                                <option value="1">Bob</option>
-                                <option value="2">Bob2</option>
-                            </select>
+                    {{ if .users }}
+                        <div class="row filtre-row">
+                            <span class="title">Owner</span>
+                            <div class="input-group col-12">
+                                <select class="form-select">
+                                    {{ range .users }}
+                                        <option value="{{ .EncryptedID }}">{{ .Name }}</option>
+                                    {{ end }}
+                                </select>
+                            </div>
                         </div>
-                    </div>
+                    {{ end }}
                 </div>
                 <div class="offcanvas offcanvas-start" id="offcanvasFilter">
                     <div class="offcanvas-header">
@@ -65,23 +72,25 @@
                     </div>
                     <div class="offcanvas-body">
                         <div class="container main-container-mobile">
-                            <div class="row filtre-row">
-                                <span class="title">Album type</span>
-                                <div class="container">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" value="" id="personalAlbumCheck">
-                                        <label class="form-check-label" for="personalAlbumCheck">
-                                          Personal
-                                        </label>
-                                    </div>
-                                    <div class="form-check">
-                                      <input class="form-check-input" type="checkbox" value="" id="personalAlbumCheck" checked>
-                                      <label class="form-check-label" for="personalAlbumCheck">
-                                        Shared
-                                      </label>
+                            {{ if .can_share }}
+                                <div class="row filtre-row">
+                                    <span class="title">Album type</span>
+                                    <div class="container">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" value="" id="personalAlbumCheck" checked>
+                                            <label class="form-check-label" for="personalAlbumCheck">
+                                              Personal
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                          <input class="form-check-input" type="checkbox" value="" id="sharedAlbumCheckMobil" checked>
+                                          <label class="form-check-label" for="sharedAlbumCheckMobil">
+                                            Shared
+                                          </label>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            {{ end }}
                             <div class="row filtre-row">
                                 <span class="title">Date</span>
                             </div>
@@ -100,7 +109,7 @@
                 <div class="col-lg-9 col-12 custom-col albums-col">
                     <div class="row justify-content-between sort-row">
                         <div class="col-4 col-lg-3">
-                            <span class="count-albums">1000</span><span>albums</span>
+                            <span class="count-albums" id="count_albums">1000</span><span>albums</span>
                         </div>
                         <div class="col-8 col-lg-6">
                             <div class="row gx-3">
@@ -116,11 +125,13 @@
                             </div>
                         </div>
                     </div>
+                    <div class="row gx-2 album-row" id="albums">
+                    </div>
                 </div>
             </div>
         </div>
     </body>
-    <!-- <footer> -->
-    <!--     {{ template "footer" }} -->
-    <!-- </footer> -->
+    <footer>
+        {{ template "footer" }}
+    </footer>
 </html>

@@ -19,7 +19,7 @@ const (
 
 type KeycloakRepo interface {
 	// Get returns all the users.
-	GetUsers(ctx context.Context) ([]entity.User, error)
+	GetUsers(ctx context.Context, sorter sort.UserSorter, filters ...filters.UserFilter) ([]entity.User, error)
 	// GetByID return the user by id.
 	GetUserByID(ctx context.Context, id string) (entity.User, error)
 	// // GetByUsername return the user by username

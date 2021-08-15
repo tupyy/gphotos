@@ -1,4 +1,4 @@
-package controllers_test
+package album_test
 
 import (
 	"testing"

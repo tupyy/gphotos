@@ -1,4 +1,4 @@
-package controllers
+package album
 
 import (
 	"github.com/tupyy/gophoto/internal/domain/entity"

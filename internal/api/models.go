@@ -2,7 +2,6 @@ package api
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/sirupsen/logrus"
 	"github.com/tupyy/gophoto/internal/conf"
@@ -14,12 +13,14 @@ import (
 // simpleAlbum is a simplified struct of an album used in rendering templates.
 // The ID of the simple album is encrypted.
 type simpleAlbum struct {
-	ID          string    `json:"id"`
-	Name        string    `json:"name"`
-	Owner       string    `json:"owner"`
-	Date        time.Time `json:"date"`
-	Description string    `json:"description"`
-	Location    string    `json:"location"`
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Owner       string `json:"owner"`
+	Day         string `json:"day"`
+	Month       string `json:"month"`
+	Year        string `json:"year"`
+	Description string `json:"description"`
+	Location    string `json:"location"`
 }
 
 func newSimpleAlbum(a entity.Album, owner entity.User) (simpleAlbum, error) {
@@ -46,7 +47,9 @@ func newSimpleAlbum(a entity.Album, owner entity.User) (simpleAlbum, error) {
 	return simpleAlbum{
 		ID:          encryptedID,
 		Name:        a.Name,
-		Date:        a.CreatedAt,
+		Day:         fmt.Sprintf("%d", a.CreatedAt.Day()),
+		Month:       a.CreatedAt.Month().String()[:3],
+		Year:        fmt.Sprintf("%d", a.CreatedAt.Year()),
 		Location:    a.Location,
 		Description: a.Description,
 		Owner:       ownerName,
@@ -79,4 +82,36 @@ func newSimpleAlbums(albums []entity.Album, users []entity.User) []simpleAlbum {
 	}
 
 	return sAlbums
+}
+
+// SerializedUser is a simplified version of user to be used in templates.
+// The username is encrypted.
+type SerializedUser struct {
+	EncryptedID string
+	Username    string
+	Name        string
+	Role        entity.Role
+	CanShare    bool
+}
+
+func NewSerializedUser(u entity.User) (SerializedUser, error) {
+	gen := encryption.NewGenerator(conf.GetEncryptionKey())
+
+	encryptedUsername, err := gen.EncryptData(u.Username)
+	if err != nil {
+		return SerializedUser{}, err
+	}
+
+	encryptedID, err := gen.EncryptData(u.Username)
+	if err != nil {
+		return SerializedUser{}, err
+	}
+
+	return SerializedUser{
+		EncryptedID: encryptedID,
+		Username:    encryptedUsername,
+		Name:        fmt.Sprintf("%s %s", u.FirstName, u.LastName),
+		Role:        u.Role,
+		CanShare:    u.CanShare,
+	}, nil
 }

@@ -25,7 +25,7 @@ func GetAlbums(r *gin.RouterGroup, repos domain.Repositories) {
 		logger := logutil.GetLogger(c)
 
 		// fetch users from keycloak
-		users, err := keycloakRepo.GetUsers(reqCtx)
+		users, err := keycloakRepo.GetUsers(reqCtx, nil)
 		if err != nil {
 			logger.WithError(err).Error("index fetch users")
 			c.AbortWithError(http.StatusInternalServerError, err)

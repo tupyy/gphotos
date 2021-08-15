@@ -9,6 +9,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/domain/entity"
+	"github.com/tupyy/gophoto/internal/domain/filters"
+	"github.com/tupyy/gophoto/internal/domain/sort"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
 
@@ -35,7 +37,7 @@ func New(ctx context.Context, c conf.KeycloakConfig) (*KeycloakRepo, error) {
 	return &KeycloakRepo{client: client, token: token, realm: c.Realm, configuration: c}, nil
 }
 
-func (k *KeycloakRepo) GetUsers(ctx context.Context) ([]entity.User, error) {
+func (k *KeycloakRepo) GetUsers(ctx context.Context, sorter sort.UserSorter, filters ...filters.UserFilter) ([]entity.User, error) {
 	keycloakUsers, err := k.client.GetUsers(ctx, k.token.AccessToken, k.realm, keycloak.GetUsersParams{Enabled: ptrBool(true)})
 	if err != nil {
 		logutil.GetDefaultLogger().WithError(err).Error("cannot fetch users from keycloak")
@@ -66,6 +68,8 @@ func (k *KeycloakRepo) GetUsers(ctx context.Context) ([]entity.User, error) {
 			user.Groups = append(user.Groups, entity.Group{Name: *g.Name})
 		}
 	}
+
+	// filter them
 
 	return users, nil
 }

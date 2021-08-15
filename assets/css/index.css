@@ -36,6 +36,7 @@
 
 .main-container {
     margin: 40px auto 10px auto;
+    min-height: 1000px;
 }
 
 .main-container .row {
@@ -62,6 +63,7 @@
     border: 1px solid #e0e0e0;
     border-radius: 2px;
     padding: 0;
+    max-height: 400px;
 }
 
 .main-container .filtre-col .title {
@@ -88,6 +90,17 @@
     margin-right: 5px;
 }
 
+.main-container #albums {
+    margin: 10px 0 0 0;
+}
+
+.main-container #albums .album-col {
+    width: 250px;
+    margin-top: 5px;
+}
+
+
+
 @media screen and (max-width: 576px) {
     .container-media .row {
         display: flex;
@@ -101,6 +114,7 @@
 
     .main-container {
         margin: 10px 2px 10px 2px;
+        min-height: 300px;
     }
 
     .main-container .filtre-col {
