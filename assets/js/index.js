@@ -1,5 +1,20 @@
 let store = {}
 
+let owner = {
+    id: '',
+    name: '',
+}
+
+let filter = {
+    personalAlbums: true,
+    sharedAlbums: true,
+    date: {
+        start: '',
+        end: '',
+    },
+    owners: [],
+}
+
 const albumsElementID = "#albums";
 
 const requestURL = "/api/albums"
@@ -55,6 +70,14 @@ let render = () => {
     $("#count_albums").html(store.albums.length);
 }
 
+let renderFilter = () => {
+    $("#selectedOwnersFilter").empty();
+    
+    filter.owners.forEach(v => {
+        $("#selectedOwnersFilter").append(renderOwnerPill(v));
+    });
+}
+
 let renderAlbum = (album) => {
     return `
         <div class="album-col col-2" id="` + album.id + `">
@@ -87,6 +110,7 @@ let showSpinner = (parentElement, show) => {
         $("#loadingSpinner").remove();
     }
 }
+
 let spinner = () => {
     return `
     <div class="d-flex justify-content-center" id="loadingSpinner">
@@ -97,35 +121,62 @@ let spinner = () => {
     `
 }
 
+let renderOwnerPill = (owner) => {
+    return `
+        <div class="col-12 col-pill">
+            <input type="hidden" value="` + owner.id + `"/>
+            <span class="badge rounded-pill bg-secondary">` + owner.name + `
+                <button type="button" class="btn-close btn-close-white"></button>
+            </span>
+        </div>
+    `
+}
+
 let bindFilter = () => {
     // bind to filter event
     $("#personalAlbumCheck").on("change", () => {
-        clearAlbums();
-        store.albums = [];
-
-        if ($("#personalAlbumCheck").prop('checked')) {
-            store.albums = _.concat(store.albums, store.data.personal_albums);
-        }
-
-        if ($("#sharedAlbumCheck").prop('checked')) {
-            store.albums = _.concat(store.albums, store.data.shared_albums);
-        }
-        
-        render();
+        filter.personalAlbums =  $("#personalAlbumCheck").prop('checked');
     });
     
     $("#sharedAlbumCheck").on("change", () => {
-        clearAlbums();
-        store.albums = [];
+        filter.sharedAlbums = $("#sharedAlbumCheck").prop('checked');
+    });
 
-        if ($("#personalAlbumCheck").prop('checked')) {
-            store.albums = _.concat(store.albums, store.data.personal_albums);
+    $("#selectOwner").on("change", () => {
+        if ($("#selectOwner option:selected").val() !== "empty-value") {
+            let newOwner = {
+                id: $("#selectOwner option:selected").val(),
+                name: $("#selectOwner option:selected").text(),
+            }
+
+            let exists = false;
+            filter.owners.forEach(v => {
+                if (v.id === newOwner.id) {
+                    exists = true;
+                }
+            })
+
+            if (!exists) {
+                filter.owners.push(newOwner);
+                renderFilter();
+            }
+        }
+    });
+
+    $("#selectedOwnersFilter").on('click', '.btn-close', (e) => {
+        let parents = $(e.target).parents("div");
+        let id = $(parents[0]).find('input').val();
+        
+        filter.owners.forEach((v,idx) => {
+            if ( v.id === id ) {
+                filter.owners.splice(idx, 1);
+            }
+        });
+
+        if ( filter.owners.length === 0 ) {
+            $("#selectOwner option:eq(0)").prop('selected', true);
         }
 
-        if ($("#sharedAlbumCheck").prop('checked')) {
-            store.albums = _.concat(store.albums, store.data.shared_albums);
-        }
-
-        render();
+        renderFilter();
     });
 }

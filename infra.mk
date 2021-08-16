@@ -56,6 +56,7 @@ POSTGRES_CONTAINER=postgresql
 IMAGE_NAME=postgres
 IMAGE_TAG=13
 PG_DATA=/home/cosmin/tmp/pgdata
+PG_VOLUME=postgresq-gphotos
 ROOT_USER=postgres
 ROOT_PWD=$(shell cat $(PGPASSFILE) | head -n 1 | cut -d":" -f5)
 USER_ID=$(shell id `whoami` -u)
@@ -78,6 +79,7 @@ run.docker.postgres:
 		--network=$(INFRA_NETWORK) \
 		-e POSTGRES_USER=$(ROOT_USER) \
 		-e POSTGRES_PASSWORD=$(ROOT_PWD) \
+		-v $(PG_VOLUME):/var/lib/postgresql/data \
 		-e VERBOSE=1 \
 		--name $(POSTGRES_CONTAINER) $(IMAGE_NAME):$(IMAGE_TAG); \
 	else \
