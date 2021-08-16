@@ -58,13 +58,13 @@
                         <span class="title">Date</span>
                         <div class="input-daterange input-group" id="datepicker">
                             <div class="row">
-                                <input type="text" class="input-sm form-control" name="start" />
+                                <input type="text" class="input-sm form-control" id="startDate" name="start" />
                             </div>
                             <div class="row">
                                 <span class="input-group-addon">to</span>
                             </div>
                             <div class="row">
-                                <input type="text" class="input-sm form-control" name="end" />
+                                <input type="text" class="input-sm form-control" id="endDate" name="end" />
                             </div>
                         </div>
                     </div>
@@ -135,7 +135,7 @@
                         <div class="col-8 col-lg-6 select-row">
                             <div class="row gx-3">
                                 <span class="col-4 col-lg-3">Sort by:</span>
-                                <div class="col-8 col-lg-9">
+                                <div class="col-8 col-lg-9" id="sortSelect">
                                     <select class="form-select">
                                         <option value="name">Name</option>
                                         <option value="date">Date</option>

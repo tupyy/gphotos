@@ -1,3 +1,6 @@
+const albumsElementID = "#albums";
+const baseURL = "/api/albums"
+
 let store = {}
 
 let owner = {
@@ -5,7 +8,7 @@ let owner = {
     name: '',
 }
 
-let filter = {
+let filterSort = {
     personalAlbums: true,
     sharedAlbums: true,
     date: {
@@ -13,38 +16,46 @@ let filter = {
         end: '',
     },
     owners: [],
+    sort: '',
+    buildRequestURL: function(baseURL) {
+        let reqUrl = baseURL + "?personal=" + this.personalAlbums + "&shared=" + this.sharedAlbums;
+        
+        if ( this.date.start !== "" ) {
+            reqUrl = reqUrl + "&start_date=" + this.date.start;
+        }
+
+        if (this.date.end !== "") {
+            reqUrl = reqUrl + "&end_date=" + this.date.end;
+        }
+
+        if (this.owners.length > 0) {
+            this.owners.forEach(v => {
+                reqUrl = reqUrl + "&owner=" + v.id
+            });
+        }
+
+        if (this.sort !== '') {
+            reqUrl = reqUrl + '&sort=' + this.sort;
+        }
+
+        return encodeURI(reqUrl);
+    },
 }
 
-const albumsElementID = "#albums";
 
-const requestURL = "/api/albums"
+const init = () => {
+    filterSort.personalAlbums =  $("#personalAlbumCheck").prop('checked');
+    filterSort.sharedAlbums = $("#sharedAlbumCheck").prop('checked');
+    filterSort.date.start = $('#startDate').val();
+    filterSort.date.end = $('#endDate').val();
+    filterSort.sort = $('#sortSelect').val();
+}
 
-$(() => {
-    // get albums from server
-    $('#datepicker').datepicker({
-        format: "dd/mm/yyyy",
-        weekStart: 1,
-        autoclose: true,
-        clearBtn: true,
-        todayHighlight: true,
-        beforeShowMonth: function(date){
-              if (date.getMonth() == 8) {
-                return false;
-              }
-            },
-        beforeShowYear: function(date){
-              if (date.getFullYear() == 2007) {
-                return false;
-              }
-            }
-    });
-
-    bindFilter();
-
+const doReq = () => {
     showSpinner($("#albums"),true);
     clearAlbums();
 
-    axios.get(requestURL)
+    axios.get(filterSort.buildRequestURL(baseURL))
         .then(response => {
 
             store.data = response.data;
@@ -59,8 +70,8 @@ $(() => {
         .then(() => {
             showSpinner($("#albums"), false);
         });
+}
 
-});
 
 let render = () => {
     store.albums.forEach(album => {
@@ -73,7 +84,7 @@ let render = () => {
 let renderFilter = () => {
     $("#selectedOwnersFilter").empty();
     
-    filter.owners.forEach(v => {
+    filterSort.owners.forEach(v => {
         $("#selectedOwnersFilter").append(renderOwnerPill(v));
     });
 }
@@ -132,14 +143,30 @@ let renderOwnerPill = (owner) => {
     `
 }
 
-let bindFilter = () => {
-    // bind to filter event
+let bindToEvents = () => {
+    // bind to filterSort event
     $("#personalAlbumCheck").on("change", () => {
-        filter.personalAlbums =  $("#personalAlbumCheck").prop('checked');
+        filterSort.personalAlbums =  $("#personalAlbumCheck").prop('checked');
+
+        doReq();
     });
     
     $("#sharedAlbumCheck").on("change", () => {
-        filter.sharedAlbums = $("#sharedAlbumCheck").prop('checked');
+        filterSort.sharedAlbums = $("#sharedAlbumCheck").prop('checked');
+        
+        doReq();
+    });
+
+    $("#startDate").on('change', (e) => {
+        filterSort.date.start = $(e.target).val();
+
+        doReq();
+    });
+    
+    $("#endDate").on('change', (e) => {
+        filterSort.date.end = $(e.target).val();
+
+        doReq();
     });
 
     $("#selectOwner").on("change", () => {
@@ -150,16 +177,18 @@ let bindFilter = () => {
             }
 
             let exists = false;
-            filter.owners.forEach(v => {
+            filterSort.owners.forEach(v => {
                 if (v.id === newOwner.id) {
                     exists = true;
                 }
             })
 
             if (!exists) {
-                filter.owners.push(newOwner);
+                filterSort.owners.push(newOwner);
                 renderFilter();
             }
+
+            doReq();
         }
     });
 
@@ -167,16 +196,53 @@ let bindFilter = () => {
         let parents = $(e.target).parents("div");
         let id = $(parents[0]).find('input').val();
         
-        filter.owners.forEach((v,idx) => {
+        filterSort.owners.forEach((v,idx) => {
             if ( v.id === id ) {
-                filter.owners.splice(idx, 1);
+                filterSort.owners.splice(idx, 1);
             }
         });
 
-        if ( filter.owners.length === 0 ) {
+        if ( filterSort.owners.length === 0 ) {
             $("#selectOwner option:eq(0)").prop('selected', true);
         }
 
         renderFilter();
+
+        doReq();
     });
+
+    $('#sortSelect').on('change', (e) => {
+        filterSort.sort = $(e.target).val();
+
+        doReq();
+    })
 }
+
+$(() => {
+    $('#datepicker').datepicker({
+        format: "dd/mm/yyyy",
+        weekStart: 1,
+        autoclose: true,
+        clearBtn: true,
+        todayHighlight: true,
+        beforeShowMonth: function(date){
+              if (date.getMonth() == 8) {
+                return false;
+              }
+            },
+        beforeShowYear: function(date){
+              if (date.getFullYear() == 2007) {
+                return false;
+              }
+            }
+    });
+
+    // bind to filterSorts controls
+    bindToEvents();
+
+    // init filterSort obj
+    init();
+
+    // get albums from server
+    doReq();
+});
