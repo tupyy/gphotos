@@ -26,9 +26,7 @@ run.infra:
 	@if [ "$(ENV)" == "dev" ]; then\
 		echo "$(COLOR_YELLOW)Run for dev$(RESET_COLOR)"; \
 		make run.docker.network run.docker.postgres; \
-		echo "$(COLOR_YELLOW)Wait for postgres to start$(RESET_COLOR)";\
-		sleep 20;\
-		make postgres.setup run.docker.keycloak; \
+		make run.docker.keycloak; \
 	else \
 		echo "run infra for prod...unavailable";\
 	fi
