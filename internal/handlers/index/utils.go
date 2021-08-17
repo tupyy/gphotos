@@ -1,13 +1,30 @@
-package album
+package index
 
 import (
 	"fmt"
 
-	"github.com/tupyy/gophoto/internal/controllers/common"
+	"github.com/tupyy/gophoto/internal/handlers/common"
 	"github.com/tupyy/gophoto/internal/domain/entity"
 	domainFilters "github.com/tupyy/gophoto/internal/domain/filters"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
+
+func serialize(users []entity.User) []common.SerializedUser {
+	serializedUsers := make([]common.SerializedUser, 0, len(users))
+
+	for _, u := range users {
+		s, err := common.NewSerializedUser(u)
+		if err != nil {
+			logutil.GetDefaultLogger().WithError(err).WithField("user", fmt.Sprintf("%+v", u)).Error("serialize user")
+
+			continue
+		}
+
+		serializedUsers = append(serializedUsers, s)
+	}
+
+	return serializedUsers
+}
 
 // generateFilters generates 3 filters: notUserNameFilter, FilterByRole and FilterByCanShare.
 func generateFilters(currentUser entity.User) ([]domainFilters.UserFilter, error) {
@@ -38,22 +55,4 @@ func generateFilters(currentUser entity.User) ([]domainFilters.UserFilter, error
 	userFilters = append(userFilters, notAdminFilter)
 
 	return userFilters, nil
-}
-
-// serialize serialized a list of users
-func serialize(users []entity.User) []common.SerializedUser {
-	serializedUsers := make([]common.SerializedUser, 0, len(users))
-
-	for _, u := range users {
-		s, err := common.NewSerializedUser(u)
-		if err != nil {
-			logutil.GetDefaultLogger().WithError(err).WithField("user", fmt.Sprintf("%+v", u)).Error("serialize user")
-
-			continue
-		}
-
-		serializedUsers = append(serializedUsers, s)
-	}
-
-	return serializedUsers
 }

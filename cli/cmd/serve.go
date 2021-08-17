@@ -27,7 +27,7 @@ import (
 	"github.com/tupyy/gophoto/internal/api"
 	"github.com/tupyy/gophoto/internal/auth"
 	"github.com/tupyy/gophoto/internal/conf"
-	"github.com/tupyy/gophoto/internal/controllers"
+	"github.com/tupyy/gophoto/internal/handlers"
 	"github.com/tupyy/gophoto/internal/domain"
 	"github.com/tupyy/gophoto/internal/domain/entity"
 	keycloakRepo "github.com/tupyy/gophoto/internal/domain/keycloak"
@@ -74,9 +74,9 @@ var serveCmd = &cobra.Command{
 		// create new router
 		r := router.NewRouter(store, keyCloakAuthenticator)
 
-		controllers.Logout(r.PrivateGroup, keyCloakAuthenticator)
+		handlers.Logout(r.PrivateGroup, keyCloakAuthenticator)
 
-		controllers.Register(r.PrivateGroup, r.PublicGroup, repos)
+		handlers.Register(r.PrivateGroup, r.PublicGroup, repos)
 
 		api.RegisterApi(r.PrivateGroup, r.PublicGroup, repos)
 

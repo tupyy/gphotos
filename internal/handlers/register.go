@@ -1,9 +1,9 @@
-package controllers
+package handlers
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/tupyy/gophoto/internal/controllers/album"
-	"github.com/tupyy/gophoto/internal/controllers/index"
+	"github.com/tupyy/gophoto/internal/handlers/album"
+	"github.com/tupyy/gophoto/internal/handlers/index"
 	"github.com/tupyy/gophoto/internal/domain"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
@@ -14,12 +14,12 @@ func Register(privateGroup *gin.RouterGroup, publicGroup *gin.RouterGroup, repos
 	index.Index(privateGroup, repos)
 	logutil.GetDefaultLogger().Info("index controller registered")
 
-	// album controllers
+	// album handlers
 	album.GetAlbum(privateGroup, repos)
 	album.GetCreateAlbumForm(privateGroup, repos)
 	album.GetUpdateAlbumForm(privateGroup, repos)
 	album.CreateAlbum(privateGroup, repos)
 	album.UpdateAlbum(privateGroup, repos)
 	album.DeleteAlbum(privateGroup, repos)
-	logutil.GetDefaultLogger().Info("album controllers registered")
+	logutil.GetDefaultLogger().Info("album handlers registered")
 }

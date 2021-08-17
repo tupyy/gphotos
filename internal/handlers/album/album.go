@@ -13,7 +13,7 @@ import (
 	"github.com/gorilla/csrf"
 	"github.com/sirupsen/logrus"
 	"github.com/tupyy/gophoto/internal/conf"
-	"github.com/tupyy/gophoto/internal/controllers/common"
+	"github.com/tupyy/gophoto/internal/handlers/common"
 	"github.com/tupyy/gophoto/internal/domain"
 	"github.com/tupyy/gophoto/internal/domain/entity"
 	"github.com/tupyy/gophoto/internal/domain/utils"

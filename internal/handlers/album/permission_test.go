@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	ac "github.com/tupyy/gophoto/internal/controllers"
+	ac "github.com/tupyy/gophoto/internal/handlers"
 	"github.com/tupyy/gophoto/internal/domain/entity"
 )
 
