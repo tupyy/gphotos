@@ -59,7 +59,7 @@ const doReq = () => {
         .then(response => {
 
             store.data = response.data;
-            store.albums = _.concat(response.data.personal_albums, response.data.shared_albums);
+            store.albums = response.data.albums;
 
             render();
 

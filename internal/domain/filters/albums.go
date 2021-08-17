@@ -1,6 +1,8 @@
 package filters
 
 import (
+	"time"
+
 	"github.com/pkg/errors"
 	"github.com/tupyy/gophoto/internal/domain/entity"
 	"github.com/tupyy/gophoto/internal/domain/utils"
@@ -9,10 +11,18 @@ import (
 type Filter int
 
 const (
-	// FilterByName returns true if album's name is in filterValues
+	// FilterByName returns true if album's name is in filter values
 	FilterByName Filter = iota
-	// FilterNotInList returns true if the album is not in filterValues
+	// FilterNotInList returns true if the album is not in filter values
 	FilterNotInList
+	// FilterAfterDate returns true if album createdAt is filter value
+	FilterAfterDate
+	// FilterBeforeDate returns true if album createdAt is before filter value
+	FilterBeforeDate
+	// FilterByOwnerID returns true if albums ownerid equal filter value
+	FilterByOwnerID
+	// NotFilterByOwnerID returns true if albums owner is not the filter value
+	NotFilterByOwnerID
 )
 
 type AlbumFilter func(album entity.Album) bool
@@ -42,6 +52,38 @@ func GenerateAlbumFilterFuncs(filter Filter, filterValues interface{}) (AlbumFil
 			}
 
 			return true
+		}, nil
+	case FilterByOwnerID:
+		v, ok := filterValues.([]string)
+		if !ok {
+			return nil, errors.Errorf("%v invalid values. expecting []string", filter)
+		}
+		return func(album entity.Album) bool {
+			return utils.StringInSlice(album.OwnerID, v)
+		}, nil
+	case NotFilterByOwnerID:
+		v, ok := filterValues.([]string)
+		if !ok {
+			return nil, errors.Errorf("%v invalid values. expecting []string", filter)
+		}
+		return func(album entity.Album) bool {
+			return !utils.StringInSlice(album.OwnerID, v)
+		}, nil
+	case FilterBeforeDate:
+		v, ok := filterValues.(time.Time)
+		if !ok {
+			return nil, errors.Errorf("%v invalid value. expecting time.Time", filter)
+		}
+		return func(album entity.Album) bool {
+			return album.CreatedAt.Before(v)
+		}, nil
+	case FilterAfterDate:
+		v, ok := filterValues.(time.Time)
+		if !ok {
+			return nil, errors.Errorf("%v invalid value. expecting time.Time", filter)
+		}
+		return func(album entity.Album) bool {
+			return album.CreatedAt.After(v)
 		}, nil
 	}
 
