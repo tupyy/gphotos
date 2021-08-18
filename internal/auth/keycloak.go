@@ -258,6 +258,8 @@ type gophotoClaims struct {
 	CanShare     *bool    `json:"can_share"`
 	Groups       []string `json:"groups"`
 	SessionState string   `json:"session_state"`
+	FirstName    string   `json:"given_name"`
+	LastName     string   `json:"family_name"`
 	jwt.StandardClaims
 }
 
@@ -303,9 +305,11 @@ func entityFromClaims(username string, claims gophotoClaims) entity.User {
 	}
 
 	return entity.User{
-		Username: username,
-		ID:       claims.StandardClaims.Subject,
-		Role:     r,
-		CanShare: canShare,
+		Username:  username,
+		ID:        claims.StandardClaims.Subject,
+		Role:      r,
+		CanShare:  canShare,
+		FirstName: claims.FirstName,
+		LastName:  claims.LastName,
 	}
 }
