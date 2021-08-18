@@ -194,7 +194,9 @@ func (a *AlbumPostgresRepo) Get(ctx context.Context, sorter sort.AlbumSorter, fi
 	}
 
 	if len(albums) == 0 {
-		return []entity.Album{}, fmt.Errorf("%w no album found", repo.ErrAlbumNotFound)
+		logutil.GetDefaultLogger().Warn("no albums found")
+
+		return []entity.Album{}, nil
 	}
 
 	entities := albums.Merge()
@@ -218,7 +220,9 @@ func (a *AlbumPostgresRepo) GetByID(ctx context.Context, id int32) (entity.Album
 	}
 
 	if len(albums) == 0 {
-		return entity.Album{}, fmt.Errorf("%w no album found with id %d", repo.ErrAlbumNotFound, id)
+		logutil.GetDefaultLogger().WithField("album id", id).Warn("no album found by id")
+
+		return entity.Album{}, nil
 	}
 
 	entities := albums.Merge()
@@ -243,7 +247,9 @@ func (a *AlbumPostgresRepo) GetByOwnerID(ctx context.Context, ownerID string, so
 	}
 
 	if len(albums) == 0 {
-		return []entity.Album{}, fmt.Errorf("%w ownerr id %s", repo.ErrAlbumNotFound, ownerID)
+		logutil.GetDefaultLogger().WithField("ownerID", ownerID).Warn("no album found by owner id")
+
+		return []entity.Album{}, nil
 	}
 
 	entities := albums.Merge()
@@ -268,9 +274,9 @@ func (a *AlbumPostgresRepo) GetByUserID(ctx context.Context, userID string, sort
 	}
 
 	if len(albums) == 0 {
-		logutil.GetDefaultLogger().WithField("user_id", userID).Warn("no album found")
+		logutil.GetDefaultLogger().WithField("userID", userID).Warn("no album found by user id")
 
-		return []entity.Album{}, repo.ErrAlbumNotFound
+		return []entity.Album{}, nil
 	}
 
 	entities := albums.Merge()
@@ -295,7 +301,9 @@ func (a *AlbumPostgresRepo) GetByGroupName(ctx context.Context, groupName string
 	}
 
 	if len(albums) == 0 {
-		return []entity.Album{}, fmt.Errorf("%w no album found with id %s", repo.ErrAlbumNotFound, groupName)
+		logutil.GetDefaultLogger().WithField("group", groupName).Warn("no album found by group name")
+
+		return []entity.Album{}, nil
 	}
 
 	entities := albums.Merge()

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	gocache "github.com/patrickmn/go-cache"
+	"github.com/sirupsen/logrus"
 	"github.com/tupyy/gophoto/internal/domain"
 	"github.com/tupyy/gophoto/internal/domain/entity"
 	"github.com/tupyy/gophoto/internal/domain/filters"
@@ -96,7 +97,10 @@ func (r albumCacheRepo) Get(ctx context.Context, sorter sort.AlbumSorter, filter
 	//filter them
 	if len(filters) > 0 {
 		filteredAlbums := filterAlbums(filters, albums)
-		logutil.GetDefaultLogger().WithField("count filtered albums", len(filteredAlbums)).Debug("served album from cache")
+		logutil.GetDefaultLogger().WithFields(logrus.Fields{
+			"count before filter": len(albums),
+			"count after filter":  len(filteredAlbums),
+		}).Debug("served album from cache")
 
 		return filteredAlbums, nil
 	}
@@ -156,7 +160,11 @@ func (r albumCacheRepo) GetByOwnerID(ctx context.Context, ownerID string, sorter
 	//filter them
 	if len(filters) > 0 {
 		filteredAlbums := filterAlbums(filters, albums)
-		logutil.GetDefaultLogger().WithField("count filtered albums", len(filteredAlbums)).Debug("served album from cache")
+		logutil.GetDefaultLogger().WithFields(logrus.Fields{
+			"count before filter": len(albums),
+			"count after filter":  len(filteredAlbums),
+			"owner id":            ownerID,
+		}).Debug("filtered albums")
 
 		return filteredAlbums, nil
 	}
@@ -191,7 +199,11 @@ func (r albumCacheRepo) GetByUserID(ctx context.Context, userID string, sorter s
 	//filter them
 	if len(filters) > 0 {
 		filteredAlbums := filterAlbums(filters, albums)
-		logutil.GetDefaultLogger().WithField("count filtered albums", len(filteredAlbums)).Debug("served album from cache")
+		logutil.GetDefaultLogger().WithFields(logrus.Fields{
+			"count before filter": len(albums),
+			"count after filter":  len(filteredAlbums),
+			"user id":             userID,
+		}).Debug("albums filtered")
 
 		return filteredAlbums, nil
 	}
@@ -228,7 +240,11 @@ func (r albumCacheRepo) GetByGroupName(ctx context.Context, groupName string, so
 	//filter them
 	if len(filters) > 0 {
 		filteredAlbums := filterAlbums(filters, albums)
-		logutil.GetDefaultLogger().WithField("count filtered albums", len(filteredAlbums)).Debug("served album from cache")
+		logutil.GetDefaultLogger().WithFields(logrus.Fields{
+			"count before filter": len(albums),
+			"count after filter":  len(filteredAlbums),
+			"group name":          groupName,
+		}).Debug("albums filtered")
 
 		return filteredAlbums, nil
 	}

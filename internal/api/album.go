@@ -1,12 +1,12 @@
 package api
 
 import (
-	"errors"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/domain"
 	"github.com/tupyy/gophoto/internal/domain/entity"
@@ -48,11 +48,10 @@ func GetAlbums(r *gin.RouterGroup, repos domain.Repositories) {
 			var err error
 			personalAlbums, err = albumRepo.GetByOwnerID(reqCtx, session.User.ID, noSorter, reqParams.Filters...)
 			if err != nil {
-				if errors.Is(err, domain.ErrAlbumNotFound) {
-					logger.Info("user has no personal albums")
-				} else {
-					panic(err) // TODO 500 page
-				}
+				logger.WithError(err).Error("error fetching personal albums")
+				AbortWithJson(c, http.StatusInternalServerError, err, "")
+
+				return
 			}
 		}
 
@@ -62,7 +61,7 @@ func GetAlbums(r *gin.RouterGroup, repos domain.Repositories) {
 		if reqParams.FetchSharedAlbums {
 			notOwnerFilter, err := domainFilter.GenerateAlbumFilterFuncs(domainFilter.NotFilterByOwnerID, []string{session.User.ID})
 			if err != nil {
-				logutil.GetLogger(c).WithError(err).Error("error generate notOwnerFilter")
+				logger.WithError(err).Error("error generate notOwnerFilter")
 				AbortWithJson(c, http.StatusInternalServerError, err, "")
 
 				return
@@ -75,7 +74,7 @@ func GetAlbums(r *gin.RouterGroup, repos domain.Repositories) {
 				var err error
 				sharedAlbums, err = albumRepo.Get(reqCtx, noSorter, filters...)
 				if err != nil {
-					logutil.GetLogger(c).WithError(err).Error("error fetching all albums")
+					logger.WithError(err).Error("error fetching all albums")
 					AbortWithJson(c, http.StatusInternalServerError, err, "")
 
 					return
@@ -84,15 +83,42 @@ func GetAlbums(r *gin.RouterGroup, repos domain.Repositories) {
 				var err error
 				sharedAlbums, err = albumRepo.GetByUserID(reqCtx, session.User.ID, noSorter, reqParams.Filters...)
 				if err != nil {
-					logutil.GetLogger(c).WithError(err).Error("error fetching shared albums")
+					logger.WithError(err).Error("error fetching shared albums")
 					AbortWithJson(c, http.StatusInternalServerError, err, "")
 
 					return
 				}
+
+				// get albums shared by the user's groups
+				var groupSharedAlbum []entity.Album
+				for _, g := range session.User.Groups {
+					// dont fetch personal albums which are shared with user's group
+					reqParams.Filters = append(reqParams.Filters, notOwnerFilter)
+
+					a, err := albumRepo.GetByGroupName(reqCtx, g.Name, noSorter, reqParams.Filters...)
+					if err != nil {
+						logger.
+							WithError(err).
+							WithFields(logrus.Fields{
+								"user_id": session.User.ID,
+								"group":   g.Name,
+							}).Error("cannot fetch albums by group name")
+						AbortWithJson(c, http.StatusInternalServerError, err, "")
+
+						return
+					}
+					// join with rest of albums but do not keep the duplicates
+					groupSharedAlbum = join(groupSharedAlbum, a)
+				}
+
+				// join and remove the duplicates
+				sharedAlbums = join(sharedAlbums, groupSharedAlbum)
 			}
 		}
 
-		albums := joinAlbums(personalAlbums, sharedAlbums)
+		albums := merge(personalAlbums, sharedAlbums)
+
+		// sort all of them
 		reqParams.Sorter.Sort(albums)
 
 		c.JSON(http.StatusOK, gin.H{
@@ -114,6 +140,8 @@ type requestParams struct {
 
 // bindToRequestParams returns a struct with filters and a sorter generated from query parameters
 func bindToRequestParams(c *gin.Context) requestParams {
+	logger := logutil.GetLogger(c)
+
 	reqParams := requestParams{
 		FetchPersonalAlbums: true,
 		FetchSharedAlbums:   true,
@@ -122,7 +150,7 @@ func bindToRequestParams(c *gin.Context) requestParams {
 	if c.Query("personal") != "" {
 		personalAlbumsFilterValue, err := strconv.ParseBool(c.Query("personal"))
 		if err != nil {
-			logutil.GetLogger(c).WithError(err).WithField("personal", c.Query("personal")).Warn("cannot parse personal filter value")
+			logger.WithError(err).WithField("personal", c.Query("personal")).Warn("cannot parse personal filter value")
 		} else {
 			reqParams.FetchPersonalAlbums = personalAlbumsFilterValue
 		}
@@ -131,7 +159,7 @@ func bindToRequestParams(c *gin.Context) requestParams {
 	if c.Query("shared") != "" {
 		sharedAlbumsFilterValue, err := strconv.ParseBool(c.Query("shared"))
 		if err != nil {
-			logutil.GetLogger(c).WithError(err).WithField("shared", c.Query("shared")).Warn("cannot parse shared filter value")
+			logger.WithError(err).WithField("shared", c.Query("shared")).Warn("cannot parse shared filter value")
 		} else {
 			reqParams.FetchSharedAlbums = sharedAlbumsFilterValue
 		}
@@ -148,30 +176,32 @@ func bindToRequestParams(c *gin.Context) requestParams {
 func generateAlbumFilters(c *gin.Context) []filters.AlbumFilter {
 	albumFilters := make([]filters.AlbumFilter, 0, 5)
 
+	logger := logutil.GetLogger(c)
+
 	if c.Query("start_date") != "" {
 		if startDate, err := time.Parse("02/01/2006", c.Query("start_date")); err != nil {
-			logutil.GetLogger(c).WithError(err).Error("cannot parse start_date query param")
+			logger.WithError(err).Error("cannot parse start_date query param")
 		} else {
 			f, err := filters.GenerateAlbumFilterFuncs(filters.FilterAfterDate, startDate)
 			if err != nil {
-				logutil.GetLogger(c).WithError(err).Error("error create FilterAfterDate filter")
+				logger.WithError(err).Error("error create FilterAfterDate filter")
 			}
 
-			logutil.GetLogger(c).WithField("start date", startDate).Debug("filter start date created")
+			logger.WithField("start date", startDate).Debug("filter start date created")
 			albumFilters = append(albumFilters, f)
 		}
 	}
 
 	if c.Query("end_date") != "" {
 		if endDate, err := time.Parse("02/01/2006", c.Query("end_date")); err != nil {
-			logutil.GetLogger(c).WithError(err).Error("cannot parse end_date query param")
+			logger.WithError(err).Error("cannot parse end_date query param")
 		} else {
 			f, err := filters.GenerateAlbumFilterFuncs(filters.FilterBeforeDate, endDate)
 			if err != nil {
-				logutil.GetLogger(c).WithError(err).Error("error create FilterBeforeDate filter")
+				logger.WithError(err).Error("error create FilterBeforeDate filter")
 			}
 
-			logutil.GetLogger(c).WithField("end date", endDate).Debug("filter end date created")
+			logger.WithField("end date", endDate).Debug("filter end date created")
 			albumFilters = append(albumFilters, f)
 		}
 	}
@@ -184,18 +214,18 @@ func generateAlbumFilters(c *gin.Context) []filters.AlbumFilter {
 		for _, o := range owners {
 			ownerID, err := gen.DecryptData(o)
 			if err != nil {
-				logutil.GetLogger(c).WithError(err).WithField("data", o).Error("error decrypt owner id")
+				logger.WithError(err).WithField("data", o).Error("error decrypt owner id")
 
 				continue
 			}
 
 			ownerIDs = append(ownerIDs, ownerID)
-			logutil.GetLogger(c).WithField("owner_id", ownerID).Debug("filter by owner id created")
+			logger.WithField("owner_id", ownerID).Debug("filter by owner id created")
 		}
 
 		f, err := filters.GenerateAlbumFilterFuncs(filters.FilterByOwnerID, ownerIDs)
 		if err != nil {
-			logutil.GetLogger(c).WithError(err).Error("error create FilterOwnerID filter")
+			logger.WithError(err).Error("error create FilterOwnerID filter")
 		}
 
 		albumFilters = append(albumFilters, f)
