@@ -175,6 +175,21 @@ tools.clean:
 tools.get:
 	cd $(CURDIR)/tools && go generate tools.go
 
+############################
+# Model generation targets #
+############################
+
+BASE_CONNSTR="postgresql://$(RESOURCE_ADMIN_USER):$(RESOURCE_ADMIN_PWD)@$(DB_HOST):$(DB_PORT)"
+GEN_CMD=$(TOOLS_DIR)/gen --sqltype=postgres \
+	--module=github.com/tupyy/gophoto \
+	--gorm --no-json --no-xml --overwrite --mapping tools/mappings.json
+
+.PHONY: generate.models
+
+#help generate.models: generate models for the gophoto database
+generate.models:
+	sh -c '$(GEN_CMD) --connstr "$(BASE_CONNSTR)/gophoto?sslmode=disable"  --model=models --database gophoto' 						# Generate models for the DB tables
+
 #####################
 # Include section   #
 #####################
