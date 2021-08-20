@@ -3,6 +3,7 @@ package album
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strings"
 	"time"
 
@@ -302,9 +303,19 @@ func filterAlbums(filters []filters.AlbumFilter, albums []entity.Album) []entity
 		pass := true
 		for _, filter := range filters {
 			if !filter(a) {
+				logutil.GetDefaultLogger().WithFields(logrus.Fields{
+					"filter":   reflect.TypeOf(filter).String(),
+					"album_id": a.ID,
+				}).Trace("filter did not passed")
+
 				pass = false
 				break
 			}
+
+			logutil.GetDefaultLogger().WithFields(logrus.Fields{
+				"filter":   reflect.TypeOf(filter).Name(),
+				"album_id": a.ID,
+			}).Trace("filter passed")
 		}
 
 		if pass {
