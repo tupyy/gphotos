@@ -53,6 +53,8 @@ const init = () => {
 
 const doReq = () => {
     showSpinner($("#albums"),true);
+    $("#count_albums").parent().hide();
+
     clearAlbums();
 
     axios.get(filterSort.buildRequestURL(baseURL))
@@ -69,6 +71,7 @@ const doReq = () => {
         })
         .then(() => {
             showSpinner($("#albums"), false);
+            $("#count_albums").parent().show();
         });
 }
 
@@ -93,6 +96,17 @@ let renderAlbum = (album) => {
     return `
         <div class="album-col col-2" id="` + album.id + `">
             <div class="container-album-card card">
+                <div class="date">
+                  <span class="day">` + album.day + `</span>
+                  <span class="month">` + album.month + `</span>
+                  <span class="year">` + album.year + `</span>
+                </div>
+                <div class="location-wrapper">
+                    <span class="location">
+                        <i class="fas fa-map-marker-alt"></i>
+                        ` + album.location + `
+                    </span>
+                </div>
                 <a href="/album/` + album.id + `">
                     <img src="/static/img/eiffeltoren.jpg" class="card-img-top"/>
                 </a>

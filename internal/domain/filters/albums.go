@@ -75,7 +75,9 @@ func GenerateAlbumFilterFuncs(filter Filter, filterValues interface{}) (AlbumFil
 			return nil, errors.Errorf("%v invalid value. expecting time.Time", filter)
 		}
 		return func(album entity.Album) bool {
-			return album.CreatedAt.Before(v)
+			ts := album.CreatedAt
+			midnight := time.Date(ts.Year(), ts.Month(), ts.Day(), 0, 0, 0, 0, time.UTC)
+			return midnight.Before(v) || midnight.Equal(v)
 		}, nil
 	case FilterAfterDate:
 		v, ok := filterValues.(time.Time)
@@ -83,7 +85,9 @@ func GenerateAlbumFilterFuncs(filter Filter, filterValues interface{}) (AlbumFil
 			return nil, errors.Errorf("%v invalid value. expecting time.Time", filter)
 		}
 		return func(album entity.Album) bool {
-			return album.CreatedAt.After(v)
+			ts := album.CreatedAt
+			midnight := time.Date(ts.Year(), ts.Month(), ts.Day(), 0, 0, 0, 0, time.UTC)
+			return midnight.After(v) || midnight.Equal(v)
 		}, nil
 	}
 
