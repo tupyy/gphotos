@@ -3,6 +3,13 @@ BEGIN
 
 TRUNCATE TABLE album, album_user_permissions, album_group_permissions CASCADE;
 
+user1 := 'id1';
+user2 := 'id2';
+user3 := 'id3';
+
+-- insert 1000 albums for each user
+FOR counter IN 0..1000
+LOOP
 
 -- insert some albums
 INSERT INTO album (id, name, created_at, owner_id, description, location) VALUES

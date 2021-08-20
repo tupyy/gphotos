@@ -4,7 +4,12 @@
         {{ template "base_css" }}
         <link rel="stylesheet" href="/static/css/index.css"/>
         <link rel="stylesheet" href="/static/css/album-card.css"/>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css"/>
         {{ template "js" }}
+        <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+        <script src="/static/js/index.js"></script>
         <title>Photos</title>
     </head>
     <body>
@@ -13,27 +18,140 @@
         </header>
         <div class="container">
             <div class="row">
-                {{ range .personal_albums }}
-                    {{ template "album-card" . }}
-                {{ end }}
+                <div class="search-group input-group md-3">
+                    <span class="input-group-text" id="search-icon"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control" placeholder="Name, description, location ...">
+                </div>
             </div>
         </div>
-        {{ if .shared_albums }}
-            <div class="container">
-                <div class="row">
-                    <div> Shared albums: </div>
+        <div class="container filter-container-mobile">
+            <button class="btn btn-outline-dark" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasFilter">
+                Filters
+            </button>
+        </div>
+        <div class="container-xl main-container">
+            <div class="row gx-5">
+                <div class="col-2 custom-col col-filter">
+                    <div class="row row-filter">
+                        <span class="title">Filters</span>
+                    </div>
+                    {{ if .can_share }}
+                        <div class="row row-filter">
+                            <span class="title">Album type</span>
+                            <div class="container">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="" id="personalAlbumCheck" checked>
+                                    <label class="form-check-label" for="personalAlbumCheck">
+                                      Personal
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                  <input class="form-check-input" type="checkbox" value="" id="sharedAlbumCheck" checked>
+                                  <label class="form-check-label" for="sharedAlbumCheck">
+                                    Shared
+                                  </label>
+                                </div>
+                            </div>
+                        </div>
+                    {{ end }}
+                    <div class="row row-filter">
+                        <span class="title">Date</span>
+                        <div class="input-daterange input-group" id="datepicker">
+                            <div class="row">
+                                <input type="text" class="input-sm form-control" id="startDate" name="start" />
+                            </div>
+                            <div class="row">
+                                <span class="input-group-addon">to</span>
+                            </div>
+                            <div class="row">
+                                <input type="text" class="input-sm form-control" id="endDate" name="end" />
+                            </div>
+                        </div>
+                    </div>
+                    {{ if .users }}
+                        <div class="row row-filter">
+                            <span class="title">Owner</span>
+                            <div class="row row-filter-users">
+                                <div class="input-group col-12">
+                                    <select class="form-select" id="selectOwner">
+                                        <option value="empty-value"> </option>
+                                        {{ range .users }}
+                                            <option value="{{ .EncryptedID }}">{{ .Name }}</option>
+                                        {{ end }}
+                                    </select>
+                                </div>
+                                <div class="row row-filter" id="selectedOwnersFilter">
+                                </div>
+                            </div>
+                        </div>
+                    {{ end }}
                 </div>
-                <div class="container container-media">
-                    <div class="row">
-                        {{ range .shared_albums }}
-                            {{ template "album-card" . }}
-                        {{ end }}
+                <div class="offcanvas offcanvas-start" id="offcanvasFilter">
+                    <div class="offcanvas-header">
+                        <h5 class="offcanvas-title" id="offcanvasExampleLabel">Filters</h5>
+                        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                    </div>
+                    <div class="offcanvas-body">
+                        <div class="container main-container-mobile">
+                            {{ if .can_share }}
+                                <div class="row row-filter">
+                                    <span class="title">Album type</span>
+                                    <div class="container">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" value="" id="personalAlbumCheck" checked>
+                                            <label class="form-check-label" for="personalAlbumCheck">
+                                              Personal
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                          <input class="form-check-input" type="checkbox" value="" id="sharedAlbumCheckMobil" checked>
+                                          <label class="form-check-label" for="sharedAlbumCheckMobil">
+                                            Shared
+                                          </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            {{ end }}
+                            <div class="row row-filter">
+                                <span class="title">Date</span>
+                            </div>
+                            <div class="row row-filter">
+                                <span class="title">Owner</span>
+                                <div class="input-group col-12">
+                                    <select class="form-select">
+                                        <option value="1">Bob</option>
+                                        <option value="2">Bob2</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-10 col-md-10 col-lg-10 col-12 custom-col albums-col">
+                    <div class="row justify-content-between sort-row">
+                        <div class="col-4 col-lg-3">
+                            <span class="count-albums" id="count_albums">1000</span><span>albums</span>
+                        </div>
+                        <div class="col-8 col-lg-6 select-row">
+                            <div class="row gx-3">
+                                <span class="col-4 col-lg-3">Sort by:</span>
+                                <div class="col-8 col-lg-9" id="sortSelect">
+                                    <select class="form-select">
+                                        <option value="name">Name</option>
+                                        <option value="date" selected>Date</option>
+                                        <option value="location">Location</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row gx-2 album-row" id="albums">
                     </div>
                 </div>
             </div>
-        {{ end }}
+        </div>
     </body>
-    <!-- <footer> -->
-    <!--     {{ template "footer" }} -->
-    <!-- </footer> -->
+    <footer>
+        {{ template "footer" }}
+    </footer>
 </html>

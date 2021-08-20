@@ -24,13 +24,15 @@ import (
 	"github.com/gin-contrib/sessions/memstore"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/tupyy/gophoto/internal/api"
 	"github.com/tupyy/gophoto/internal/auth"
 	"github.com/tupyy/gophoto/internal/conf"
-	"github.com/tupyy/gophoto/internal/controllers"
 	"github.com/tupyy/gophoto/internal/domain"
 	"github.com/tupyy/gophoto/internal/domain/entity"
 	keycloakRepo "github.com/tupyy/gophoto/internal/domain/keycloak"
 	"github.com/tupyy/gophoto/internal/domain/postgres/album"
+	"github.com/tupyy/gophoto/internal/domain/postgres/user"
+	"github.com/tupyy/gophoto/internal/handlers"
 	"github.com/tupyy/gophoto/utils/logutil"
 	"github.com/tupyy/gophoto/utils/pgclient"
 
@@ -73,9 +75,11 @@ var serveCmd = &cobra.Command{
 		// create new router
 		r := router.NewRouter(store, keyCloakAuthenticator)
 
-		controllers.Logout(r.PrivateGroup, keyCloakAuthenticator)
+		handlers.Logout(r.PrivateGroup, keyCloakAuthenticator)
 
-		controllers.Register(r.PrivateGroup, r.PublicGroup, repos)
+		handlers.Register(r.PrivateGroup, r.PublicGroup, repos)
+
+		api.RegisterApi(r.PrivateGroup, r.PublicGroup, repos)
 
 		// run server
 		r.Run()
@@ -89,6 +93,7 @@ func init() {
 func createPostgresRepos(client pgclient.Client) (domain.Repositories, error) {
 	repos := make(domain.Repositories)
 
+	// create keycloak repo
 	kr, err := keycloakRepo.New(context.Background(), conf.GetKeycloakConfig())
 	if err != nil {
 		logutil.GetDefaultLogger().WithError(err).Warn("cannot create user repo")
@@ -96,8 +101,11 @@ func createPostgresRepos(client pgclient.Client) (domain.Repositories, error) {
 		return repos, err
 	}
 
-	repos[domain.KeycloakRepoName] = kr
+	ttl, interval := conf.GetRepoCacheConfig()
 
+	repos[domain.KeycloakRepoName] = keycloakRepo.NewCacheRepo(kr, ttl, interval)
+
+	// create album repo
 	albumRepo, err := album.NewPostgresRepo(client)
 	if err != nil {
 		logutil.GetDefaultLogger().WithError(err).Warn("cannot create user repo")
@@ -105,8 +113,17 @@ func createPostgresRepos(client pgclient.Client) (domain.Repositories, error) {
 		return repos, err
 	}
 
-	ttl, interval := conf.GetRepoCacheConfig()
 	repos[domain.AlbumRepoName] = album.NewCacheRepo(albumRepo, ttl, interval)
+
+	// create user repo
+	userRepo, err := user.NewPostgresRepo(client)
+	if err != nil {
+		logutil.GetDefaultLogger().WithError(err).Warn("cannot create user repo")
+
+		return repos, err
+	}
+
+	repos[domain.UserRepoName] = userRepo
 
 	return repos, nil
 }

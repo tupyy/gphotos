@@ -42,25 +42,3 @@ func (u User) Validate() error {
 
 	return nil
 }
-
-type UserFilter struct {
-	users []User
-}
-
-type UserFilterFunc func(u User) bool
-
-func NewUserFilter(users []User) *UserFilter {
-	return &UserFilter{users}
-}
-
-func (uf *UserFilter) Filter(filterFunc UserFilterFunc) []User {
-	filteredUsers := make([]User, 0, len(uf.users))
-
-	for _, u := range uf.users {
-		if filterFunc(u) {
-			filteredUsers = append(filteredUsers, u)
-		}
-	}
-
-	return filteredUsers
-}

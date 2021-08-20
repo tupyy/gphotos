@@ -6,6 +6,27 @@ import (
 	"github.com/tupyy/gophoto/internal/domain/entity"
 )
 
+type SortOrder int
+
+const (
+	NormalOrder SortOrder = iota
+	ReverseOrder
+)
+
+type SortName int
+
+const (
+	SortAlbumsByName SortName = iota
+	SortAlbumsByID
+	SortAlbumsByOwner
+	SortAlbumsByDate
+	SortAlbumsByLocation
+)
+
+type NoSorter struct{}
+
+func (n NoSorter) Sort(albums []entity.Album) {}
+
 type AlbumSorter interface {
 	Sort(albums []entity.Album)
 }
@@ -18,49 +39,58 @@ type albumSorter struct {
 }
 
 // NewAlbumSorterById returns a sorter by IDs.
-func NewAlbumSorterById(albums []entity.Album, reverse bool) *albumSorter {
-	lessFunc := func(a1, a2 entity.Album) bool {
-		if reverse {
-			return a1.ID > a2.ID
-		}
+func NewAlbumSorter(name SortName, order SortOrder) *albumSorter {
+	var lessFunc AlbumLessFunc
 
-		return a1.ID < a2.ID
+	switch name {
+	case SortAlbumsByID:
+		lessFunc = func(a1, a2 entity.Album) bool {
+			if order == ReverseOrder {
+				return a1.ID > a2.ID
+			}
+
+			return a1.ID < a2.ID
+		}
+	case SortAlbumsByName:
+		lessFunc = func(a1, a2 entity.Album) bool {
+			if order == ReverseOrder {
+				return a1.Name > a2.Name
+			}
+
+			return a1.Name < a2.Name
+		}
+	case SortAlbumsByLocation:
+		lessFunc = func(a1, a2 entity.Album) bool {
+			if order == ReverseOrder {
+				return a1.Location > a2.Location
+			}
+
+			return a1.Location < a2.Location
+		}
+	case SortAlbumsByDate:
+		lessFunc = func(a1, a2 entity.Album) bool {
+			if order == ReverseOrder {
+				return a1.CreatedAt.After(a2.CreatedAt)
+			}
+			return a1.CreatedAt.Before(a2.CreatedAt)
+		}
+	default:
+		// dont sort here
+		lessFunc = func(a1, a2 entity.Album) bool {
+			return true
+		}
 	}
 
-	return NewAlbumSorter(albums, lessFunc)
+	return NewAlbumCustomSorter(lessFunc)
 }
 
-// NewAlbumSorterByName returns a sorter by name.
-func NewAlbumSorterByName(albums []entity.Album, reverse bool) *albumSorter {
-	nameLessFunc := func(a1, a2 entity.Album) bool {
-		if reverse {
-			return a1.Name > a2.Name
-		}
-
-		return a1.Name < a2.Name
-	}
-
-	return NewAlbumSorter(albums, nameLessFunc)
-}
-
-func NewAlbumSorterByDate(albums []entity.Album, reverse bool) *albumSorter {
-	dateLessFunc := func(a1, a2 entity.Album) bool {
-		if reverse {
-			return a1.CreatedAt.After(a2.CreatedAt)
-		}
-
-		return a1.CreatedAt.Before(a2.CreatedAt)
-	}
-
-	return NewAlbumSorter(albums, dateLessFunc)
-}
-
-// NewAlbumSorter returns a custom sorter. The user must provide a lessFunc.
-func NewAlbumSorter(albums []entity.Album, lessFunc AlbumLessFunc) *albumSorter {
-	return &albumSorter{albums, lessFunc}
+// NewAlbumCustomSorter returns a custom sorter. The user must provide a lessFunc.
+func NewAlbumCustomSorter(lessFunc AlbumLessFunc) *albumSorter {
+	return &albumSorter{lessFunc: lessFunc}
 }
 
 func (as *albumSorter) Sort(albums []entity.Album) {
+	as.album = albums
 	sort.Sort(as)
 }
 

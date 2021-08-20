@@ -1,4 +1,4 @@
-package controllers
+package album
 
 import (
 	"github.com/tupyy/gophoto/internal/domain/entity"
@@ -127,11 +127,11 @@ func (gp GroupPermissionPolicy) Resolve(a entity.Album, u entity.User) bool {
 type AnyGroupPermissionPolicy struct{}
 
 func (ap AnyGroupPermissionPolicy) Resolve(a entity.Album, u entity.User) bool {
-	hasPermission := false
-
 	for _, g := range u.Groups {
-		hasPermission = utils.HasGroupPermissions(a, g.Name)
+		if utils.HasGroupPermissions(a, g.Name) {
+			return true
+		}
 	}
 
-	return hasPermission
+	return false
 }

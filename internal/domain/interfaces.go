@@ -15,17 +15,15 @@ type RepoName int
 const (
 	KeycloakRepoName RepoName = iota
 	AlbumRepoName
+	UserRepoName
 )
 
 type KeycloakRepo interface {
 	// Get returns all the users.
-	GetUsers(ctx context.Context) ([]entity.User, error)
+	GetUsers(ctx context.Context, sorter sort.UserSorter, filters ...filters.UserFilter) ([]entity.User, error)
 	// GetByID return the user by id.
 	GetUserByID(ctx context.Context, id string) (entity.User, error)
-	// // GetByUsername return the user by username
-	// GetByUsername(ctx context.Context, username string) (entity.User, error)
-	// // GetByGroupID returns all the users belonging to groupID.
-	// GetByGroupID(ctx context.Context, groupID int32) ([]entity.User, error)
+	// GetGroups returns all groups.
 	GetGroups(ctx context.Context) ([]entity.Group, error)
 }
 
@@ -46,4 +44,11 @@ type Album interface {
 	GetByUserID(ctx context.Context, userID string, sorter sort.AlbumSorter, filters ...filters.AlbumFilter) ([]entity.Album, error)
 	// GetByGroup returns a list of albums for which the group has at least one permission.
 	GetByGroupName(ctx context.Context, groupName string, sorter sort.AlbumSorter, filters ...filters.AlbumFilter) ([]entity.Album, error)
+	// GetByGroups returns a list of albums with at least one persmission for at least on group in the list.
+	GetByGroups(ctx context.Context, groups []string, sorter sort.AlbumSorter, filters ...filters.AlbumFilter) ([]entity.Album, error)
+}
+
+// Postgres repo to handler relationships between users
+type User interface {
+	GetRelatedUsers(ctx context.Context, user entity.User) (ids []string, err error)
 }
