@@ -90,27 +90,18 @@ func GetAlbums(r *gin.RouterGroup, repos domain.Repositories) {
 				}
 
 				// get albums shared by the user's groups
-				var groupSharedAlbum []entity.Album
-				for _, g := range session.User.Groups {
-					// dont fetch personal albums which are shared with user's group
-					reqParams.Filters = append(reqParams.Filters, notOwnerFilter)
+				groupSharedAlbum, err := albumRepo.GetByGroups(reqCtx, groupsToList(session.User.Groups), noSorter, reqParams.Filters...)
+				if err != nil {
+					logger.
+						WithError(err).
+						WithFields(logrus.Fields{
+							"user_id": session.User.ID,
+							"groups":  session.User.Groups,
+						}).Error("cannot fetch albums by group name")
+					AbortWithJson(c, http.StatusInternalServerError, err, "")
 
-					a, err := albumRepo.GetByGroupName(reqCtx, g.Name, noSorter, reqParams.Filters...)
-					if err != nil {
-						logger.
-							WithError(err).
-							WithFields(logrus.Fields{
-								"user_id": session.User.ID,
-								"group":   g.Name,
-							}).Error("cannot fetch albums by group name")
-						AbortWithJson(c, http.StatusInternalServerError, err, "")
-
-						return
-					}
-					// join with rest of albums but do not keep the duplicates
-					groupSharedAlbum = join(groupSharedAlbum, a)
+					return
 				}
-
 				// join and remove the duplicates
 				sharedAlbums = join(sharedAlbums, groupSharedAlbum)
 			}

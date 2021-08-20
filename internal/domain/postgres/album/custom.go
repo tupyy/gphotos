@@ -13,7 +13,7 @@ import (
 type customAlbum struct {
 	ID               int32                `gorm:"column_name:id;type:INT4"`
 	Name             string               `gorm:"column:name;type:TEXT;"`
-	CreatedAt        time.Time            `gorm:"column:created_at;type:TIMESTAMP;default:timezone('UTC';"`
+	CreatedAt        time.Time            `gorm:"column:created_at;type:TIMESTAMP;default:timezone('UTC');"`
 	OwnerID          string               `gorm:"column:owner_id;type:INT4;"`
 	Description      *string              `gorm:"column:description;type:TEXT;"`
 	Location         *string              `gorm:"column:location;type:TEXT;"`

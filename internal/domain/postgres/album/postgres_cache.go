@@ -3,6 +3,7 @@ package album
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	gocache "github.com/patrickmn/go-cache"
@@ -254,6 +255,47 @@ func (r albumCacheRepo) GetByGroupName(ctx context.Context, groupName string, so
 	return albums, nil
 }
 
+func (r albumCacheRepo) GetByGroups(ctx context.Context, groupNames []string, sorter sort.AlbumSorter, filters ...filters.AlbumFilter) ([]entity.Album, error) {
+	var albums []entity.Album
+
+	items, found := r.cache.Get(strings.Join(groupNames, "#"))
+	if !found {
+		var err error
+
+		albums, err = r.repo.GetByGroups(ctx, groupNames, sorter, filters...)
+		if err != nil {
+			return []entity.Album{}, err
+		}
+
+		// set cache
+		r.cache.Set(strings.Join(groupNames, "#"), albums, gocache.DefaultExpiration)
+		logutil.GetDefaultLogger().WithField("count albums", len(albums)).Debug("albums cached")
+	} else {
+		albums, _ = items.([]entity.Album)
+	}
+
+	// sort
+	if sorter != nil {
+		sorter.Sort(albums)
+	}
+
+	//filter them
+	if len(filters) > 0 {
+		filteredAlbums := filterAlbums(filters, albums)
+		logutil.GetDefaultLogger().WithFields(logrus.Fields{
+			"count before filter": len(albums),
+			"count after filter":  len(filteredAlbums),
+			"group names":         groupNames,
+		}).Debug("albums filtered")
+
+		return filteredAlbums, nil
+	}
+
+	logutil.GetDefaultLogger().WithField("count albums", len(albums)).Debug("served albums from cache")
+
+	return albums, nil
+}
+
 func filterAlbums(filters []filters.AlbumFilter, albums []entity.Album) []entity.Album {
 	filteredAlbums := make([]entity.Album, 0, len(albums))
 	for _, a := range albums {
@@ -271,5 +313,4 @@ func filterAlbums(filters []filters.AlbumFilter, albums []entity.Album) []entity
 	}
 
 	return filteredAlbums
-
 }

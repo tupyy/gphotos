@@ -130,6 +130,11 @@
     padding-right: 5px;
 }
 
+.main-container #datepicker {
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
 
 
 @media screen and (max-width: 576px) {

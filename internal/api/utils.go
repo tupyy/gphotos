@@ -130,3 +130,13 @@ func substractUsers(users1, users2 []entity.User) []entity.User {
 
 	return res
 }
+
+func groupsToList(groups []entity.Group) []string {
+	l := make([]string, 0, len(groups))
+
+	for _, g := range groups {
+		l = append(l, g.Name)
+	}
+
+	return l
+}

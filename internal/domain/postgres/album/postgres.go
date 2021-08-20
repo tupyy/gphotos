@@ -3,6 +3,7 @@ package album
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 	repo "github.com/tupyy/gophoto/internal/domain"
@@ -302,6 +303,46 @@ func (a *AlbumPostgresRepo) GetByGroupName(ctx context.Context, groupName string
 
 	if len(albums) == 0 {
 		logutil.GetDefaultLogger().WithField("group", groupName).Warn("no album found by group name")
+
+		return []entity.Album{}, nil
+	}
+
+	entities := albums.Merge()
+
+	return entities, nil
+}
+
+// GetByGroups returns a list of albums with at least one persmission for at least on group in the list.
+// It does not sort or filter the album here. The sorting and filter is done at cache level.
+func (a *AlbumPostgresRepo) GetByGroups(ctx context.Context, groupNames []string, sorter sort.AlbumSorter, filters ...filters.AlbumFilter) ([]entity.Album, error) {
+	var albums customAlbums
+
+	if len(groupNames) == 0 {
+		return []entity.Album{}, nil
+	}
+
+	var groups strings.Builder
+	for idx, g := range groupNames {
+		groups.WriteString(fmt.Sprintf("'%s'", g))
+
+		if idx < len(groupNames)-1 {
+			groups.WriteString(",")
+		}
+	}
+
+	tx := a.db.WithContext(ctx).Table("album").
+		Select(`album.*, album_user_permissions.permissions as user_permissions, album_user_permissions.user_id as user_id,
+				album_group_permissions.permissions as group_permissions, album_group_permissions.group_name as group_name`).
+		Joins("LEFT JOIN album_user_permissions ON (album.id = album_user_permissions.album_id)").
+		Joins("LEFT JOIN album_group_permissions ON (album.id = album_group_permissions.album_id)").
+		Where(fmt.Sprintf("album_group_permissions.group_name = ANY(ARRAY[%s])", groups.String())).
+		Find(&albums)
+	if tx.Error != nil {
+		return []entity.Album{}, fmt.Errorf("%w internal error: %v", repo.ErrInternalError, tx.Error)
+	}
+
+	if len(albums) == 0 {
+		logutil.GetDefaultLogger().WithField("group names", fmt.Sprintf("%+v", groupNames)).Warn("no album found by group name")
 
 		return []entity.Album{}, nil
 	}
