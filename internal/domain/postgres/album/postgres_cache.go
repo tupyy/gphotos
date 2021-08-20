@@ -3,7 +3,7 @@ package album
 import (
 	"context"
 	"fmt"
-	"reflect"
+	"reflect
 	"strings"
 	"time"
 
@@ -307,7 +307,6 @@ func filterAlbums(filters []filters.AlbumFilter, albums []entity.Album) []entity
 					"filter":   reflect.TypeOf(filter).String(),
 					"album_id": a.ID,
 				}).Trace("filter did not passed")
-
 				pass = false
 				break
 			}

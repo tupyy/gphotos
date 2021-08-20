@@ -82,4 +82,18 @@
 .container-album-card .location-wrapper i {
     padding-right: 3px;
     color: #2f48a7;
+=======
+
+.container-album-card .card-body {
+    padding: 5px 0 2px 5px;
+}
+
+.container-album-card a {
+    color: black;
+    text-decoration: none;
+}
+
+.container-album-card a:hover {
+    text-underline-position: under;
+    text-decoration: underline;
 }
