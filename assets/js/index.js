@@ -53,6 +53,8 @@ const init = () => {
 
 const doReq = () => {
     showSpinner($("#albums"),true);
+    $("#count_albums").parent().hide();
+
     clearAlbums();
 
     axios.get(filterSort.buildRequestURL(baseURL))
@@ -69,6 +71,7 @@ const doReq = () => {
         })
         .then(() => {
             showSpinner($("#albums"), false);
+            $("#count_albums").parent().show();
         });
 }
 

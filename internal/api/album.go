@@ -231,6 +231,8 @@ func generateSort(c *gin.Context) domainSort.AlbumSorter {
 		return domainSort.NewAlbumSorter(domainSort.SortAlbumsByName, domainSort.NormalOrder)
 	case "location":
 		return domainSort.NewAlbumSorter(domainSort.SortAlbumsByLocation, domainSort.NormalOrder)
+	case "date-normal":
+		return domainSort.NewAlbumSorter(domainSort.SortAlbumsByDate, domainSort.NormalOrder)
 	default:
 		return domainSort.NewAlbumSorter(domainSort.SortAlbumsByDate, domainSort.ReverseOrder)
 	}
