@@ -72,6 +72,8 @@ const doReq = () => {
         .then(() => {
             showSpinner($("#albums"), false);
             $("#count_albums").parent().show();
+
+            bindToEvents();
         });
 }
 
@@ -98,13 +100,13 @@ let renderAlbum = (album) => {
             <div class="container-album-card card">
                 <div class="card-header">
                     <div class="row row-owner">
-                    <span>
-                        ` + album.owner + `
-                    </span>
-                    <span class="location">
-                        <i class="fas fa-map-marker-alt"></i>
-                        ` + album.location + `
-                    </span>
+                        <span id="owner12">
+                            ` + album.owner + `
+                        </span>
+                        <span class="location">
+                            <i class="fas fa-map-marker-alt"></i>
+                            ` + album.location + `
+                        </span>
                     </div>
                     <div class="row row-date">
                         <span>
@@ -128,11 +130,11 @@ let renderAlbum = (album) => {
     `
 }
 
-let clearAlbums = () => {
+const clearAlbums = () => {
     $(albumsElementID).empty();
 }
 
-let showSpinner = (parentElement, show) => {
+const showSpinner = (parentElement, show) => {
     if (show) {
         parentElement.append(spinner())
     } else {
@@ -140,7 +142,7 @@ let showSpinner = (parentElement, show) => {
     }
 }
 
-let spinner = () => {
+const spinner = () => {
     return `
     <div class="d-flex justify-content-center" id="loadingSpinner">
         <div class="spinner-border" role="status">
@@ -150,7 +152,7 @@ let spinner = () => {
     `
 }
 
-let renderOwnerPill = (owner) => {
+const renderOwnerPill = (owner) => {
     return `
         <div class="col-12 col-pill">
             <input type="hidden" value="` + owner.id + `"/>
@@ -161,7 +163,21 @@ let renderOwnerPill = (owner) => {
     `
 }
 
-let bindToEvents = () => {
+const addOwner = (owner) => {
+    let exists = false;
+    filterSort.owners.forEach(v => {
+        if (v.id === owner.id) {
+            exists = true;
+        }
+    })
+
+    if (!exists) {
+        filterSort.owners.push(owner);
+        renderFilter();
+    }
+}
+
+const bindToEvents = () => {
     // bind to filterSort event
     $("#personalAlbumCheck").on("change", () => {
         filterSort.personalAlbums =  $("#personalAlbumCheck").prop('checked');
@@ -194,17 +210,7 @@ let bindToEvents = () => {
                 name: $("#selectOwner option:selected").text(),
             }
 
-            let exists = false;
-            filterSort.owners.forEach(v => {
-                if (v.id === newOwner.id) {
-                    exists = true;
-                }
-            })
-
-            if (!exists) {
-                filterSort.owners.push(newOwner);
-                renderFilter();
-            }
+            addOwner(newOwner);
 
             doReq();
         }
@@ -233,7 +239,26 @@ let bindToEvents = () => {
         filterSort.sort = $(e.target).val();
 
         doReq();
-    })
+    });
+
+    $('.container-album-card .card-header .row-owner').on('click',(e) => {
+        ownerName = $(e.target).html().trim();
+
+        newOwner = {}
+        $("#selectOwner > option").each((_, o) => {
+            if (o.text === ownerName) {
+                newOwner.id = o.value;
+                newOwner.name = o.text;
+                
+                addOwner(newOwner);
+                
+                doReq();
+                return false;
+            }
+        })
+
+
+    });
 }
 
 $(() => {
@@ -255,12 +280,13 @@ $(() => {
             }
     });
 
-    // bind to filterSorts controls
-    bindToEvents();
-
     // init filterSort obj
     init();
 
     // get albums from server
     doReq();
+    
+    // bind to filterSorts controls
+    bindToEvents();
+
 });

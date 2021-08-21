@@ -41,7 +41,7 @@
 }
 
 .container-album-card a {
-    color: #2f48a7;
+    color: #292929;
     text-decoration: none;
 }
 
@@ -63,33 +63,6 @@
     text-align: center;
 }
 
-.container-album-card .date .day {
-    font-weight: 700;
-    font-size: 17px;
-    text-shadow: 2px 3px 2px rgba(0, 0, 0, 0.18);
-}
-
-.container-album-card .date .month {
-    text-transform: uppercase;
-    font-size: 12px;
-}
-
-.container-album-card .date .year {
-    font-size: 12px
-}
-
-.container-album-card .location-wrapper {
-    position: absolute;
-    right: 0;
-    top: 0;
-    margin-right: 5px;
-}
-
-.container-album-card .location-wrapper i {
-    padding-right: 3px;
-    color: #2f48a7;
-}
-
 .container-album-card .card-body {
     padding: 5px 0 2px 5px;
 }
@@ -106,7 +79,7 @@
     justify-content: space-between;
     grid-auto-flow: column;
     font-weight: bold;
-    color: #2e46a5;
+    color: #292929;
     font-size: 0.9rem;
 }
 
@@ -121,11 +94,19 @@
     display: block;
     text-align: right;
     padding-left: 0;
-    padding-right: 0;
+    padding-right: 2px;
+}
+
+.container-album-card .card-header .row-owner span:last-child i {
+    padding-right: 2px;
+}
+
+.container-album-card .card-header .row-date span i {
+    padding-right: 2px;
 }
 
 .container-album-card .card-header .row-owner span:hover {
-    border-bottom: 1px #2e46a5 solid;
+    border-bottom: 1px #292929 solid;
     cursor: pointer;
     margin-bottom: -1px;
 }
@@ -134,5 +115,5 @@
     font-size: 0.8rem;
     font-style: italic;
     padding-left: 0;
-    color: #2e46a5;
+    color: #292929;
 }

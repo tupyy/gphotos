@@ -38,6 +38,7 @@
 .main-container {
     margin: 40px auto 10px auto;
     min-height: 1000px;
+    color: #292929;
 }
 
 
@@ -166,6 +167,11 @@
         display: none;
     }
 
+    .main-container .albums-col {
+        padding-left: 0;
+        padding-right: 0;
+    }
+
     .filter-container-mobile {
         display: flex;
         justify-content: center;
@@ -189,5 +195,11 @@
     
     .main-container-mobile .row-filter:last-child {
         margin: 30px 0px 30px 0px;
+    }
+
+    .main-container #albums {
+        margin: 5px 0 5px 0;
+        display: flex;
+        justify-content: center;
     }
 }
