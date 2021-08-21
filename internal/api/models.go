@@ -16,9 +16,7 @@ type simpleAlbum struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
 	Owner       string `json:"owner"`
-	Day         string `json:"day"`
-	Month       string `json:"month"`
-	Year        string `json:"year"`
+	Date        string `json:"date"`
 	Description string `json:"description"`
 	Location    string `json:"location"`
 }
@@ -47,9 +45,7 @@ func newSimpleAlbum(a entity.Album, owner entity.User) (simpleAlbum, error) {
 	return simpleAlbum{
 		ID:          encryptedID,
 		Name:        a.Name,
-		Day:         fmt.Sprintf("%d", a.CreatedAt.Day()),
-		Month:       a.CreatedAt.Month().String()[:3],
-		Year:        fmt.Sprintf("%d", a.CreatedAt.Year()),
+		Date:        a.CreatedAt.Format("2 January 2006"),
 		Location:    a.Location,
 		Description: a.Description,
 		Owner:       ownerName,

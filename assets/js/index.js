@@ -96,27 +96,31 @@ let renderAlbum = (album) => {
     return `
         <div class="album-col col-2" id="` + album.id + `">
             <div class="container-album-card card">
-                <div class="date">
-                  <span class="day">` + album.day + `</span>
-                  <span class="month">` + album.month + `</span>
-                  <span class="year">` + album.year + `</span>
-                </div>
-                <div class="location-wrapper">
+                <div class="card-header">
+                    <div class="row row-owner">
+                    <span>
+                        ` + album.owner + `
+                    </span>
                     <span class="location">
                         <i class="fas fa-map-marker-alt"></i>
                         ` + album.location + `
                     </span>
+                    </div>
+                    <div class="row row-date">
+                        <span>
+                            <i class="far fa-calendar-alt"></i>
+                            ` + album.date + `
+                        </span>
+                    </div> 
                 </div>
                 <a href="/album/` + album.id + `">
                     <img src="/static/img/eiffeltoren.jpg" class="card-img-top"/>
                 </a>
                 <div class="album">
                     <div class="card-body">
-                        <span class="author">` + album.owner + `</span>
                         <h1 class="card-title title">
                             <a href="/album/` + album.id + `">` + album.name + `</a>
                         </h1>
-                        <p class="card-text">` + album.description + `</p>
                     </div>
                 </div>
             </div>

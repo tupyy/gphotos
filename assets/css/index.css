@@ -12,6 +12,7 @@
     padding-bottom: 0.75rem;
     padding-left: 0.75rem;
     z-index: 20;
+    color: #2f48a7;
 }
 
 .search-group input {
@@ -39,12 +40,13 @@
     min-height: 1000px;
 }
 
+
 .main-container .row {
     margin: auto;
 }
 
 .main-container .form-check-input:checked {
-    background-color: black;
+    background-color: #2f48a7;
 }
 
 .main-container select:focus, .form-check-input:focus {
@@ -63,6 +65,8 @@
     border: 1px solid #e0e0e0;
     border-radius: 2px;
     padding: 0;
+    height: 500px;
+    max-height: 600px;
 }
 
 .main-container .col-filter .title {
@@ -104,12 +108,17 @@
 .main-container #albums .album-col {
     width: 250px;
     margin-top: 5px;
+    margin-bottom: 10px;
 }
 
 .main-container .row-filter .col-pill {
     display: flex;
     justify-content: center;
     margin-top: 5px;
+}
+
+.main-container .row-filter .col-pill .bg-secondary {
+    background-color: #2f48a7 !important;
 }
 
 .main-container .row-filter span {
