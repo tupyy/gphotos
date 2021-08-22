@@ -72,8 +72,6 @@ const doReq = () => {
         .then(() => {
             showSpinner($("#albums"), false);
             $("#count_albums").parent().show();
-
-            bindToEvents();
         });
 }
 
@@ -252,12 +250,11 @@ const bindToEvents = () => {
                 
                 addOwner(newOwner);
                 
-                doReq();
                 return false;
             }
         })
 
-
+        doReq();
     });
 }
 
