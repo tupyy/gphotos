@@ -1,13 +1,13 @@
 .bg-dark {
-    background-color: #2f48a7 !important;
+    background-color: #2e343a !important;
 }
 .navbar-dark .navbar-nav .nav-link {
-    color: white;
+    color: silver;
 }
 .navbar-dark .navbar-nav .nav-link:hover {
-    color: white;
+    color: deepskyblue;
     font-weight: bold;
-    border-bottom: 1.5px white solid;
+    border-bottom: 1.5px deepskyblue solid;
     margin-bottom: -1.5px;
 }
 

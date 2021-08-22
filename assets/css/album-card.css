@@ -7,7 +7,7 @@
 }
 
 .container-album-card.card:hover {
-    box-shadow: 1px 2px 2px #d9d9d9;
+    box-shadow: 1px 2px 2px silver;
 }
 
 .container-album-card a {
@@ -38,23 +38,23 @@
 
 .container-album-card .card-body {
     padding: 5px 0 2px 5px;
+    background-color: #2e343a;
 }
 
 .container-album-card a {
-    color: #292929;
+    color: silver;
     text-decoration: none;
 }
 
 .container-album-card a:hover {
-    text-underline-position: under;
-    text-decoration: underline;
+    color: deepskyblue;
+    font-weight: bold;
 }
 
 .container-album-card .date {
     position: absolute;
     top: 0;
     left: 0;
-    background-color: #2f48a7;
     color: #fff;
     padding: 0.5em;
 }
@@ -69,9 +69,10 @@
 
 
 .container-album-card .card-header {
-    background-color: white;
+    color: silver;
     padding-left: 3px;
     padding-right: 3px;
+    background-color: #2e343a;
 }
 
 .container-album-card .card-header .row-owner{
@@ -79,7 +80,6 @@
     justify-content: space-between;
     grid-auto-flow: column;
     font-weight: bold;
-    color: #292929;
     font-size: 0.9rem;
 }
 
@@ -106,7 +106,7 @@
 }
 
 .container-album-card .card-header .row-owner span:hover {
-    border-bottom: 1px #292929 solid;
+    color: deepskyblue;
     cursor: pointer;
     margin-bottom: -1px;
 }
@@ -115,5 +115,4 @@
     font-size: 0.8rem;
     font-style: italic;
     padding-left: 0;
-    color: #292929;
 }

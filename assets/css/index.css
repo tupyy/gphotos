@@ -12,10 +12,12 @@
     padding-bottom: 0.75rem;
     padding-left: 0.75rem;
     z-index: 20;
-    color: #2f48a7;
+    color: silver;
 }
 
 .search-group input {
+    background-color: #202327;
+    color: silver;
     border-top-right-radius: 25px;
     border-top-left-radius: 25px !important;
     border-bottom-right-radius: 25px;
@@ -26,9 +28,11 @@
 }
 
 .search-group input:focus {
+    background-color: #202327;
+    color: silver;
     box-shadow: 0 0 0 0;
     border-width: 1px;
-    border-color: black;
+    border-color: silver;
 }
 
 .filter-container-mobile {
@@ -38,54 +42,12 @@
 .main-container {
     margin: 40px auto 10px auto;
     min-height: 1000px;
-    color: #292929;
+    color: silver;
 }
 
 
 .main-container .row {
     margin: auto;
-}
-
-.main-container .form-check-input:checked {
-    background-color: #2f48a7;
-}
-
-.main-container select:focus, .form-check-input:focus {
-    box-shadow: 0 0 0 0;
-    border-width: 1px;
-    border-color: black;
-}
-
-.main-container .custom-col {
-    margin-left: 0px;
-    margin-right: 0px;
-}
-
-.main-container .col-filter {
-    background: white;
-    border: 1px solid #e0e0e0;
-    border-radius: 2px;
-    padding: 0;
-    height: 500px;
-    max-height: 600px;
-}
-
-.main-container .col-filter .title {
-    font-size: 1rem;
-    font-weight: bold;
-    margin-bottom: 10px;
-}
-
-.main-container .col-filter .row-filter {
-    margin: 10px 5px 10px 5px;
-}
-
-.main-container .col-filter .row-filter:last-child {
-    margin: 10px 0px 30px 0px;
-}
-
-.main-container .albums-col {
-    padding-right: 0;
 }
 
 .main-container .sort-row span {
@@ -110,39 +72,6 @@
     width: 250px;
     margin-top: 5px;
     margin-bottom: 10px;
-}
-
-.main-container .row-filter .col-pill {
-    display: flex;
-    justify-content: center;
-    margin-top: 5px;
-}
-
-.main-container .row-filter .col-pill .bg-secondary {
-    background-color: #2f48a7 !important;
-}
-
-.main-container .row-filter span {
-    display: flex;
-    align-items: center;
-}
-
-.main-container .row-filter span button {
-    margin-left: 5px;
-}
-
-.main-container .row-filter .input-group {
-    padding: 0;
-}
-
-.main-container .row-filter-users {
-    padding-left: 5px;
-    padding-right: 5px;
-}
-
-.main-container #datepicker {
-    padding-left: 5px;
-    padding-right: 5px;
 }
 
 
