@@ -1,5 +1,22 @@
 .btn {
-    width: 80px;
+    width: 100px;
+    border-radius: 20px;
+}
+
+.btn.btn-outline-primary.btn-sm {
+    color: deepskyblue;
+    background-color: transparent;
+    border-color: deepskyblue;
+}
+
+.btn.btn-outline-primary.btn-sm:hover {
+    color: black;
+    background-color: deepskyblue;
+    border-color: silver;
+}
+
+.btn.btn-outline-primary.btn-sm:focus {
+    box-shadow: 0 0 0;
 }
 
 .form-container {
@@ -14,6 +31,31 @@
     margin-top: 50px;
 }
 
+.form-container .form-control,.form-select {
+    background-color: #202327;
+    color: silver
+}
+
+.form-container .form-control:focus,.form-select:focus {
+    border-color: deepskyblue;
+}
+
+.form-container .form-check-input {
+    background-color: #2e343a;
+    border-color: silver;
+}
+
+.form-container .form-check-input:checked {
+    background-color: #2e343a;
+    color: silver;
+}
+
+.form-container select:focus, .form-check-input:focus {
+    box-shadow: 0 0 0 0;
+    border-width: 1px;
+    border-color: silver;
+}
+    
 .form-container .title {
     font-weight: bold;
 }
@@ -27,8 +69,9 @@
 }
 
 .container-permissions ul li {
-    background: #f8f9fa;
+    background-color: transparent;
     border: 0;
+    color: silver;
 }
 
 .container-permissions-title {
@@ -72,6 +115,7 @@
 #selected-users .permission-remove-btn, #selected-groups .permission-remove-btn {
     display: flex;
     justify-content: right;
+    padding-right: 0;
 }
 
 @media (max-width: 576px) {

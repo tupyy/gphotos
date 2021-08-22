@@ -72,6 +72,8 @@ const doReq = () => {
         .then(() => {
             showSpinner($("#albums"), false);
             $("#count_albums").parent().show();
+
+            bindToCardOwner();
         });
 }
 
@@ -239,6 +241,9 @@ const bindToEvents = () => {
         doReq();
     });
 
+}
+
+const bindToCardOwner = () => {
     $('.container-album-card .card-header .row-owner').on('click',(e) => {
         ownerName = $(e.target).html().trim();
 
