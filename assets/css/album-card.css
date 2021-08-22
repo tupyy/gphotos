@@ -1,5 +1,9 @@
 @charset "UTF-8";
 
+.card {
+    background: transparent;
+}
+
 .container-album-card {
   box-sizing: border-box;
   padding: 0;
@@ -38,7 +42,7 @@
 
 .container-album-card .card-body {
     padding: 5px 0 2px 5px;
-    background-color: #2e343a;
+    background-color: transparent;
 }
 
 .container-album-card a {
@@ -72,7 +76,7 @@
     color: silver;
     padding-left: 3px;
     padding-right: 3px;
-    background-color: #2e343a;
+    background-color: transparent;
 }
 
 .container-album-card .card-header .row-owner{
