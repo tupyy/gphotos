@@ -1,3 +1,21 @@
+.main-container .custom-col {
+    margin-left: 0px;
+    margin-right: 0px;
+}
+
+.main-container .col-filter {
+    background-color: #2e343a;
+    border: 1px solid silver;
+    border-radius: 5px;
+    padding: 0;
+    height: 500px;
+    max-height: 600px;
+}
+
+.main-container .form-check {
+    margin-left: 0;
+}
+
 .main-container  .form-check-input {
     background-color: #2e343a;
     border-color: silver;
@@ -14,19 +32,6 @@
     border-color: silver;
 }
 
-.main-container .custom-col {
-    margin-left: 0px;
-    margin-right: 0px;
-}
-
-.main-container .col-filter {
-    background-color: #2e343a;
-    border: 1px solid silver;
-    border-radius: 5px;
-    padding: 0;
-    height: 500px;
-    max-height: 600px;
-}
 
 .main-container .col-filter .title {
     font-size: 1rem;
@@ -52,6 +57,10 @@
     color: silver;
     border-color: silver;
     border-radius: 5px;
+}
+
+.main-container .col-filter .row-filter .form-check input {
+    border-radius: 2px;
 }
 
 .main-container .col-filter .row-filter input, .form-select option {

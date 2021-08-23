@@ -3,11 +3,6 @@ const baseURL = "/api/albums"
 
 let store = {}
 
-let owner = {
-    id: '',
-    name: '',
-}
-
 let filterSort = {
     personalAlbums: true,
     sharedAlbums: true,
@@ -29,8 +24,8 @@ let filterSort = {
         }
 
         if (this.owners.length > 0) {
-            this.owners.forEach(v => {
-                reqUrl = reqUrl + "&owner=" + v.id
+            this.owners.forEach(id => {
+                reqUrl = reqUrl + "&owner=" + id
             });
         }
 
@@ -84,14 +79,6 @@ let render = () => {
     });
     
     $("#count_albums").html(store.albums.length);
-}
-
-let renderFilter = () => {
-    $("#selectedOwnersFilter").empty();
-    
-    filterSort.owners.forEach(v => {
-        $("#selectedOwnersFilter").append(renderOwnerPill(v));
-    });
 }
 
 let renderAlbum = (album) => {
@@ -163,18 +150,26 @@ const renderOwnerPill = (owner) => {
     `
 }
 
-const addOwner = (owner) => {
+const selectOwner = (ownerID) => {
     let exists = false;
     filterSort.owners.forEach(v => {
-        if (v.id === owner.id) {
+        if (v === ownerID) {
             exists = true;
         }
     })
 
     if (!exists) {
-        filterSort.owners.push(owner);
-        renderFilter();
+        filterSort.owners.push(ownerID);
     }
+}
+
+const removeOwner = (ownerID) => {
+    filterSort.owners.forEach( (v,idx) => {
+        if (v === ownerID) {
+            filterSort.owners.splice(idx, 1);
+            return false;
+        }
+    })
 }
 
 const bindToEvents = () => {
@@ -203,17 +198,16 @@ const bindToEvents = () => {
         doReq();
     });
 
-    $("#selectOwner").on("change", () => {
-        if ($("#selectOwner option:selected").val() !== "empty-value") {
-            let newOwner = {
-                id: $("#selectOwner option:selected").val(),
-                name: $("#selectOwner option:selected").text(),
-            }
+    $("#ownerFilter").on("change","input", (e) => {
+        checkElem = $(e.target)[0];
 
-            addOwner(newOwner);
-
-            doReq();
+        if ( $(checkElem).prop('checked') ) {
+            selectOwner($(checkElem)[0].id);
+        } else {
+            removeOwner($(checkElem)[0].id);
         }
+
+        doReq();
     });
 
     $("#selectedOwnersFilter").on('click', '.btn-close', (e) => {
@@ -253,7 +247,7 @@ const bindToCardOwner = () => {
                 newOwner.id = o.value;
                 newOwner.name = o.text;
                 
-                addOwner(newOwner);
+                selectOwner(newOwner);
                 
                 return false;
             }
