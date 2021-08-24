@@ -1,9 +1,24 @@
+.bg-dark {
+    background-color: #2e343a !important;
+}
+.navbar-dark .navbar-nav .nav-link {
+    color: silver;
+}
+.navbar-dark .navbar-nav .nav-link:hover {
+    color: deepskyblue;
+    font-weight: bold;
+    border-bottom: 1.5px deepskyblue solid;
+    margin-bottom: -1.5px;
+}
+
 .navbar-right-side {
     display: flex;
     justify-content: right;
 }
 
 .navbar-nav-user {
+    color: white;
+    font-weight: bold;
     display: flex;
     align-items: center;
     margin-right: 10px;
