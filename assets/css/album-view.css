@@ -3,19 +3,21 @@
 }
 
 .menu-bar .nav-link {
-   color: black;
+   color: silver;
    border-radius: 0;
 }
 
 .menu-bar .nav-link.active {
-    color: black;
-    background: #f8f9fa;
+    color: deepskyblue;
+    background: transparent;
     border-radius: 0;
-    border-bottom: 2px solid #577290 !important;
+    border-bottom: 2px solid deepskyblue !important;
+    margin-bottom: -2px;
 }
 
 .menu-bar .nav-link:hover {
    border-bottom: 2px solid grey;
+   margin-bottom: -2px;
 }
 
 .no-photos-row {
