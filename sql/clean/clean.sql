@@ -7,4 +7,5 @@ DROP DATABASE IF EXISTS gophoto;
 -- Clean table roles 
 DROP ROLE IF EXISTS core_readwrite;
 DROP ROLE IF EXISTS core_readonly;
+DROP USER IF EXISTS resources_admin;
 
