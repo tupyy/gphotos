@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -88,8 +89,9 @@ func GetAlbums(r *gin.RouterGroup, repos domain.Repositories) {
 					return
 				}
 
+				filters := append(reqParams.Filters, notOwnerFilter)
 				// get albums shared by the user's groups
-				groupSharedAlbum, err := albumRepo.GetByGroups(reqCtx, groupsToList(session.User.Groups), reqParams.Filters...)
+				groupSharedAlbum, err := albumRepo.GetByGroups(reqCtx, groupsToList(session.User.Groups), filters...)
 				if err != nil {
 					logger.
 						WithError(err).
@@ -112,8 +114,8 @@ func GetAlbums(r *gin.RouterGroup, repos domain.Repositories) {
 		reqParams.Sorter.Sort(albums)
 
 		c.JSON(http.StatusOK, gin.H{
-			"username":  session.User.Username,
 			"user_role": session.User.Role.String(),
+			"username":  fmt.Sprintf("%s %s", session.User.FirstName, session.User.LastName),
 			"albums":    newSimpleAlbums(albums, users),
 		})
 

@@ -57,6 +57,7 @@ const doReq = () => {
 
             store.data = response.data;
             store.albums = response.data.albums;
+            store.username = response.data.username;
 
             render();
 
@@ -86,7 +87,7 @@ let renderAlbum = (album) => {
             <div class="container-album-card card">
                 <div class="card-header">
                     <div class="row row-owner">
-                        <span id="owner12">
+                        <span id="owner">
                             ` + album.owner + `
                         </span>
                         <span class="location">
@@ -116,6 +117,23 @@ let renderAlbum = (album) => {
     `
 }
 
+const renderFilter = () => {
+        $("#personalAlbumCheck").prop('checked', filterSort.personalAlbums);
+        $("#sharedAlbumCheck").prop('checked', filterSort.sharedAlbums);
+
+        
+        $("#ownerFilter .form-check").each((_, e) => {
+            id = $(e).find('input').val();
+            find = false;
+            filterSort.owners.forEach((i) => {
+                if (i === id) {
+                    find = true;
+                }
+            });
+            $(e).find('input').prop('checked', find);
+        });
+}
+
 const clearAlbums = () => {
     $(albumsElementID).empty();
 }
@@ -135,17 +153,6 @@ const spinner = () => {
             <span class="visually-hidden">Loading...</span>
         </div>
     </div>
-    `
-}
-
-const renderOwnerPill = (owner) => {
-    return `
-        <div class="col-12 col-pill">
-            <input type="hidden" value="` + owner.id + `"/>
-            <span class="badge rounded-pill bg-secondary">` + owner.name + `
-                <button type="button" class="btn-close btn-close-white"></button>
-            </span>
-        </div>
     `
 }
 
@@ -240,17 +247,22 @@ const bindToCardOwner = () => {
     $('.container-album-card .card-header .row-owner').on('click',(e) => {
         ownerName = $(e.target).html().trim();
 
-        newOwner = {}
-        $("#selectOwner > option").each((_, o) => {
-            if (o.text === ownerName) {
-                newOwner.id = o.value;
-                newOwner.name = o.text;
-                
-                selectOwner(newOwner);
-                
-                return false;
-            }
-        })
+        if (ownerName == store.username) {
+            filterSort.personalAlbums = true;
+            filterSort.sharedAlbums = false;
+            filterSort.owners = [];
+        } else {
+            $("#ownerFilter .form-check").each((_, e) => {
+                if ($(e).find('label').text() === ownerName) {
+                    id = $(e).find('input').val()
+                    
+                    filterSort.owners = [id];
+                    filterSort.personalAlbums = false;
+                }
+            });
+        }
+
+        renderFilter();
 
         doReq();
     });
