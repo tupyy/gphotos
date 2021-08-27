@@ -15,6 +15,7 @@ const (
 	NotFilterByUsername
 	// FilterByCanShare returns true if users has can_share set to true.
 	FilterByCanShare
+	FilterByName
 )
 
 type UserFilter func(user entity.User) bool

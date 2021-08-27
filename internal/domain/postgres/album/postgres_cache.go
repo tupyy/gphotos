@@ -3,16 +3,13 @@ package album
 import (
 	"context"
 	"fmt"
-	"reflect"
 	"strings"
 	"time"
 
 	gocache "github.com/patrickmn/go-cache"
-	"github.com/sirupsen/logrus"
 	"github.com/tupyy/gophoto/internal/domain"
 	"github.com/tupyy/gophoto/internal/domain/entity"
 	"github.com/tupyy/gophoto/internal/domain/filters"
-	"github.com/tupyy/gophoto/internal/domain/sort"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
 
@@ -72,14 +69,14 @@ func (r albumCacheRepo) Delete(ctx context.Context, id int32) error {
 	return nil
 }
 
-func (r albumCacheRepo) Get(ctx context.Context, sorter sort.AlbumSorter, filters ...filters.AlbumFilter) ([]entity.Album, error) {
+func (r albumCacheRepo) Get(ctx context.Context, filters ...filters.AlbumFilter) ([]entity.Album, error) {
 	var albums []entity.Album
 
 	items, found := r.cache.Get(allAlbumsKey)
 	if !found {
 		var err error
 
-		albums, err = r.repo.Get(ctx, sorter, filters...)
+		albums, err = r.repo.Get(ctx, filters...)
 		if err != nil {
 			return []entity.Album{}, err
 		}
@@ -89,22 +86,6 @@ func (r albumCacheRepo) Get(ctx context.Context, sorter sort.AlbumSorter, filter
 		logutil.GetDefaultLogger().WithField("count albums", len(albums)).Debug("albums cached")
 	} else {
 		albums, _ = items.([]entity.Album)
-	}
-
-	// sort
-	if sorter != nil {
-		sorter.Sort(albums)
-	}
-
-	//filter them
-	if len(filters) > 0 {
-		filteredAlbums := filterAlbums(filters, albums)
-		logutil.GetDefaultLogger().WithFields(logrus.Fields{
-			"count before filter": len(albums),
-			"count after filter":  len(filteredAlbums),
-		}).Debug("served album from cache")
-
-		return filteredAlbums, nil
 	}
 
 	logutil.GetDefaultLogger().WithField("count albums", len(albums)).Debug("served album from cache")
@@ -133,7 +114,7 @@ func (r albumCacheRepo) GetByID(ctx context.Context, id int32) (entity.Album, er
 	return item.(entity.Album), nil
 }
 
-func (r albumCacheRepo) GetByOwnerID(ctx context.Context, ownerID string, sorter sort.AlbumSorter, filters ...filters.AlbumFilter) ([]entity.Album, error) {
+func (r albumCacheRepo) GetByOwnerID(ctx context.Context, ownerID string, filters ...filters.AlbumFilter) ([]entity.Album, error) {
 	cacheKey := fmt.Sprintf("owner%s", ownerID)
 
 	var albums []entity.Album
@@ -142,7 +123,7 @@ func (r albumCacheRepo) GetByOwnerID(ctx context.Context, ownerID string, sorter
 	if !found {
 		var err error
 
-		albums, err = r.repo.GetByOwnerID(ctx, ownerID, sorter, filters...)
+		albums, err = r.repo.GetByOwnerID(ctx, ownerID, filters...)
 		if err != nil {
 			return []entity.Album{}, err
 		}
@@ -154,34 +135,17 @@ func (r albumCacheRepo) GetByOwnerID(ctx context.Context, ownerID string, sorter
 		albums, _ = items.([]entity.Album)
 	}
 
-	// sort
-	if sorter != nil {
-		sorter.Sort(albums)
-	}
-
-	//filter them
-	if len(filters) > 0 {
-		filteredAlbums := filterAlbums(filters, albums)
-		logutil.GetDefaultLogger().WithFields(logrus.Fields{
-			"count before filter": len(albums),
-			"count after filter":  len(filteredAlbums),
-			"owner id":            ownerID,
-		}).Debug("filtered albums")
-
-		return filteredAlbums, nil
-	}
-
 	return albums, nil
 }
 
-func (r albumCacheRepo) GetByUserID(ctx context.Context, userID string, sorter sort.AlbumSorter, filters ...filters.AlbumFilter) ([]entity.Album, error) {
+func (r albumCacheRepo) GetByUserID(ctx context.Context, userID string, filters ...filters.AlbumFilter) ([]entity.Album, error) {
 	var albums []entity.Album
 
 	items, found := r.cache.Get(userID)
 	if !found {
 		var err error
 
-		albums, err = r.repo.GetByUserID(ctx, userID, sorter, filters...)
+		albums, err = r.repo.GetByUserID(ctx, userID, filters...)
 		if err != nil {
 			return []entity.Album{}, err
 		}
@@ -193,36 +157,19 @@ func (r albumCacheRepo) GetByUserID(ctx context.Context, userID string, sorter s
 		albums, _ = items.([]entity.Album)
 	}
 
-	// sort
-	if sorter != nil {
-		sorter.Sort(albums)
-	}
-
-	//filter them
-	if len(filters) > 0 {
-		filteredAlbums := filterAlbums(filters, albums)
-		logutil.GetDefaultLogger().WithFields(logrus.Fields{
-			"count before filter": len(albums),
-			"count after filter":  len(filteredAlbums),
-			"user id":             userID,
-		}).Debug("albums filtered")
-
-		return filteredAlbums, nil
-	}
-
 	logutil.GetDefaultLogger().WithField("count albums", len(albums)).Debug("served album from cache")
 
 	return albums, nil
 }
 
-func (r albumCacheRepo) GetByGroupName(ctx context.Context, groupName string, sorter sort.AlbumSorter, filters ...filters.AlbumFilter) ([]entity.Album, error) {
+func (r albumCacheRepo) GetByGroupName(ctx context.Context, groupName string, filters ...filters.AlbumFilter) ([]entity.Album, error) {
 	var albums []entity.Album
 
 	items, found := r.cache.Get(groupName)
 	if !found {
 		var err error
 
-		albums, err = r.repo.GetByGroupName(ctx, groupName, sorter, filters...)
+		albums, err = r.repo.GetByGroupName(ctx, groupName, filters...)
 		if err != nil {
 			return []entity.Album{}, err
 		}
@@ -234,36 +181,19 @@ func (r albumCacheRepo) GetByGroupName(ctx context.Context, groupName string, so
 		albums, _ = items.([]entity.Album)
 	}
 
-	// sort
-	if sorter != nil {
-		sorter.Sort(albums)
-	}
-
-	//filter them
-	if len(filters) > 0 {
-		filteredAlbums := filterAlbums(filters, albums)
-		logutil.GetDefaultLogger().WithFields(logrus.Fields{
-			"count before filter": len(albums),
-			"count after filter":  len(filteredAlbums),
-			"group name":          groupName,
-		}).Debug("albums filtered")
-
-		return filteredAlbums, nil
-	}
-
 	logutil.GetDefaultLogger().WithField("count albums", len(albums)).Debug("served album from cache")
 
 	return albums, nil
 }
 
-func (r albumCacheRepo) GetByGroups(ctx context.Context, groupNames []string, sorter sort.AlbumSorter, filters ...filters.AlbumFilter) ([]entity.Album, error) {
+func (r albumCacheRepo) GetByGroups(ctx context.Context, groupNames []string, filters ...filters.AlbumFilter) ([]entity.Album, error) {
 	var albums []entity.Album
 
 	items, found := r.cache.Get(strings.Join(groupNames, "#"))
 	if !found {
 		var err error
 
-		albums, err = r.repo.GetByGroups(ctx, groupNames, sorter, filters...)
+		albums, err = r.repo.GetByGroups(ctx, groupNames, filters...)
 		if err != nil {
 			return []entity.Album{}, err
 		}
@@ -275,52 +205,7 @@ func (r albumCacheRepo) GetByGroups(ctx context.Context, groupNames []string, so
 		albums, _ = items.([]entity.Album)
 	}
 
-	// sort
-	if sorter != nil {
-		sorter.Sort(albums)
-	}
-
-	//filter them
-	if len(filters) > 0 {
-		filteredAlbums := filterAlbums(filters, albums)
-		logutil.GetDefaultLogger().WithFields(logrus.Fields{
-			"count before filter": len(albums),
-			"count after filter":  len(filteredAlbums),
-			"group names":         groupNames,
-		}).Debug("albums filtered")
-
-		return filteredAlbums, nil
-	}
-
 	logutil.GetDefaultLogger().WithField("count albums", len(albums)).Debug("served albums from cache")
 
 	return albums, nil
-}
-
-func filterAlbums(filters []filters.AlbumFilter, albums []entity.Album) []entity.Album {
-	filteredAlbums := make([]entity.Album, 0, len(albums))
-	for _, a := range albums {
-		pass := true
-		for _, filter := range filters {
-			if !filter(a) {
-				logutil.GetDefaultLogger().WithFields(logrus.Fields{
-					"filter":   reflect.TypeOf(filter).String(),
-					"album_id": a.ID,
-				}).Trace("filter did not passed")
-				pass = false
-				break
-			}
-
-			logutil.GetDefaultLogger().WithFields(logrus.Fields{
-				"filter":   reflect.TypeOf(filter).Name(),
-				"album_id": a.ID,
-			}).Trace("filter passed")
-		}
-
-		if pass {
-			filteredAlbums = append(filteredAlbums, a)
-		}
-	}
-
-	return filteredAlbums
 }

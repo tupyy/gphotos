@@ -31,7 +31,7 @@ func Index(r *gin.RouterGroup, repos domain.Repositories) {
 			return
 		}
 
-		users, err := keycloakRepo.GetUsers(reqCtx, nil, filters...)
+		users, err := keycloakRepo.GetUsers(reqCtx, filters...)
 		if err != nil {
 			logger.WithError(err).Error("fetch user filters")
 			common.AbortInternalError(c, err, "")

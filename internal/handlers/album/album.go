@@ -13,11 +13,11 @@ import (
 	"github.com/gorilla/csrf"
 	"github.com/sirupsen/logrus"
 	"github.com/tupyy/gophoto/internal/conf"
-	"github.com/tupyy/gophoto/internal/handlers/common"
 	"github.com/tupyy/gophoto/internal/domain"
 	"github.com/tupyy/gophoto/internal/domain/entity"
 	"github.com/tupyy/gophoto/internal/domain/utils"
 	"github.com/tupyy/gophoto/internal/form"
+	"github.com/tupyy/gophoto/internal/handlers/common"
 	"github.com/tupyy/gophoto/utils/encryption"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
@@ -187,7 +187,7 @@ func GetCreateAlbumForm(r *gin.RouterGroup, repos domain.Repositories) {
 			return
 		}
 
-		users, err := keycloakRepo.GetUsers(reqCtx, nil, userFilters...)
+		users, err := keycloakRepo.GetUsers(reqCtx, userFilters...)
 		if err != nil && errors.Is(err, domain.ErrInternalError) {
 			common.AbortInternalError(c, err, "cannot fetch users")
 
@@ -347,7 +347,7 @@ func GetUpdateAlbumForm(r *gin.RouterGroup, repos domain.Repositories) {
 				return
 			}
 
-			users, err := keycloakRepo.GetUsers(reqCtx, nil, userFilters...)
+			users, err := keycloakRepo.GetUsers(reqCtx, userFilters...)
 			if err != nil && errors.Is(err, domain.ErrInternalError) {
 				common.AbortInternalError(c, err, "cannot fetch users")
 

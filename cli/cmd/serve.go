@@ -113,7 +113,7 @@ func createPostgresRepos(client pgclient.Client) (domain.Repositories, error) {
 		return repos, err
 	}
 
-	repos[domain.AlbumRepoName] = album.NewCacheRepo(albumRepo, ttl, interval)
+	repos[domain.AlbumRepoName] = albumRepo
 
 	// create user repo
 	userRepo, err := user.NewPostgresRepo(client)

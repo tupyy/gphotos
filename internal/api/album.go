@@ -31,7 +31,7 @@ func GetAlbums(r *gin.RouterGroup, repos domain.Repositories) {
 		logger := logutil.GetLogger(c)
 
 		// fetch users from keycloak
-		users, err := keycloakRepo.GetUsers(reqCtx, nil)
+		users, err := keycloakRepo.GetUsers(reqCtx)
 		if err != nil {
 			logger.WithError(err).Error("index fetch users")
 			c.AbortWithError(http.StatusInternalServerError, err)
@@ -40,13 +40,12 @@ func GetAlbums(r *gin.RouterGroup, repos domain.Repositories) {
 		}
 
 		// generate the req filters and sorter
-		reqParams := bindToRequestParams(c)
-		noSorter := domainSort.NoSorter{}
+		reqParams := bindRequestParams(c)
 
 		var personalAlbums []entity.Album
 		if reqParams.FetchPersonalAlbums {
 			var err error
-			personalAlbums, err = albumRepo.GetByOwnerID(reqCtx, session.User.ID, noSorter, reqParams.Filters...)
+			personalAlbums, err = albumRepo.GetByOwnerID(reqCtx, session.User.ID, reqParams.Filters...)
 			if err != nil {
 				logger.WithError(err).Error("error fetching personal albums")
 				AbortWithJson(c, http.StatusInternalServerError, err, "")
@@ -72,7 +71,7 @@ func GetAlbums(r *gin.RouterGroup, repos domain.Repositories) {
 				filters := append(reqParams.Filters, notOwnerFilter)
 
 				var err error
-				sharedAlbums, err = albumRepo.Get(reqCtx, noSorter, filters...)
+				sharedAlbums, err = albumRepo.Get(reqCtx, filters...)
 				if err != nil {
 					logger.WithError(err).Error("error fetching all albums")
 					AbortWithJson(c, http.StatusInternalServerError, err, "")
@@ -81,7 +80,7 @@ func GetAlbums(r *gin.RouterGroup, repos domain.Repositories) {
 				}
 			} else if session.User.CanShare {
 				var err error
-				sharedAlbums, err = albumRepo.GetByUserID(reqCtx, session.User.ID, noSorter, reqParams.Filters...)
+				sharedAlbums, err = albumRepo.GetByUserID(reqCtx, session.User.ID, reqParams.Filters...)
 				if err != nil {
 					logger.WithError(err).Error("error fetching shared albums")
 					AbortWithJson(c, http.StatusInternalServerError, err, "")
@@ -90,7 +89,7 @@ func GetAlbums(r *gin.RouterGroup, repos domain.Repositories) {
 				}
 
 				// get albums shared by the user's groups
-				groupSharedAlbum, err := albumRepo.GetByGroups(reqCtx, groupsToList(session.User.Groups), noSorter, reqParams.Filters...)
+				groupSharedAlbum, err := albumRepo.GetByGroups(reqCtx, groupsToList(session.User.Groups), reqParams.Filters...)
 				if err != nil {
 					logger.
 						WithError(err).
@@ -129,8 +128,8 @@ type requestParams struct {
 	Sorter              domainSort.AlbumSorter
 }
 
-// bindToRequestParams returns a struct with filters and a sorter generated from query parameters
-func bindToRequestParams(c *gin.Context) requestParams {
+// bindRequestParams returns a struct with filters and a sorter generated from query parameters
+func bindRequestParams(c *gin.Context) requestParams {
 	logger := logutil.GetLogger(c)
 
 	reqParams := requestParams{

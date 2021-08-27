@@ -9,7 +9,6 @@ import (
 	repo "github.com/tupyy/gophoto/internal/domain"
 	"github.com/tupyy/gophoto/internal/domain/entity"
 	"github.com/tupyy/gophoto/internal/domain/filters"
-	"github.com/tupyy/gophoto/internal/domain/sort"
 	"github.com/tupyy/gophoto/models"
 	"github.com/tupyy/gophoto/utils/logutil"
 	"github.com/tupyy/gophoto/utils/pgclient"
@@ -179,17 +178,20 @@ func (a *AlbumPostgresRepo) Update(ctx context.Context, album entity.Album) erro
 }
 
 // Get returns all the albums sorted by id.
-// It does not sort or filter the album here. The sorting and filter is done at cache level.
-func (a *AlbumPostgresRepo) Get(ctx context.Context, sorter sort.AlbumSorter, filters ...filters.AlbumFilter) ([]entity.Album, error) {
+func (a *AlbumPostgresRepo) Get(ctx context.Context, filters ...filters.AlbumFilter) ([]entity.Album, error) {
 	var albums customAlbums
 
 	tx := a.db.WithContext(ctx).Table("album").
 		Select(`album.*, album_user_permissions.permissions as user_permissions, album_user_permissions.user_id as user_id,
 				album_group_permissions.permissions as group_permissions, album_group_permissions.group_name as group_name`).
 		Joins("LEFT JOIN album_user_permissions ON (album.id = album_user_permissions.album_id)").
-		Joins("LEFT JOIN album_group_permissions ON (album.id = album_group_permissions.album_id)").
-		Order("album.id").
-		Find(&albums)
+		Joins("LEFT JOIN album_group_permissions ON (album.id = album_group_permissions.album_id)")
+
+	for _, f := range filters {
+		tx = f(tx)
+	}
+
+	tx.Find(&albums)
 	if tx.Error != nil {
 		return []entity.Album{}, fmt.Errorf("%w internal error: %v", repo.ErrInternalError, tx.Error)
 	}
@@ -233,7 +235,7 @@ func (a *AlbumPostgresRepo) GetByID(ctx context.Context, id int32) (entity.Album
 
 // GetByOwnerID return all albums of an user.
 // It does not sort or filter the album here. The sorting and filter is done at cache level.
-func (a *AlbumPostgresRepo) GetByOwnerID(ctx context.Context, ownerID string, sorter sort.AlbumSorter, filters ...filters.AlbumFilter) ([]entity.Album, error) {
+func (a *AlbumPostgresRepo) GetByOwnerID(ctx context.Context, ownerID string, filters ...filters.AlbumFilter) ([]entity.Album, error) {
 	var albums customAlbums
 
 	tx := a.db.WithContext(ctx).Table("album").
@@ -241,8 +243,13 @@ func (a *AlbumPostgresRepo) GetByOwnerID(ctx context.Context, ownerID string, so
 				album_group_permissions.permissions as group_permissions, album_group_permissions.group_name as group_name`).
 		Joins("LEFT JOIN album_user_permissions ON (album.id = album_user_permissions.album_id)").
 		Joins("LEFT JOIN album_group_permissions ON (album.id = album_group_permissions.album_id)").
-		Where("album.owner_id = ?", ownerID).
-		Find(&albums)
+		Where("album.owner_id = ?", ownerID)
+
+	for _, f := range filters {
+		tx = f(tx)
+	}
+
+	tx.Find(&albums)
 	if tx.Error != nil {
 		return []entity.Album{}, fmt.Errorf("%w internal error: %v", repo.ErrInternalError, tx.Error)
 	}
@@ -260,7 +267,7 @@ func (a *AlbumPostgresRepo) GetByOwnerID(ctx context.Context, ownerID string, so
 
 // GetByUserID returns a list of albums for which the user has at one permission set.
 // It does not sort or filter the album here. The sorting and filter is done at cache level.
-func (a *AlbumPostgresRepo) GetByUserID(ctx context.Context, userID string, sorter sort.AlbumSorter, filters ...filters.AlbumFilter) ([]entity.Album, error) {
+func (a *AlbumPostgresRepo) GetByUserID(ctx context.Context, userID string, filters ...filters.AlbumFilter) ([]entity.Album, error) {
 	var albums customAlbums
 
 	tx := a.db.WithContext(ctx).Table("album").
@@ -268,8 +275,13 @@ func (a *AlbumPostgresRepo) GetByUserID(ctx context.Context, userID string, sort
 				album_group_permissions.permissions as group_permissions, album_group_permissions.group_name as group_name`).
 		Joins("LEFT JOIN album_user_permissions ON (album.id = album_user_permissions.album_id)").
 		Joins("LEFT JOIN album_group_permissions ON (album.id = album_group_permissions.album_id)").
-		Where("album_user_permissions.user_id = ?", userID).
-		Find(&albums)
+		Where("album_user_permissions.user_id = ?", userID)
+
+	for _, f := range filters {
+		tx = f(tx)
+	}
+
+	tx.Find(&albums)
 	if tx.Error != nil {
 		return []entity.Album{}, fmt.Errorf("%w internal error: %v", repo.ErrInternalError, tx.Error)
 	}
@@ -287,16 +299,21 @@ func (a *AlbumPostgresRepo) GetByUserID(ctx context.Context, userID string, sort
 
 // GetAlbumsByGroup returns a list of albums for which the group has at one permission set.
 // It does not sort or filter the album here. The sorting and filter is done at cache level.
-func (a *AlbumPostgresRepo) GetByGroupName(ctx context.Context, groupName string, sorter sort.AlbumSorter, filters ...filters.AlbumFilter) ([]entity.Album, error) {
+func (a *AlbumPostgresRepo) GetByGroupName(ctx context.Context, groupName string, filters ...filters.AlbumFilter) ([]entity.Album, error) {
 	var albums customAlbums
 
 	tx := a.db.WithContext(ctx).Table("album").
 		Select(`album.*, album_user_permissions.permissions as user_permissions, album_user_permissions.user_id as user_id,
 				album_group_permissions.permissions as group_permissions, album_group_permissions.group_name as group_name`).
 		Joins("LEFT JOIN album_user_permissions ON (album.id = album_user_permissions.album_id)").
-		Joins("LEFT JOIN album_group_permissions ON (album.id = album_group_permissions.album_id)").
-		Where("album_group_permissions.group_name= ?", groupName).
-		Find(&albums)
+		Joins("JOIN album_group_permissions ON (album.id = album_group_permissions.album_id)").
+		Where("album_group_permissions.group_name= ?", groupName)
+
+	for _, f := range filters {
+		tx = f(tx)
+	}
+
+	tx.Find(&albums)
 	if tx.Error != nil {
 		return []entity.Album{}, fmt.Errorf("%w internal error: %v", repo.ErrInternalError, tx.Error)
 	}
@@ -313,8 +330,7 @@ func (a *AlbumPostgresRepo) GetByGroupName(ctx context.Context, groupName string
 }
 
 // GetByGroups returns a list of albums with at least one persmission for at least on group in the list.
-// It does not sort or filter the album here. The sorting and filter is done at cache level.
-func (a *AlbumPostgresRepo) GetByGroups(ctx context.Context, groupNames []string, sorter sort.AlbumSorter, filters ...filters.AlbumFilter) ([]entity.Album, error) {
+func (a *AlbumPostgresRepo) GetByGroups(ctx context.Context, groupNames []string, filters ...filters.AlbumFilter) ([]entity.Album, error) {
 	var albums customAlbums
 
 	if len(groupNames) == 0 {
@@ -334,9 +350,14 @@ func (a *AlbumPostgresRepo) GetByGroups(ctx context.Context, groupNames []string
 		Select(`album.*, album_user_permissions.permissions as user_permissions, album_user_permissions.user_id as user_id,
 				album_group_permissions.permissions as group_permissions, album_group_permissions.group_name as group_name`).
 		Joins("LEFT JOIN album_user_permissions ON (album.id = album_user_permissions.album_id)").
-		Joins("LEFT JOIN album_group_permissions ON (album.id = album_group_permissions.album_id)").
-		Where(fmt.Sprintf("album_group_permissions.group_name = ANY(ARRAY[%s])", groups.String())).
-		Find(&albums)
+		Joins("JOIN album_group_permissions ON (album.id = album_group_permissions.album_id)").
+		Where(fmt.Sprintf("album_group_permissions.group_name = ANY(ARRAY[%s])", groups.String()))
+
+	for _, f := range filters {
+		tx = f(tx)
+	}
+
+	tx.Find(&albums)
 	if tx.Error != nil {
 		return []entity.Album{}, fmt.Errorf("%w internal error: %v", repo.ErrInternalError, tx.Error)
 	}

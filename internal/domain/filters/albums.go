@@ -4,19 +4,14 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/tupyy/gophoto/internal/domain/entity"
-	"github.com/tupyy/gophoto/internal/domain/utils"
+	"gorm.io/gorm"
 )
 
 type Filter int
 
 const (
-	// FilterByName returns true if album's name is in filter values
-	FilterByName Filter = iota
-	// FilterNotInList returns true if the album is not in filter values
-	FilterNotInList
 	// FilterAfterDate returns true if album createdAt is filter value
-	FilterAfterDate
+	FilterAfterDate = iota
 	// FilterBeforeDate returns true if album createdAt is before filter value
 	FilterBeforeDate
 	// FilterByOwnerID returns true if albums ownerid equal filter value
@@ -25,69 +20,43 @@ const (
 	NotFilterByOwnerID
 )
 
-type AlbumFilter func(album entity.Album) bool
+type AlbumFilter func(tx *gorm.DB) *gorm.DB
 
 func GenerateAlbumFilterFuncs(filter Filter, filterValues interface{}) (AlbumFilter, error) {
 	switch filter {
-	case FilterByName:
-		v, ok := filterValues.([]string)
-		if !ok {
-			return nil, errors.Errorf("%v invalid values. expecting []string", filter)
-		}
-
-		return func(album entity.Album) bool {
-			return utils.StringMatchRegexSlice(album.Name, v)
-		}, nil
-	case FilterNotInList:
-		v, ok := filterValues.([]entity.Album)
-		if !ok {
-			return nil, errors.Errorf("%v invalid values. expecting list of albums.", filter)
-		}
-
-		return func(album entity.Album) bool {
-			for _, a := range v {
-				if a.ID == album.ID {
-					return false
-				}
-			}
-
-			return true
-		}, nil
 	case FilterByOwnerID:
 		v, ok := filterValues.([]string)
 		if !ok {
-			return nil, errors.Errorf("%v invalid values. expecting []string", filter)
+			return nil, errors.Errorf("%v invalid value. expecting list of strings", filter)
 		}
-		return func(album entity.Album) bool {
-			return utils.StringInSlice(album.OwnerID, v)
+		return func(tx *gorm.DB) *gorm.DB {
+			return tx.Where("album.owner_id IN ?", v)
 		}, nil
 	case NotFilterByOwnerID:
 		v, ok := filterValues.([]string)
 		if !ok {
-			return nil, errors.Errorf("%v invalid values. expecting []string", filter)
+			return nil, errors.Errorf("%v invalid value. expecting list of strings", filter)
 		}
-		return func(album entity.Album) bool {
-			return !utils.StringInSlice(album.OwnerID, v)
+		return func(tx *gorm.DB) *gorm.DB {
+			return tx.Not("album.owner_id IN ?", v)
 		}, nil
 	case FilterBeforeDate:
 		v, ok := filterValues.(time.Time)
 		if !ok {
 			return nil, errors.Errorf("%v invalid value. expecting time.Time", filter)
 		}
-		return func(album entity.Album) bool {
-			ts := album.CreatedAt
-			midnight := time.Date(ts.Year(), ts.Month(), ts.Day(), 0, 0, 0, 0, time.UTC)
-			return midnight.Before(v) || midnight.Equal(v)
+		return func(tx *gorm.DB) *gorm.DB {
+			midnight := time.Date(v.Year(), v.Month(), v.Day(), 0, 0, 0, 0, time.UTC)
+			return tx.Where("album.create_at < ?", midnight)
 		}, nil
 	case FilterAfterDate:
 		v, ok := filterValues.(time.Time)
 		if !ok {
 			return nil, errors.Errorf("%v invalid value. expecting time.Time", filter)
 		}
-		return func(album entity.Album) bool {
-			ts := album.CreatedAt
-			midnight := time.Date(ts.Year(), ts.Month(), ts.Day(), 0, 0, 0, 0, time.UTC)
-			return midnight.After(v) || midnight.Equal(v)
+		return func(tx *gorm.DB) *gorm.DB {
+			midnight := time.Date(v.Year(), v.Month(), v.Day(), 0, 0, 0, 0, time.UTC)
+			return tx.Where("album.created_at > ?", midnight)
 		}, nil
 	}
 

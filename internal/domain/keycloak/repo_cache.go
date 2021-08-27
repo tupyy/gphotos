@@ -8,7 +8,6 @@ import (
 	"github.com/tupyy/gophoto/internal/domain"
 	"github.com/tupyy/gophoto/internal/domain/entity"
 	"github.com/tupyy/gophoto/internal/domain/filters"
-	"github.com/tupyy/gophoto/internal/domain/sort"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
 
@@ -30,14 +29,14 @@ func NewCacheRepo(r domain.KeycloakRepo, ttl time.Duration, cleanInterval time.D
 	}
 }
 
-func (r keycloakCacheRepo) GetUsers(ctx context.Context, sorter sort.UserSorter, filters ...filters.UserFilter) ([]entity.User, error) {
+func (r keycloakCacheRepo) GetUsers(ctx context.Context, filters ...filters.UserFilter) ([]entity.User, error) {
 	var users []entity.User
 
 	items, found := r.cache.Get(allUsersKey)
 	if !found {
 		var err error
 
-		users, err = r.repo.GetUsers(ctx, sorter, filters...)
+		users, err = r.repo.GetUsers(ctx, filters...)
 		if err != nil {
 			return []entity.User{}, err
 		}
@@ -47,11 +46,6 @@ func (r keycloakCacheRepo) GetUsers(ctx context.Context, sorter sort.UserSorter,
 		logutil.GetDefaultLogger().WithField("count users", len(users)).Debug("users cached")
 	} else {
 		users, _ = items.([]entity.User)
-	}
-
-	// sort
-	if sorter != nil {
-		sorter.Sort(users)
 	}
 
 	//filter them
@@ -110,17 +104,17 @@ func (r keycloakCacheRepo) GetGroups(ctx context.Context) ([]entity.Group, error
 
 func filterUsers(filters []filters.UserFilter, users []entity.User) []entity.User {
 	filteredUsers := make([]entity.User, 0, len(users))
-	for _, a := range users {
+	for _, u := range users {
 		pass := true
 		for _, filter := range filters {
-			if !filter(a) {
+			if !filter(u) {
 				pass = false
 				break
 			}
 		}
 
 		if pass {
-			filteredUsers = append(filteredUsers, a)
+			filteredUsers = append(filteredUsers, u)
 		}
 	}
 
