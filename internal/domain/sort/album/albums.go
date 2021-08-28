@@ -1,4 +1,4 @@
-package sort
+package album
 
 import (
 	"sort"
@@ -16,34 +16,32 @@ const (
 type SortName int
 
 const (
-	SortAlbumsByName SortName = iota
-	SortAlbumsByID
-	SortAlbumsByOwner
-	SortAlbumsByDate
-	SortAlbumsByLocation
+	SortByName SortName = iota
+	SortByID
+	SortByOwner
+	SortByDate
+	SortByLocation
 )
 
 type NoSorter struct{}
 
 func (n NoSorter) Sort(albums []entity.Album) {}
 
-type AlbumSorter interface {
+type Sorter interface {
 	Sort(albums []entity.Album)
 }
 
-type AlbumLessFunc func(a1, a2 entity.Album) bool
-
 type albumSorter struct {
 	album    []entity.Album
-	lessFunc AlbumLessFunc
+	lessFunc func(a1, a2 entity.Album) bool
 }
 
 // NewAlbumSorterById returns a sorter by IDs.
-func NewAlbumSorter(name SortName, order SortOrder) *albumSorter {
-	var lessFunc AlbumLessFunc
+func NewSorter(name SortName, order SortOrder) *albumSorter {
+	var lessFunc func(a1, a2 entity.Album) bool
 
 	switch name {
-	case SortAlbumsByID:
+	case SortByID:
 		lessFunc = func(a1, a2 entity.Album) bool {
 			if order == ReverseOrder {
 				return a1.ID > a2.ID
@@ -51,7 +49,7 @@ func NewAlbumSorter(name SortName, order SortOrder) *albumSorter {
 
 			return a1.ID < a2.ID
 		}
-	case SortAlbumsByName:
+	case SortByName:
 		lessFunc = func(a1, a2 entity.Album) bool {
 			if order == ReverseOrder {
 				return a1.Name > a2.Name
@@ -59,7 +57,7 @@ func NewAlbumSorter(name SortName, order SortOrder) *albumSorter {
 
 			return a1.Name < a2.Name
 		}
-	case SortAlbumsByLocation:
+	case SortByLocation:
 		lessFunc = func(a1, a2 entity.Album) bool {
 			if order == ReverseOrder {
 				return a1.Location > a2.Location
@@ -67,7 +65,7 @@ func NewAlbumSorter(name SortName, order SortOrder) *albumSorter {
 
 			return a1.Location < a2.Location
 		}
-	case SortAlbumsByDate:
+	case SortByDate:
 		lessFunc = func(a1, a2 entity.Album) bool {
 			if order == ReverseOrder {
 				return a1.CreatedAt.After(a2.CreatedAt)
@@ -81,11 +79,6 @@ func NewAlbumSorter(name SortName, order SortOrder) *albumSorter {
 		}
 	}
 
-	return NewAlbumCustomSorter(lessFunc)
-}
-
-// NewAlbumCustomSorter returns a custom sorter. The user must provide a lessFunc.
-func NewAlbumCustomSorter(lessFunc AlbumLessFunc) *albumSorter {
 	return &albumSorter{lessFunc: lessFunc}
 }
 

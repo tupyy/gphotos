@@ -11,9 +11,8 @@ import (
 	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/domain"
 	"github.com/tupyy/gophoto/internal/domain/entity"
-	"github.com/tupyy/gophoto/internal/domain/filters"
-	domainFilter "github.com/tupyy/gophoto/internal/domain/filters"
-	domainSort "github.com/tupyy/gophoto/internal/domain/sort"
+	albumFilter "github.com/tupyy/gophoto/internal/domain/filters/album"
+	albumSort "github.com/tupyy/gophoto/internal/domain/sort/album"
 	"github.com/tupyy/gophoto/utils/encryption"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
@@ -55,11 +54,11 @@ func GetAlbums(r *gin.RouterGroup, repos domain.Repositories) {
 			}
 		}
 
-		// user with canShare true can share albums with other users
+		// user with canShare=true can share albums with other users
 		// fetch all albums for which the user has at least one permissions
 		var sharedAlbums []entity.Album
 		if reqParams.FetchSharedAlbums {
-			notOwnerFilter, err := domainFilter.GenerateAlbumFilterFuncs(domainFilter.NotFilterByOwnerID, []string{session.User.ID})
+			notOwnerFilter, err := albumFilter.GenerateFilterFuncs(albumFilter.NotFilterByOwnerID, []string{session.User.ID})
 			if err != nil {
 				logger.WithError(err).Error("error generate notOwnerFilter")
 				AbortWithJson(c, http.StatusInternalServerError, err, "")
@@ -126,8 +125,8 @@ func GetAlbums(r *gin.RouterGroup, repos domain.Repositories) {
 type requestParams struct {
 	FetchPersonalAlbums bool
 	FetchSharedAlbums   bool
-	Filters             []domainFilter.AlbumFilter
-	Sorter              domainSort.AlbumSorter
+	Filters             []albumFilter.Filter
+	Sorter              albumSort.Sorter
 }
 
 // bindRequestParams returns a struct with filters and a sorter generated from query parameters
@@ -157,7 +156,7 @@ func bindRequestParams(c *gin.Context) requestParams {
 		}
 	}
 
-	reqParams.Filters = generateAlbumFilters(c)
+	reqParams.Filters = generateFilters(c)
 	reqParams.Sorter = generateSort(c)
 
 	return reqParams
@@ -165,8 +164,8 @@ func bindRequestParams(c *gin.Context) requestParams {
 }
 
 // GenerateAlbumFilters generates a list of filters from the query parameters.
-func generateAlbumFilters(c *gin.Context) []filters.AlbumFilter {
-	albumFilters := make([]filters.AlbumFilter, 0, 5)
+func generateFilters(c *gin.Context) []albumFilter.Filter {
+	albumFilters := make([]albumFilter.Filter, 0, 5)
 
 	logger := logutil.GetLogger(c)
 
@@ -174,7 +173,7 @@ func generateAlbumFilters(c *gin.Context) []filters.AlbumFilter {
 		if startDate, err := time.Parse("02/01/2006", c.Query("start_date")); err != nil {
 			logger.WithError(err).Error("cannot parse start_date query param")
 		} else {
-			f, err := filters.GenerateAlbumFilterFuncs(filters.FilterAfterDate, startDate)
+			f, err := albumFilter.GenerateFilterFuncs(albumFilter.FilterAfterDate, startDate)
 			if err != nil {
 				logger.WithError(err).Error("error create FilterAfterDate filter")
 			}
@@ -188,7 +187,7 @@ func generateAlbumFilters(c *gin.Context) []filters.AlbumFilter {
 		if endDate, err := time.Parse("02/01/2006", c.Query("end_date")); err != nil {
 			logger.WithError(err).Error("cannot parse end_date query param")
 		} else {
-			f, err := filters.GenerateAlbumFilterFuncs(filters.FilterBeforeDate, endDate)
+			f, err := albumFilter.GenerateFilterFuncs(albumFilter.FilterBeforeDate, endDate)
 			if err != nil {
 				logger.WithError(err).Error("error create FilterBeforeDate filter")
 			}
@@ -215,7 +214,7 @@ func generateAlbumFilters(c *gin.Context) []filters.AlbumFilter {
 			logger.WithField("owner_id", ownerID).Debug("filter by owner id created")
 		}
 
-		f, err := filters.GenerateAlbumFilterFuncs(filters.FilterByOwnerID, ownerIDs)
+		f, err := albumFilter.GenerateFilterFuncs(albumFilter.FilterByOwnerID, ownerIDs)
 		if err != nil {
 			logger.WithError(err).Error("error create FilterOwnerID filter")
 		}
@@ -226,15 +225,15 @@ func generateAlbumFilters(c *gin.Context) []filters.AlbumFilter {
 	return albumFilters
 }
 
-func generateSort(c *gin.Context) domainSort.AlbumSorter {
+func generateSort(c *gin.Context) albumSort.Sorter {
 	switch c.Query("sort") {
 	case "name":
-		return domainSort.NewAlbumSorter(domainSort.SortAlbumsByName, domainSort.NormalOrder)
+		return albumSort.NewSorter(albumSort.SortByName, albumSort.NormalOrder)
 	case "location":
-		return domainSort.NewAlbumSorter(domainSort.SortAlbumsByLocation, domainSort.NormalOrder)
+		return albumSort.NewSorter(albumSort.SortByLocation, albumSort.NormalOrder)
 	case "date-normal":
-		return domainSort.NewAlbumSorter(domainSort.SortAlbumsByDate, domainSort.NormalOrder)
+		return albumSort.NewSorter(albumSort.SortByDate, albumSort.NormalOrder)
 	default:
-		return domainSort.NewAlbumSorter(domainSort.SortAlbumsByDate, domainSort.ReverseOrder)
+		return albumSort.NewSorter(albumSort.SortByDate, albumSort.ReverseOrder)
 	}
 }

@@ -9,7 +9,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/domain/entity"
-	"github.com/tupyy/gophoto/internal/domain/filters"
+	userFilters "github.com/tupyy/gophoto/internal/domain/filters/user"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
 
@@ -31,12 +31,12 @@ func New(ctx context.Context, c conf.KeycloakConfig) (*KeycloakRepo, error) {
 		return nil, err
 	}
 
-	logutil.GetDefaultLogger().Info("keycloak client created")
+	logutil.GetDefaultLogger().Infof("connected to keycloak as %s", c.AdminUsername)
 
 	return &KeycloakRepo{client: client, token: token, realm: c.Realm, configuration: c}, nil
 }
 
-func (k *KeycloakRepo) GetUsers(ctx context.Context, filters ...filters.UserFilter) ([]entity.User, error) {
+func (k *KeycloakRepo) GetUsers(ctx context.Context, filters ...userFilters.Filter) ([]entity.User, error) {
 	keycloakUsers, err := k.client.GetUsers(ctx, k.token.AccessToken, k.realm, keycloak.GetUsersParams{Enabled: ptrBool(true)})
 	if err != nil {
 		logutil.GetDefaultLogger().WithError(err).Error("cannot fetch users from keycloak")
@@ -68,7 +68,11 @@ func (k *KeycloakRepo) GetUsers(ctx context.Context, filters ...filters.UserFilt
 		}
 	}
 
-	// filter them
+	//filter them
+	if len(filters) > 0 {
+		users = filter(filters, users)
+		logutil.GetDefaultLogger().WithField("count filtered users", len(users)).Debug("filter user")
+	}
 
 	return users, nil
 }
@@ -102,39 +106,4 @@ func (k *KeycloakRepo) GetGroups(ctx context.Context) ([]entity.Group, error) {
 	}
 
 	return groups, nil
-}
-
-func mapper(u keycloak.User) entity.User {
-	user := entity.User{
-		Username: *u.Username,
-		ID:       *u.ID,
-	}
-
-	if u.FirstName != nil {
-		user.FirstName = *u.FirstName
-	}
-
-	if u.LastName != nil {
-		user.LastName = *u.LastName
-	}
-
-	if u.Attributes != nil {
-		m := *u.Attributes
-		if attrs, found := m["can_share"]; found {
-			for _, attr := range attrs {
-				switch attr {
-				case "true":
-					user.CanShare = true
-				default:
-					user.CanShare = false
-				}
-			}
-		}
-	}
-
-	return user
-}
-
-func ptrBool(b bool) *bool {
-	return &b
 }

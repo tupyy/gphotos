@@ -3,9 +3,9 @@ package index
 import (
 	"fmt"
 
-	"github.com/tupyy/gophoto/internal/handlers/common"
 	"github.com/tupyy/gophoto/internal/domain/entity"
-	domainFilters "github.com/tupyy/gophoto/internal/domain/filters"
+	userFilters "github.com/tupyy/gophoto/internal/domain/filters/user"
+	"github.com/tupyy/gophoto/internal/handlers/common"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
 
@@ -27,32 +27,32 @@ func serialize(users []entity.User) []common.SerializedUser {
 }
 
 // generateFilters generates 3 filters: notUserNameFilter, FilterByRole and FilterByCanShare.
-func generateFilters(currentUser entity.User) ([]domainFilters.UserFilter, error) {
-	userFilters := make([]domainFilters.UserFilter, 0, 3)
+func generateFilters(currentUser entity.User) ([]userFilters.Filter, error) {
+	filters := make([]userFilters.Filter, 0, 3)
 
 	// get other users with can_share true except the current user
-	usernameFilter, err := domainFilters.GenerateUserFilterFuncs(domainFilters.NotFilterByUsername, []string{currentUser.Username})
+	usernameFilter, err := userFilters.GenerateFilterFuncs(userFilters.NotFilterByUsername, []string{currentUser.Username})
 	if err != nil {
-		return []domainFilters.UserFilter{}, err
+		return []userFilters.Filter{}, err
 	}
 
-	userFilters = append(userFilters, usernameFilter)
+	filters = append(filters, usernameFilter)
 
 	// only can share users
-	canShareFilter, err := domainFilters.GenerateUserFilterFuncs(domainFilters.FilterByCanShare, []string{})
+	canShareFilter, err := userFilters.GenerateFilterFuncs(userFilters.FilterByCanShare, []string{})
 	if err != nil {
-		return []domainFilters.UserFilter{}, err
+		return []userFilters.Filter{}, err
 	}
 
-	userFilters = append(userFilters, canShareFilter)
+	filters = append(filters, canShareFilter)
 
 	// remove admins
-	notAdminFilter, err := domainFilters.GenerateUserFilterFuncs(domainFilters.FilterByRole, []entity.Role{entity.RoleUser, entity.RoleEditor})
+	notAdminFilter, err := userFilters.GenerateFilterFuncs(userFilters.FilterByRole, []entity.Role{entity.RoleUser, entity.RoleEditor})
 	if err != nil {
-		return []domainFilters.UserFilter{}, err
+		return []userFilters.Filter{}, err
 	}
 
-	userFilters = append(userFilters, notAdminFilter)
+	filters = append(filters, notAdminFilter)
 
-	return userFilters, nil
+	return filters, nil
 }

@@ -1,4 +1,4 @@
-package filters
+package user
 
 import (
 	"github.com/pkg/errors"
@@ -6,9 +6,11 @@ import (
 	"github.com/tupyy/gophoto/internal/domain/utils"
 )
 
+type FilterName int
+
 const (
 	// FilterByUsername returns true if album's name is in filterValues
-	FilterByUsername Filter = iota
+	FilterByUsername FilterName = iota
 	// FilterByRole returns true if the user has the filter role
 	FilterByRole
 	// NotFilterByUsername negates the FilterByUsername
@@ -18,9 +20,9 @@ const (
 	FilterByName
 )
 
-type UserFilter func(user entity.User) bool
+type Filter func(user entity.User) bool
 
-func GenerateUserFilterFuncs(filter Filter, filterValues interface{}) (UserFilter, error) {
+func GenerateFilterFuncs(filter FilterName, filterValues interface{}) (Filter, error) {
 	switch filter {
 	case FilterByName:
 		v, ok := filterValues.([]string)

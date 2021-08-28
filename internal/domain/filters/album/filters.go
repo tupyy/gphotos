@@ -1,4 +1,4 @@
-package filters
+package album
 
 import (
 	"time"
@@ -7,22 +7,22 @@ import (
 	"gorm.io/gorm"
 )
 
-type Filter int
+type FilterName int
 
 const (
-	// FilterAfterDate returns true if album createdAt is filter value
-	FilterAfterDate = iota
-	// FilterBeforeDate returns true if album createdAt is before filter value
+	// FilterAfterDate filter albums created after filter value.
+	FilterAfterDate FilterName = iota
+	// FilterBeforeDate filter albums created before filter value.
 	FilterBeforeDate
-	// FilterByOwnerID returns true if albums ownerid equal filter value
+	// FilterByOwnerID filter the album with owner in filter values.
 	FilterByOwnerID
-	// NotFilterByOwnerID returns true if albums owner is not the filter value
+	// NotFilterByOwnerID filter out the albums whose owner is not in filter values.
 	NotFilterByOwnerID
 )
 
-type AlbumFilter func(tx *gorm.DB) *gorm.DB
+type Filter func(tx *gorm.DB) *gorm.DB
 
-func GenerateAlbumFilterFuncs(filter Filter, filterValues interface{}) (AlbumFilter, error) {
+func GenerateFilterFuncs(filter FilterName, filterValues interface{}) (Filter, error) {
 	switch filter {
 	case FilterByOwnerID:
 		v, ok := filterValues.([]string)

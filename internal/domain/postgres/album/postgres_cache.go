@@ -8,8 +8,8 @@ import (
 
 	gocache "github.com/patrickmn/go-cache"
 	"github.com/tupyy/gophoto/internal/domain"
+	repo "github.com/tupyy/gophoto/internal/domain"
 	"github.com/tupyy/gophoto/internal/domain/entity"
-	"github.com/tupyy/gophoto/internal/domain/filters"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
 
@@ -69,26 +69,28 @@ func (r albumCacheRepo) Delete(ctx context.Context, id int32) error {
 	return nil
 }
 
-func (r albumCacheRepo) Get(ctx context.Context, filters ...filters.AlbumFilter) ([]entity.Album, error) {
+func (r albumCacheRepo) Get(ctx context.Context, filters repo.AlbumFilters) ([]entity.Album, error) {
 	var albums []entity.Album
 
-	items, found := r.cache.Get(allAlbumsKey)
+	// generate a cache key depending on filters
+	cacheKey := generateCacheKey(allAlbumsKey, filters)
+
+	items, found := r.cache.Get(cacheKey)
 	if !found {
 		var err error
 
-		albums, err = r.repo.Get(ctx, filters...)
+		albums, err = r.repo.Get(ctx, filters)
 		if err != nil {
 			return []entity.Album{}, err
 		}
 
 		// set cache
 		r.cache.Set(allAlbumsKey, albums, gocache.DefaultExpiration)
-		logutil.GetDefaultLogger().WithField("count albums", len(albums)).Debug("albums cached")
+		logutil.GetDefaultLogger().WithField("count albums", len(albums)).WithField("cache key", cacheKey).Debug("albums cached")
 	} else {
+		logutil.GetDefaultLogger().WithField("count albums", len(albums)).WithField("cache key", cacheKey).Debug("served album from cache")
 		albums, _ = items.([]entity.Album)
 	}
-
-	logutil.GetDefaultLogger().WithField("count albums", len(albums)).Debug("served album from cache")
 
 	return albums, nil
 
@@ -114,8 +116,8 @@ func (r albumCacheRepo) GetByID(ctx context.Context, id int32) (entity.Album, er
 	return item.(entity.Album), nil
 }
 
-func (r albumCacheRepo) GetByOwnerID(ctx context.Context, ownerID string, filters ...filters.AlbumFilter) ([]entity.Album, error) {
-	cacheKey := fmt.Sprintf("owner%s", ownerID)
+func (r albumCacheRepo) GetByOwnerID(ctx context.Context, ownerID string, filters repo.AlbumFilters) ([]entity.Album, error) {
+	cacheKey := generateCacheKey(fmt.Sprintf("owner%s", ownerID), filters)
 
 	var albums []entity.Album
 
@@ -123,89 +125,104 @@ func (r albumCacheRepo) GetByOwnerID(ctx context.Context, ownerID string, filter
 	if !found {
 		var err error
 
-		albums, err = r.repo.GetByOwnerID(ctx, ownerID, filters...)
+		albums, err = r.repo.GetByOwnerID(ctx, ownerID, filters)
 		if err != nil {
 			return []entity.Album{}, err
 		}
 
 		// set cache
 		r.cache.Set(cacheKey, albums, gocache.DefaultExpiration)
-		logutil.GetDefaultLogger().WithField("count albums", len(albums)).Debug("albums cached")
+		logutil.GetDefaultLogger().WithField("count albums", len(albums)).WithField("cache key", cacheKey).Debug("albums cached")
 	} else {
+		logutil.GetDefaultLogger().WithField("count albums", len(albums)).WithField("cache key", cacheKey).Debug("served album from cache")
 		albums, _ = items.([]entity.Album)
 	}
 
 	return albums, nil
 }
 
-func (r albumCacheRepo) GetByUserID(ctx context.Context, userID string, filters ...filters.AlbumFilter) ([]entity.Album, error) {
+func (r albumCacheRepo) GetByUserID(ctx context.Context, userID string, filters repo.AlbumFilters) ([]entity.Album, error) {
 	var albums []entity.Album
 
-	items, found := r.cache.Get(userID)
+	cacheKey := generateCacheKey(userID, filters)
+
+	items, found := r.cache.Get(cacheKey)
 	if !found {
 		var err error
 
-		albums, err = r.repo.GetByUserID(ctx, userID, filters...)
+		albums, err = r.repo.GetByUserID(ctx, userID, filters)
 		if err != nil {
 			return []entity.Album{}, err
 		}
 
 		// set cache
 		r.cache.Set(userID, albums, gocache.DefaultExpiration)
-		logutil.GetDefaultLogger().WithField("count albums", len(albums)).Debug("albums cached")
+		logutil.GetDefaultLogger().WithField("count albums", len(albums)).WithField("cache key", cacheKey).Debug("albums cached")
 	} else {
+		logutil.GetDefaultLogger().WithField("count albums", len(albums)).WithField("cache key", cacheKey).Debug("served album from cache")
 		albums, _ = items.([]entity.Album)
 	}
-
-	logutil.GetDefaultLogger().WithField("count albums", len(albums)).Debug("served album from cache")
 
 	return albums, nil
 }
 
-func (r albumCacheRepo) GetByGroupName(ctx context.Context, groupName string, filters ...filters.AlbumFilter) ([]entity.Album, error) {
+func (r albumCacheRepo) GetByGroupName(ctx context.Context, groupName string, filters repo.AlbumFilters) ([]entity.Album, error) {
 	var albums []entity.Album
 
-	items, found := r.cache.Get(groupName)
+	cacheKey := generateCacheKey(groupName, filters)
+
+	items, found := r.cache.Get(cacheKey)
 	if !found {
 		var err error
 
-		albums, err = r.repo.GetByGroupName(ctx, groupName, filters...)
+		albums, err = r.repo.GetByGroupName(ctx, groupName, filters)
 		if err != nil {
 			return []entity.Album{}, err
 		}
 
 		// set cache
 		r.cache.Set(groupName, albums, gocache.DefaultExpiration)
-		logutil.GetDefaultLogger().WithField("count albums", len(albums)).Debug("albums cached")
+		logutil.GetDefaultLogger().WithField("count albums", len(albums)).WithField("cache key", cacheKey).Debug("albums cached")
 	} else {
+		logutil.GetDefaultLogger().WithField("count albums", len(albums)).WithField("cache key", cacheKey).Debug("served album from cache")
 		albums, _ = items.([]entity.Album)
 	}
-
-	logutil.GetDefaultLogger().WithField("count albums", len(albums)).Debug("served album from cache")
 
 	return albums, nil
 }
 
-func (r albumCacheRepo) GetByGroups(ctx context.Context, groupNames []string, filters ...filters.AlbumFilter) ([]entity.Album, error) {
+func (r albumCacheRepo) GetByGroups(ctx context.Context, groupNames []string, filters repo.AlbumFilters) ([]entity.Album, error) {
 	var albums []entity.Album
 
-	items, found := r.cache.Get(strings.Join(groupNames, "#"))
+	cacheKey := generateCacheKey(strings.Join(groupNames, "#"), filters)
+
+	items, found := r.cache.Get(cacheKey)
 	if !found {
 		var err error
 
-		albums, err = r.repo.GetByGroups(ctx, groupNames, filters...)
+		albums, err = r.repo.GetByGroups(ctx, groupNames, filters)
 		if err != nil {
 			return []entity.Album{}, err
 		}
 
 		// set cache
-		r.cache.Set(strings.Join(groupNames, "#"), albums, gocache.DefaultExpiration)
-		logutil.GetDefaultLogger().WithField("count albums", len(albums)).Debug("albums cached")
+		r.cache.Set(cacheKey, albums, gocache.DefaultExpiration)
+		logutil.GetDefaultLogger().WithField("count albums", len(albums)).WithField("cache key", cacheKey).Debug("albums cached")
 	} else {
+		logutil.GetDefaultLogger().WithField("count albums", len(albums)).WithField("cache key", cacheKey).Debug("served albums from cache")
 		albums, _ = items.([]entity.Album)
 	}
 
-	logutil.GetDefaultLogger().WithField("count albums", len(albums)).Debug("served albums from cache")
-
 	return albums, nil
+}
+
+func generateCacheKey(initialKey string, filters repo.AlbumFilters) string {
+	var sb strings.Builder
+
+	fmt.Fprintf(&sb, "%s", initialKey)
+	for k := range filters {
+		fmt.Fprintf(&sb, "%d", k)
+	}
+
+	return sb.String()
 }
