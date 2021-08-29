@@ -36,7 +36,7 @@ func New(ctx context.Context, c conf.KeycloakConfig) (*KeycloakRepo, error) {
 	return &KeycloakRepo{client: client, token: token, realm: c.Realm, configuration: c}, nil
 }
 
-func (k *KeycloakRepo) GetUsers(ctx context.Context, filters ...userFilters.Filter) ([]entity.User, error) {
+func (k *KeycloakRepo) GetUsers(ctx context.Context, filters userFilters.Filters) ([]entity.User, error) {
 	keycloakUsers, err := k.client.GetUsers(ctx, k.token.AccessToken, k.realm, keycloak.GetUsersParams{Enabled: ptrBool(true)})
 	if err != nil {
 		logutil.GetDefaultLogger().WithError(err).Error("cannot fetch users from keycloak")

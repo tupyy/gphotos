@@ -17,14 +17,17 @@ const (
 	NotFilterByUsername
 	// FilterByCanShare returns true if users has can_share set to true.
 	FilterByCanShare
-	FilterByName
 )
 
 type Filter func(user entity.User) bool
 
+// Filters defines a collection of filters. The key is the id of the filter which depends on the value of the filter.
+// The id is used to compute cache keys in order to cache query results based on filters' values.
+type Filters map[string]Filter
+
 func GenerateFilterFuncs(filter FilterName, filterValues interface{}) (Filter, error) {
 	switch filter {
-	case FilterByName:
+	case FilterByUsername:
 		v, ok := filterValues.([]string)
 		if !ok {
 			return nil, errors.Errorf("%v invalid values. expecting []string", filter)

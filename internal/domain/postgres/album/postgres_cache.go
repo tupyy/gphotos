@@ -2,14 +2,15 @@ package album
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"strings"
 	"time"
 
 	gocache "github.com/patrickmn/go-cache"
 	"github.com/tupyy/gophoto/internal/domain"
-	repo "github.com/tupyy/gophoto/internal/domain"
 	"github.com/tupyy/gophoto/internal/domain/entity"
+	albumFilters "github.com/tupyy/gophoto/internal/domain/filters/album"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
 
@@ -69,7 +70,7 @@ func (r albumCacheRepo) Delete(ctx context.Context, id int32) error {
 	return nil
 }
 
-func (r albumCacheRepo) Get(ctx context.Context, filters repo.AlbumFilters) ([]entity.Album, error) {
+func (r albumCacheRepo) Get(ctx context.Context, filters albumFilters.Filters) ([]entity.Album, error) {
 	var albums []entity.Album
 
 	// generate a cache key depending on filters
@@ -116,7 +117,7 @@ func (r albumCacheRepo) GetByID(ctx context.Context, id int32) (entity.Album, er
 	return item.(entity.Album), nil
 }
 
-func (r albumCacheRepo) GetByOwnerID(ctx context.Context, ownerID string, filters repo.AlbumFilters) ([]entity.Album, error) {
+func (r albumCacheRepo) GetByOwnerID(ctx context.Context, ownerID string, filters albumFilters.Filters) ([]entity.Album, error) {
 	cacheKey := generateCacheKey(fmt.Sprintf("owner%s", ownerID), filters)
 
 	var albums []entity.Album
@@ -141,7 +142,7 @@ func (r albumCacheRepo) GetByOwnerID(ctx context.Context, ownerID string, filter
 	return albums, nil
 }
 
-func (r albumCacheRepo) GetByUserID(ctx context.Context, userID string, filters repo.AlbumFilters) ([]entity.Album, error) {
+func (r albumCacheRepo) GetByUserID(ctx context.Context, userID string, filters albumFilters.Filters) ([]entity.Album, error) {
 	var albums []entity.Album
 
 	cacheKey := generateCacheKey(userID, filters)
@@ -166,7 +167,7 @@ func (r albumCacheRepo) GetByUserID(ctx context.Context, userID string, filters 
 	return albums, nil
 }
 
-func (r albumCacheRepo) GetByGroupName(ctx context.Context, groupName string, filters repo.AlbumFilters) ([]entity.Album, error) {
+func (r albumCacheRepo) GetByGroupName(ctx context.Context, groupName string, filters albumFilters.Filters) ([]entity.Album, error) {
 	var albums []entity.Album
 
 	cacheKey := generateCacheKey(groupName, filters)
@@ -191,7 +192,7 @@ func (r albumCacheRepo) GetByGroupName(ctx context.Context, groupName string, fi
 	return albums, nil
 }
 
-func (r albumCacheRepo) GetByGroups(ctx context.Context, groupNames []string, filters repo.AlbumFilters) ([]entity.Album, error) {
+func (r albumCacheRepo) GetByGroups(ctx context.Context, groupNames []string, filters albumFilters.Filters) ([]entity.Album, error) {
 	var albums []entity.Album
 
 	cacheKey := generateCacheKey(strings.Join(groupNames, "#"), filters)
@@ -216,13 +217,15 @@ func (r albumCacheRepo) GetByGroups(ctx context.Context, groupNames []string, fi
 	return albums, nil
 }
 
-func generateCacheKey(initialKey string, filters repo.AlbumFilters) string {
+func generateCacheKey(initialKey string, filters albumFilters.Filters) string {
 	var sb strings.Builder
 
 	fmt.Fprintf(&sb, "%s", initialKey)
 	for k := range filters {
-		fmt.Fprintf(&sb, "%d", k)
+		fmt.Fprintf(&sb, "%s", k)
 	}
 
-	return sb.String()
+	h := base64.StdEncoding.EncodeToString([]byte(sb.String()))
+
+	return string(h)
 }

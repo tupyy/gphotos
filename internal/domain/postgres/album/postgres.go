@@ -8,6 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 	repo "github.com/tupyy/gophoto/internal/domain"
 	"github.com/tupyy/gophoto/internal/domain/entity"
+	albumFilters "github.com/tupyy/gophoto/internal/domain/filters/album"
 	"github.com/tupyy/gophoto/models"
 	"github.com/tupyy/gophoto/utils/logutil"
 	"github.com/tupyy/gophoto/utils/pgclient"
@@ -177,7 +178,7 @@ func (a *AlbumPostgresRepo) Update(ctx context.Context, album entity.Album) erro
 }
 
 // Get returns all the albums sorted by id.
-func (a *AlbumPostgresRepo) Get(ctx context.Context, filters repo.AlbumFilters) ([]entity.Album, error) {
+func (a *AlbumPostgresRepo) Get(ctx context.Context, filters albumFilters.Filters) ([]entity.Album, error) {
 	var albums customAlbums
 
 	tx := a.db.WithContext(ctx).Table("album").
@@ -234,7 +235,7 @@ func (a *AlbumPostgresRepo) GetByID(ctx context.Context, id int32) (entity.Album
 
 // GetByOwnerID return all albums of an user.
 // It does not sort or filter the album here. The sorting and filter is done at cache level.
-func (a *AlbumPostgresRepo) GetByOwnerID(ctx context.Context, ownerID string, filters repo.AlbumFilters) ([]entity.Album, error) {
+func (a *AlbumPostgresRepo) GetByOwnerID(ctx context.Context, ownerID string, filters albumFilters.Filters) ([]entity.Album, error) {
 	var albums customAlbums
 
 	tx := a.db.WithContext(ctx).Table("album").
@@ -266,7 +267,7 @@ func (a *AlbumPostgresRepo) GetByOwnerID(ctx context.Context, ownerID string, fi
 
 // GetByUserID returns a list of albums for which the user has at one permission set.
 // It does not sort or filter the album here. The sorting and filter is done at cache level.
-func (a *AlbumPostgresRepo) GetByUserID(ctx context.Context, userID string, filters repo.AlbumFilters) ([]entity.Album, error) {
+func (a *AlbumPostgresRepo) GetByUserID(ctx context.Context, userID string, filters albumFilters.Filters) ([]entity.Album, error) {
 	var albums customAlbums
 
 	tx := a.db.WithContext(ctx).Table("album").
@@ -298,7 +299,7 @@ func (a *AlbumPostgresRepo) GetByUserID(ctx context.Context, userID string, filt
 
 // GetAlbumsByGroup returns a list of albums for which the group has at one permission set.
 // It does not sort or filter the album here. The sorting and filter is done at cache level.
-func (a *AlbumPostgresRepo) GetByGroupName(ctx context.Context, groupName string, filters repo.AlbumFilters) ([]entity.Album, error) {
+func (a *AlbumPostgresRepo) GetByGroupName(ctx context.Context, groupName string, filters albumFilters.Filters) ([]entity.Album, error) {
 	var albums customAlbums
 
 	tx := a.db.WithContext(ctx).Table("album").
@@ -329,7 +330,7 @@ func (a *AlbumPostgresRepo) GetByGroupName(ctx context.Context, groupName string
 }
 
 // GetByGroups returns a list of albums with at least one persmission for at least on group in the list.
-func (a *AlbumPostgresRepo) GetByGroups(ctx context.Context, groupNames []string, filters repo.AlbumFilters) ([]entity.Album, error) {
+func (a *AlbumPostgresRepo) GetByGroups(ctx context.Context, groupNames []string, filters albumFilters.Filters) ([]entity.Album, error) {
 	var albums customAlbums
 
 	if len(groupNames) == 0 {

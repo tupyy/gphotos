@@ -2,6 +2,9 @@ package keycloak
 
 import (
 	"context"
+	"encoding/base64"
+	"fmt"
+	"strings"
 	"time"
 
 	gocache "github.com/patrickmn/go-cache"
@@ -29,26 +32,27 @@ func NewCacheRepo(r domain.KeycloakRepo, ttl time.Duration, cleanInterval time.D
 	}
 }
 
-func (r keycloakCacheRepo) GetUsers(ctx context.Context, filters ...userFilters.Filter) ([]entity.User, error) {
+func (r keycloakCacheRepo) GetUsers(ctx context.Context, filters userFilters.Filters) ([]entity.User, error) {
 	var users []entity.User
 
-	items, found := r.cache.Get(allUsersKey)
+	cacheKey := generateCacheKey(allUsersKey, filters)
+
+	items, found := r.cache.Get(cacheKey)
 	if !found {
 		var err error
 
-		users, err = r.repo.GetUsers(ctx, filters...)
+		users, err = r.repo.GetUsers(ctx, filters)
 		if err != nil {
 			return []entity.User{}, err
 		}
 
 		// set cache
 		r.cache.Set(allUsersKey, users, gocache.DefaultExpiration)
-		logutil.GetDefaultLogger().WithField("count users", len(users)).Debug("users cached")
+		logutil.GetDefaultLogger().WithField("count users", len(users)).WithField("cache key", cacheKey).Debug("users cached")
 	} else {
+		logutil.GetDefaultLogger().WithField("count users", len(users)).WithField("cache key", cacheKey).Debug("served users from cache")
 		users, _ = items.([]entity.User)
 	}
-
-	logutil.GetDefaultLogger().WithField("count users", len(users)).Debug("served users from cache")
 
 	return users, nil
 }
@@ -91,4 +95,17 @@ func (r keycloakCacheRepo) GetGroups(ctx context.Context) ([]entity.Group, error
 	logutil.GetDefaultLogger().Debug("groups served from cached")
 
 	return item.([]entity.Group), nil
+}
+
+func generateCacheKey(initialKey string, filters userFilters.Filters) string {
+	var sb strings.Builder
+
+	fmt.Fprintf(&sb, "%s", initialKey)
+	for k := range filters {
+		fmt.Fprintf(&sb, "%s", k)
+	}
+
+	h := base64.StdEncoding.EncodeToString([]byte(sb.String()))
+
+	return string(h)
 }

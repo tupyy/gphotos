@@ -187,7 +187,7 @@ func GetCreateAlbumForm(r *gin.RouterGroup, repos domain.Repositories) {
 			return
 		}
 
-		users, err := keycloakRepo.GetUsers(reqCtx, userFilters...)
+		users, err := keycloakRepo.GetUsers(reqCtx, userFilters)
 		if err != nil && errors.Is(err, domain.ErrInternalError) {
 			common.AbortInternalError(c, err, "cannot fetch users")
 
@@ -347,7 +347,7 @@ func GetUpdateAlbumForm(r *gin.RouterGroup, repos domain.Repositories) {
 				return
 			}
 
-			users, err := keycloakRepo.GetUsers(reqCtx, userFilters...)
+			users, err := keycloakRepo.GetUsers(reqCtx, userFilters)
 			if err != nil && errors.Is(err, domain.ErrInternalError) {
 				common.AbortInternalError(c, err, "cannot fetch users")
 

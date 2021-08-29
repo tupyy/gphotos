@@ -38,18 +38,18 @@ func (a Album) Validate() error {
 func (a Album) String() string {
 	var sb strings.Builder
 
-	fmt.Fprintf(&sb, "id = %d\n", a.ID)
-	fmt.Fprintf(&sb, "name = %s\n", a.Name)
-	fmt.Fprintf(&sb, "created_at = %+v\n", a.CreatedAt)
-	fmt.Fprintf(&sb, "description = %s\n", a.Description)
-	fmt.Fprintf(&sb, "location = %s\n", a.Location)
+	fmt.Fprintf(&sb, "id = %d ", a.ID)
+	fmt.Fprintf(&sb, "name = %s ", a.Name)
+	fmt.Fprintf(&sb, "created_at = %+v ", a.CreatedAt)
+	fmt.Fprintf(&sb, "description = %s ", a.Description)
+	fmt.Fprintf(&sb, "location = %s ", a.Location)
 
 	for k, v := range a.UserPermissions {
-		fmt.Fprintf(&sb, "user = %s, permisions = %+v\n", k, v)
+		fmt.Fprintf(&sb, "user = %s, permisions = %+v ", k, v)
 	}
 
 	for k, v := range a.GroupPermissions {
-		fmt.Fprintf(&sb, "group = %s, permisions = %+v\n", k, v)
+		fmt.Fprintf(&sb, "group = %s, permisions = %+v ", k, v)
 	}
 
 	return sb.String()

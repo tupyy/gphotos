@@ -25,13 +25,13 @@ func Index(r *gin.RouterGroup, repos domain.Repositories) {
 
 		filters, err := generateFilters(session.User)
 		if err != nil {
-			logger.WithError(err).Error("create user filters")
+			logger.WithError(err).Error("failed to create user filters")
 			common.AbortInternalError(c, err, "")
 
 			return
 		}
 
-		users, err := keycloakRepo.GetUsers(reqCtx, filters...)
+		users, err := keycloakRepo.GetUsers(reqCtx, filters)
 		if err != nil {
 			logger.WithError(err).Error("fetch user filters")
 			common.AbortInternalError(c, err, "")
@@ -39,7 +39,20 @@ func Index(r *gin.RouterGroup, repos domain.Repositories) {
 			return
 		}
 
-		if session.User.Role != entity.RoleAdmin {
+		// return all users if current user is an admin
+		if session.User.Role == entity.RoleAdmin {
+			c.HTML(http.StatusOK, "index.html", gin.H{
+				"name":      fmt.Sprintf("%s %s", session.User.FirstName, session.User.LastName),
+				"user_role": session.User.Role.String(),
+				"can_share": session.User.CanShare,
+				"users":     serialize(users),
+			})
+
+			return
+		}
+
+		// if current user can share get all users that share an album with the current one.
+		if session.User.CanShare {
 			// get all shared albums in order to filtered users which don't share albums with the current user
 			ids, err := userRepo.GetRelatedUsers(reqCtx, session.User)
 			if err != nil {

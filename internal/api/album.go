@@ -1,6 +1,8 @@
 package api
 
 import (
+	"bytes"
+	"encoding/base64"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -12,6 +14,7 @@ import (
 	"github.com/tupyy/gophoto/internal/domain"
 	"github.com/tupyy/gophoto/internal/domain/entity"
 	albumFilter "github.com/tupyy/gophoto/internal/domain/filters/album"
+	userFilter "github.com/tupyy/gophoto/internal/domain/filters/user"
 	albumSort "github.com/tupyy/gophoto/internal/domain/sort/album"
 	"github.com/tupyy/gophoto/utils/encryption"
 	"github.com/tupyy/gophoto/utils/logutil"
@@ -31,7 +34,8 @@ func GetAlbums(r *gin.RouterGroup, repos domain.Repositories) {
 		logger := logutil.GetLogger(c)
 
 		// fetch users from keycloak
-		users, err := keycloakRepo.GetUsers(reqCtx)
+		noFilters := make(userFilter.Filters)
+		users, err := keycloakRepo.GetUsers(reqCtx, noFilters)
 		if err != nil {
 			logger.WithError(err).Error("index fetch users")
 			c.AbortWithError(http.StatusInternalServerError, err)
@@ -42,22 +46,47 @@ func GetAlbums(r *gin.RouterGroup, repos domain.Repositories) {
 		// generate the req filters and sorter
 		reqParams := bindRequestParams(c)
 
-		var personalAlbums []entity.Album
+		var albums []entity.Album
+
+		// if i'm an admin fetch all other albums regardless of permissions
+		if session.User.Role == entity.RoleAdmin {
+			a, err := albumRepo.Get(reqCtx, reqParams.Filters)
+			if err != nil {
+				logger.WithError(err).Error("error fetching all albums")
+				AbortWithJson(c, http.StatusInternalServerError, err, "")
+
+				return
+			}
+
+			// sort all of them
+			reqParams.Sorter.Sort(a)
+
+			c.JSON(http.StatusOK, gin.H{
+				"user_role": session.User.Role.String(),
+				"username":  fmt.Sprintf("%s %s", session.User.FirstName, session.User.LastName),
+				"albums":    newSimpleAlbums(a, users),
+			})
+
+			return
+
+		}
+
 		if reqParams.FetchPersonalAlbums {
-			var err error
-			personalAlbums, err = albumRepo.GetByOwnerID(reqCtx, session.User.ID, reqParams.Filters...)
+			// fetch personal albums
+			pa, err := albumRepo.GetByOwnerID(reqCtx, session.User.ID, reqParams.Filters)
 			if err != nil {
 				logger.WithError(err).Error("error fetching personal albums")
 				AbortWithJson(c, http.StatusInternalServerError, err, "")
 
 				return
 			}
+
+			albums = join(albums, pa)
 		}
 
 		// user with canShare=true can share albums with other users
 		// fetch all albums for which the user has at least one permissions
-		var sharedAlbums []entity.Album
-		if reqParams.FetchSharedAlbums {
+		if reqParams.FetchSharedAlbums && session.User.CanShare {
 			notOwnerFilter, err := albumFilter.GenerateFilterFuncs(albumFilter.NotFilterByOwnerID, []string{session.User.ID})
 			if err != nil {
 				logger.WithError(err).Error("error generate notOwnerFilter")
@@ -66,21 +95,10 @@ func GetAlbums(r *gin.RouterGroup, repos domain.Repositories) {
 				return
 			}
 
-			// if i'm an admin fetch all other albums regardless of permissions
-			if session.User.Role == entity.RoleAdmin {
-				filters := append(reqParams.Filters, notOwnerFilter)
+			reqParams.Filters[session.User.ID] = notOwnerFilter
 
-				var err error
-				sharedAlbums, err = albumRepo.Get(reqCtx, filters...)
-				if err != nil {
-					logger.WithError(err).Error("error fetching all albums")
-					AbortWithJson(c, http.StatusInternalServerError, err, "")
-
-					return
-				}
-			} else if session.User.CanShare {
-				var err error
-				sharedAlbums, err = albumRepo.GetByUserID(reqCtx, session.User.ID, reqParams.Filters...)
+			if session.User.CanShare {
+				sharedAlbums, err := albumRepo.GetByUserID(reqCtx, session.User.ID, reqParams.Filters)
 				if err != nil {
 					logger.WithError(err).Error("error fetching shared albums")
 					AbortWithJson(c, http.StatusInternalServerError, err, "")
@@ -88,9 +106,8 @@ func GetAlbums(r *gin.RouterGroup, repos domain.Repositories) {
 					return
 				}
 
-				filters := append(reqParams.Filters, notOwnerFilter)
-				// get albums shared by the user's groups
-				groupSharedAlbum, err := albumRepo.GetByGroups(reqCtx, groupsToList(session.User.Groups), filters...)
+				// get albums shared by the user's groups but filter out the ones owns by the user
+				groupSharedAlbum, err := albumRepo.GetByGroups(reqCtx, groupsToList(session.User.Groups), reqParams.Filters)
 				if err != nil {
 					logger.
 						WithError(err).
@@ -104,10 +121,9 @@ func GetAlbums(r *gin.RouterGroup, repos domain.Repositories) {
 				}
 				// join and remove the duplicates
 				sharedAlbums = join(sharedAlbums, groupSharedAlbum)
+				albums = merge(albums, sharedAlbums)
 			}
 		}
-
-		albums := merge(personalAlbums, sharedAlbums)
 
 		// sort all of them
 		reqParams.Sorter.Sort(albums)
@@ -125,7 +141,7 @@ func GetAlbums(r *gin.RouterGroup, repos domain.Repositories) {
 type requestParams struct {
 	FetchPersonalAlbums bool
 	FetchSharedAlbums   bool
-	Filters             []albumFilter.Filter
+	Filters             albumFilter.Filters
 	Sorter              albumSort.Sorter
 }
 
@@ -164,8 +180,8 @@ func bindRequestParams(c *gin.Context) requestParams {
 }
 
 // GenerateAlbumFilters generates a list of filters from the query parameters.
-func generateFilters(c *gin.Context) []albumFilter.Filter {
-	albumFilters := make([]albumFilter.Filter, 0, 5)
+func generateFilters(c *gin.Context) albumFilter.Filters {
+	albumFilters := make(map[string]albumFilter.Filter)
 
 	logger := logutil.GetLogger(c)
 
@@ -179,7 +195,10 @@ func generateFilters(c *gin.Context) []albumFilter.Filter {
 			}
 
 			logger.WithField("start date", startDate).Debug("filter start date created")
-			albumFilters = append(albumFilters, f)
+
+			// hash the date
+			key := string(base64.StdEncoding.EncodeToString([]byte(startDate.String())))
+			albumFilters[key] = f
 		}
 	}
 
@@ -193,7 +212,9 @@ func generateFilters(c *gin.Context) []albumFilter.Filter {
 			}
 
 			logger.WithField("end date", endDate).Debug("filter end date created")
-			albumFilters = append(albumFilters, f)
+
+			key := string(base64.StdEncoding.EncodeToString([]byte(endDate.String())))
+			albumFilters[key] = f
 		}
 	}
 
@@ -219,7 +240,16 @@ func generateFilters(c *gin.Context) []albumFilter.Filter {
 			logger.WithError(err).Error("error create FilterOwnerID filter")
 		}
 
-		albumFilters = append(albumFilters, f)
+		keyBytes := []byte{}
+		b := bytes.NewBuffer(keyBytes)
+		for _, o := range ownerIDs {
+			if _, err := b.WriteString(o); err != nil {
+				logger.WithError(err).WithField("data", o).Error("failed to write owner id as bytes")
+				continue
+			}
+		}
+		key := string(base64.StdEncoding.EncodeToString(keyBytes))
+		albumFilters[key] = f
 	}
 
 	return albumFilters
