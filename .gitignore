@@ -4,3 +4,4 @@ keycloak/.pass
 keycloak/gophoto-realm.json
 target/
 tools/
+.vimspector.json
