@@ -3,6 +3,7 @@ package keycloak
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/Nerzal/gocloak/v8"
 	keycloak "github.com/Nerzal/gocloak/v8"
@@ -26,7 +27,7 @@ type KeycloakRepo struct {
 
 func New(ctx context.Context, c conf.KeycloakConfig) (*KeycloakRepo, error) {
 	client := gocloak.NewClient(c.BaseURL)
-	token, err := client.LoginAdmin(ctx, c.AdminUsername, c.AdminPwd, masterRealm)
+	token, err := client.LoginClient(ctx, c.AdminUsername, c.AdminPwd, masterRealm)
 	if err != nil {
 		return nil, err
 	}
@@ -39,9 +40,11 @@ func New(ctx context.Context, c conf.KeycloakConfig) (*KeycloakRepo, error) {
 func (k *KeycloakRepo) GetUsers(ctx context.Context, filters userFilters.Filters) ([]entity.User, error) {
 	keycloakUsers, err := k.client.GetUsers(ctx, k.token.AccessToken, k.realm, keycloak.GetUsersParams{Enabled: ptrBool(true)})
 	if err != nil {
-		logutil.GetDefaultLogger().WithError(err).Error("cannot fetch users from keycloak")
-
-		return []entity.User{}, errors.Wrap(err, "user repo")
+		err := k.tryReconnect()
+		if err != nil {
+			logutil.GetDefaultLogger().WithError(err).Error("cannot fetch users from keycloak")
+			return []entity.User{}, errors.Wrap(err, "user repo")
+		}
 	}
 
 	users := make([]entity.User, 0, len(keycloakUsers))
@@ -106,4 +109,19 @@ func (k *KeycloakRepo) GetGroups(ctx context.Context) ([]entity.Group, error) {
 	}
 
 	return groups, nil
+}
+
+func (k *KeycloakRepo) tryReconnect() error {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	// try to refresh the token
+	token, err := k.client.LoginClient(ctx, k.configuration.AdminUsername, k.configuration.AdminPwd, masterRealm)
+	if err != nil {
+		return err
+	}
+
+	k.token = token
+
+	return nil
 }
