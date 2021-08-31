@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Nerzal/gocloak/v8"
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-contrib/sessions"
@@ -42,11 +43,18 @@ type Authenticator interface {
 }
 
 type keyCloakAuthenticator struct {
-	oidcProvider *OidcProvider
+	oidcProvider *oidcProvider
+	client       gocloak.GoCloak
+	conf         conf.KeycloakConfig
 }
 
-func NewKeyCloakAuthenticator(oidcProvider *OidcProvider) Authenticator {
-	return &keyCloakAuthenticator{oidcProvider: oidcProvider}
+func NewKeyCloakAuthenticator(c conf.KeycloakConfig, authCallback string) Authenticator {
+
+	// initialize oidc provier
+	oidcProvider := newOidcProvider(c, authCallback)
+	keycloakClient := gocloak.NewClient(c.BaseURL)
+
+	return &keyCloakAuthenticator{oidcProvider: oidcProvider, client: keycloakClient, conf: c}
 }
 
 // Middleware returns the authentication middleware used for private routes.
@@ -80,6 +88,9 @@ func (k *keyCloakAuthenticator) AuthMiddleware() gin.HandlerFunc {
 			redirectToLogin(c, k.oidcProvider.Config)
 			return
 		}
+
+		session.Set(cookie.Value, sessionData)
+		session.Save()
 
 		c.Next()
 	}
@@ -208,12 +219,22 @@ func (k *keyCloakAuthenticator) Logout(c *gin.Context, username, refreshToken st
 func (k *keyCloakAuthenticator) authenticate(ctx *gin.Context, sessionData entity.Session) error {
 	// check if session not expired
 	if time.Now().After(sessionData.ExpireAt) {
-		return errSessionExpired
+		// try to refresh the token
+		newJwt, err := k.client.RefreshToken(ctx.Request.Context(), sessionData.Token.RefreshToken, k.conf.ClientID, k.conf.ClientSecret, k.conf.Realm)
+		if err != nil {
+			return errSessionExpired
+		}
+
+		sessionData.Token.AccessToken = newJwt.AccessToken
+		sessionData.Token.RefreshToken = newJwt.RefreshToken
+		sessionData.ExpireAt = time.Now().Add(time.Duration(int64(newJwt.ExpiresIn)) * time.Second)
+
+		logutil.GetLogger(ctx).WithField("username", sessionData.User.Username).WithField("token expire at", sessionData.ExpireAt).Info("session has expired. Token refreshed.")
 	}
 
 	ctx.Set("sessionData", sessionData)
 
-	logutil.GetLogger(ctx).WithField("user", fmt.Sprintf("%+v", sessionData)).Debug("user logged in")
+	logutil.GetLogger(ctx).WithField("user", fmt.Sprintf("%+v", sessionData)).Info("user logged in")
 
 	return nil
 }

@@ -14,13 +14,13 @@ import (
 	"golang.org/x/oauth2"
 )
 
-type OidcProvider struct {
+type oidcProvider struct {
 	provider *oidc.Provider
 	Config   oauth2.Config
 	Issuer   string
 }
 
-func NewOidcProvider(conf conf.KeycloakConfig, authCallBack string) *OidcProvider {
+func newOidcProvider(conf conf.KeycloakConfig, authCallBack string) *oidcProvider {
 	issuer := fmt.Sprintf("%s/auth/realms/%s", conf.BaseURL, conf.Realm)
 
 	provider, err := oidc.NewProvider(context.Background(), issuer)
@@ -41,10 +41,10 @@ func NewOidcProvider(conf conf.KeycloakConfig, authCallBack string) *OidcProvide
 		Scopes: []string{oidc.ScopeOpenID, "profile", "email", "roles"},
 	}
 
-	return &OidcProvider{provider, oauth2Config, issuer}
+	return &oidcProvider{provider, oauth2Config, issuer}
 }
 
-func (p *OidcProvider) Verifier() *oidc.IDTokenVerifier {
+func (p *oidcProvider) Verifier() *oidc.IDTokenVerifier {
 	config := p.Config
 	oidcConfig := &oidc.Config{
 		ClientID: config.ClientID,
@@ -53,7 +53,7 @@ func (p *OidcProvider) Verifier() *oidc.IDTokenVerifier {
 	return p.provider.Verifier(oidcConfig)
 }
 
-func (p *OidcProvider) GetLogoutURL() (string, error) {
+func (p *oidcProvider) GetLogoutURL() (string, error) {
 	var emptyString string
 
 	wellKnown := strings.TrimSuffix(p.Issuer, "/") + "/.well-known/openid-configuration"

@@ -67,15 +67,13 @@ var serveCmd = &cobra.Command{
 			panic(err)
 		}
 
-		// initialize oidc provier
-		oidcProvider := auth.NewOidcProvider(keycloakConf, conf.GetServerAuthCallback())
-
-		keyCloakAuthenticator := auth.NewKeyCloakAuthenticator(oidcProvider)
+		// create keycloak
+		keycloakAuthenticator := auth.NewKeyCloakAuthenticator(conf.GetKeycloakConfig(), conf.GetServerAuthCallback())
 
 		// create new router
-		r := router.NewRouter(store, keyCloakAuthenticator)
+		r := router.NewRouter(store, keycloakAuthenticator)
 
-		handlers.Logout(r.PrivateGroup, keyCloakAuthenticator)
+		handlers.Logout(r.PrivateGroup, keycloakAuthenticator)
 
 		handlers.Register(r.PrivateGroup, r.PublicGroup, repos)
 

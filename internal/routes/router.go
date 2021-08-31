@@ -11,7 +11,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/tupyy/gophoto/internal/auth"
 	"github.com/tupyy/gophoto/internal/conf"
-	"github.com/tupyy/gophoto/internal/middleware"
 	"github.com/tupyy/gophoto/templates/funcs"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
@@ -27,8 +26,16 @@ func NewRouter(store sessions.Store, authenticator auth.Authenticator) *PhotoRou
 	r := gin.Default()
 
 	// TODO remove hotreloading in prod
-	r.Use(sessions.Sessions("gophoto", store), middleware.HotReloading(r))
+	r.Use(sessions.Sessions("gophoto", store))
 	r.Static("/static", conf.GetStaticsFolder())
+
+	// load templates
+	renderer, err := loadTemplates(conf.GetTemplateFolder())
+	if err != nil {
+		panic(err)
+	}
+
+	r.HTMLRender = renderer
 
 	// setup authentication for the priate group.
 	private := r.Group("/", authenticator.AuthMiddleware())
@@ -68,9 +75,11 @@ func loadTemplates(templateDir string) (multitemplate.Renderer, error) {
 	}
 
 	templateFuncs := template.FuncMap{
-		"day":   funcs.Day,
-		"month": funcs.Month,
-		"year":  funcs.Year,
+		"day":       funcs.Day,
+		"month":     funcs.Month,
+		"year":      funcs.Year,
+		"perm_name": funcs.PermissionName,
+		"date":      funcs.Date,
 	}
 
 	for _, t := range templates {
