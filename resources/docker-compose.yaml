@@ -35,10 +35,29 @@ services:
       DB_DATABASE: keycloak
       DB_USER: ${KEYCLOAK_DB_USER}
       DB_PASSWORD: azerty
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    command: server /data --console-address ":9001"
+    networks:
+      - gphotos
+    ports:
+      - ${MINIO_SERVER_PORT}:9000
+      - ${MINIO_CONSOLE_PORT}:9001
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PWD}
+    volumes:
+      - minio-gphotos:/data
+      
+
+
 
 networks:
   gphotos:
 
 volumes:
   postgresq-gphotos:
+  minio-gphotos:
+
 
