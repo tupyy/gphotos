@@ -1,5 +1,12 @@
 CREATE TYPE role as ENUM('admin','editor','user');
 
+DROP TABLE IF EXISTS "album";
+DROP TABLE IF EXISTS "bucket";
+DROP TABLE IF EXISTS "album_user_permissions";
+DROP TABLE IF EXISTS "album_group_permissions";
+DROP TABLE IF EXISTS "tag";
+DROP TABLE IF EXISTS "albums_tags";
+
 CREATE TABLE album (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
@@ -7,6 +14,12 @@ CREATE TABLE album (
     owner_id TEXT NOT NULL,
     description TEXT,
     location TEXT
+);
+
+CREATE TABLE bucket (
+    id SERIAL PRIMARY KEY,
+    urn TEXT NOT NULL UNIQUE,
+    album_ID SERIAL REFERENCES album(id)
 );
 
 CREATE TYPE permission_id as ENUM (

@@ -46,8 +46,13 @@ const (
 	pgsqlHost   = "POSTGRESQL_HOST"
 	pgsqlPort   = "POSTGRESQL_PORT"
 	pgsqlUser   = "POSTGRESQL_USER"
-	pgsqlPwd    = "POSTGRESQL_PASSWORD" // nolint: gosec // it thinks "POSTGRESQL_PASSWORD" is the password
+	pgsqlPwd    = "POSTGRESQL_PASSWORD"
 	pgsqlDBName = "POSTGRESQL_DBNAME"
+
+	// params for minio
+	minioUrl  = "MINIO_SERVER_URL"
+	minioUser = "MINIO_ACCESS_ID"
+	minioPwd  = "MINIO_ACCESS_KEY"
 )
 
 type KeycloakConfig struct {
@@ -57,6 +62,12 @@ type KeycloakConfig struct {
 	Realm         string
 	AdminUsername string
 	AdminPwd      string
+}
+
+type MinioConfig struct {
+	Url      string
+	User     string
+	Password string
 }
 
 func ParseConfiguration(confFile string) {
@@ -123,6 +134,18 @@ func (s KeycloakConfig) String() string {
 	fmt.Fprintf(&sb, "Realm: %s\n", s.Realm)
 
 	return sb.String()
+}
+
+func GetMinioConfig() MinioConfig {
+	return MinioConfig{
+		Url:      viper.GetString(minioUrl),
+		User:     viper.GetString(minioUser),
+		Password: viper.GetString(minioPwd),
+	}
+}
+
+func (m MinioConfig) String() string {
+	return fmt.Sprintf("Url: %s, User: %s, Password: %v", m.Url, m.User, len(m.Password) > 0)
 }
 
 func GetServerSecretKey() string {

@@ -22,6 +22,7 @@ import (
 	"fmt"
 
 	"github.com/gin-contrib/sessions/memstore"
+	"github.com/minio/minio-go/v7"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/tupyy/gophoto/internal/api"
@@ -30,10 +31,13 @@ import (
 	"github.com/tupyy/gophoto/internal/domain"
 	"github.com/tupyy/gophoto/internal/domain/entity"
 	keycloakRepo "github.com/tupyy/gophoto/internal/domain/keycloak"
+	miniorepo "github.com/tupyy/gophoto/internal/domain/minio"
 	"github.com/tupyy/gophoto/internal/domain/postgres/album"
+	"github.com/tupyy/gophoto/internal/domain/postgres/bucket"
 	"github.com/tupyy/gophoto/internal/domain/postgres/user"
 	"github.com/tupyy/gophoto/internal/handlers"
 	"github.com/tupyy/gophoto/utils/logutil"
+	"github.com/tupyy/gophoto/utils/minioclient"
 	"github.com/tupyy/gophoto/utils/pgclient"
 
 	router "github.com/tupyy/gophoto/internal/routes"
@@ -62,7 +66,14 @@ var serveCmd = &cobra.Command{
 			panic(err)
 		}
 
-		repos, err := createPostgresRepos(client)
+		// init minio client
+		minioClient, err := minioclient.New(conf.GetMinioConfig())
+		if err != nil {
+			panic(err)
+		}
+		logutil.GetDefaultLogger().WithField("conf", conf.GetMinioConfig().String()).Info("connected at minio")
+
+		repos, err := createRepos(client, minioClient)
 		if err != nil {
 			panic(err)
 		}
@@ -81,6 +92,8 @@ var serveCmd = &cobra.Command{
 
 		// run server
 		r.Run()
+
+		// TODO shutdown
 	},
 }
 
@@ -88,7 +101,7 @@ func init() {
 	rootCmd.AddCommand(serveCmd)
 }
 
-func createPostgresRepos(client pgclient.Client) (domain.Repositories, error) {
+func createRepos(client pgclient.Client, mclient *minio.Client) (domain.Repositories, error) {
 	repos := make(domain.Repositories)
 
 	// create keycloak repo
@@ -106,22 +119,33 @@ func createPostgresRepos(client pgclient.Client) (domain.Repositories, error) {
 	// create album repo
 	albumRepo, err := album.NewPostgresRepo(client)
 	if err != nil {
-		logutil.GetDefaultLogger().WithError(err).Warn("cannot create user repo")
+		logutil.GetDefaultLogger().WithError(err).Warn("failed to create album repo")
 
 		return repos, err
 	}
-
 	repos[domain.AlbumRepoName] = albumRepo
+
+	bucketRepo, err := bucket.NewPostgresRepo(client)
+	if err != nil {
+		logutil.GetDefaultLogger().WithError(err).Warn("failed to create bucket repo")
+
+		return repos, err
+	}
+	repos[domain.BucketRepoName] = bucketRepo
 
 	// create user repo
 	userRepo, err := user.NewPostgresRepo(client)
 	if err != nil {
-		logutil.GetDefaultLogger().WithError(err).Warn("cannot create user repo")
+		logutil.GetDefaultLogger().WithError(err).Warn("failed to create user pg repo")
 
 		return repos, err
 	}
 
 	repos[domain.UserRepoName] = userRepo
+
+	// create minio repo
+	minioRepo := miniorepo.New(mclient)
+	repos[domain.MinioRepoName] = minioRepo
 
 	return repos, nil
 }

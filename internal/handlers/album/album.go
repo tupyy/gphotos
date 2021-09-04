@@ -7,9 +7,11 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/gorilla/csrf"
 	"github.com/sirupsen/logrus"
 	"github.com/tupyy/gophoto/internal/conf"
@@ -214,6 +216,8 @@ func GetCreateAlbumForm(r *gin.RouterGroup, repos domain.Repositories) {
 // POST /album
 func CreateAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 	albumRepo := repos[domain.AlbumRepoName].(domain.Album)
+	minioRepo := repos[domain.MinioRepoName].(domain.Store)
+	bucketRepo := repos[domain.BucketRepoName].(domain.Bucket)
 
 	r.POST("/album", func(c *gin.Context) {
 		s, _ := c.Get("sessionData")
@@ -285,6 +289,22 @@ func CreateAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 			common.AbortInternalError(c, err, fmt.Sprintf("album: %+v", album))
 
 			return
+		}
+
+		// generate bucket urn
+		id := strings.ReplaceAll(uuid.New().String(), "-", "")
+		err = minioRepo.CreateBucket(reqCtx, id)
+		if err != nil {
+			logger.WithError(err).WithField("album_id", albumID).Error("failed to create bucket on store")
+		}
+
+		// create bucket on pg
+		err = bucketRepo.Create(reqCtx, entity.Bucket{
+			AlbumID: albumID,
+			Urn:     id,
+		})
+		if err != nil {
+			logger.WithError(err).WithField("album_id", albumID).Error("failed to create bucket on pg")
 		}
 
 		logger.WithFields(logrus.Fields{

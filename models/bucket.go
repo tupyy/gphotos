@@ -20,32 +20,32 @@ DB Table Details
 -------------------------------------
 
 
-Table: tag
+Table: bucket
 [ 0] id                                             INT4                 null: false  primary: true   isArray: false  auto: false  col: INT4            len: -1      default: []
-[ 1] name                                           TEXT                 null: false  primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
-[ 2] color                                          TEXT                 null: true   primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
+[ 1] urn                                            TEXT                 null: false  primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
+[ 2] album_id                                       INT4                 null: false  primary: false  isArray: false  auto: false  col: INT4            len: -1      default: []
 
 
 JSON Sample
 -------------------------------------
-{    "name": "RzxKaykDTOwoOzSLJwnHGqBSI",    "color": "MizIoboWswpVBzfvmHPIbVhNV",    "id": 7}
+{    "urn": "pBHWOygeIbHqRvbLApQkonCuJ",    "album_id": 33,    "id": 98}
 
 
 
 */
 
-// Tag struct is a row record of the tag table in the gophoto database
-type Tag struct {
+// Bucket struct is a row record of the bucket table in the gophoto database
+type Bucket struct {
 	//[ 0] id                                             INT4                 null: false  primary: true   isArray: false  auto: false  col: INT4            len: -1      default: []
 	ID int32 `gorm:"primary_key;column:id;type:INT4;"`
-	//[ 1] name                                           TEXT                 null: false  primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
-	Name string `gorm:"column:name;type:TEXT;"`
-	//[ 2] color                                          TEXT                 null: true   primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
-	Color *string `gorm:"column:color;type:TEXT;"`
+	//[ 1] urn                                            TEXT                 null: false  primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
+	Urn string `gorm:"column:urn;type:TEXT;"`
+	//[ 2] album_id                                       INT4                 null: false  primary: false  isArray: false  auto: false  col: INT4            len: -1      default: []
+	AlbumID int32 `gorm:"column:album_id;type:INT4;"`
 }
 
-var tagTableInfo = &TableInfo{
-	Name: "tag",
+var bucketTableInfo = &TableInfo{
+	Name: "bucket",
 	Columns: []*ColumnInfo{
 
 		&ColumnInfo{
@@ -71,7 +71,7 @@ var tagTableInfo = &TableInfo{
 
 		&ColumnInfo{
 			Index:              1,
-			Name:               "name",
+			Name:               "urn",
 			Comment:            ``,
 			Notes:              ``,
 			Nullable:           false,
@@ -82,31 +82,31 @@ var tagTableInfo = &TableInfo{
 			IsArray:            false,
 			ColumnType:         "TEXT",
 			ColumnLength:       -1,
-			GoFieldName:        "Name",
+			GoFieldName:        "Urn",
 			GoFieldType:        "string",
-			JSONFieldName:      "name",
-			ProtobufFieldName:  "name",
+			JSONFieldName:      "urn",
+			ProtobufFieldName:  "urn",
 			ProtobufType:       "",
 			ProtobufPos:        2,
 		},
 
 		&ColumnInfo{
 			Index:              2,
-			Name:               "color",
+			Name:               "album_id",
 			Comment:            ``,
 			Notes:              ``,
-			Nullable:           true,
-			DatabaseTypeName:   "TEXT",
-			DatabaseTypePretty: "TEXT",
+			Nullable:           false,
+			DatabaseTypeName:   "INT4",
+			DatabaseTypePretty: "INT4",
 			IsPrimaryKey:       false,
 			IsAutoIncrement:    false,
 			IsArray:            false,
-			ColumnType:         "TEXT",
+			ColumnType:         "INT4",
 			ColumnLength:       -1,
-			GoFieldName:        "Color",
-			GoFieldType:        "*string",
-			JSONFieldName:      "color",
-			ProtobufFieldName:  "color",
+			GoFieldName:        "AlbumID",
+			GoFieldType:        "int32",
+			JSONFieldName:      "album_id",
+			ProtobufFieldName:  "album_id",
 			ProtobufType:       "",
 			ProtobufPos:        3,
 		},
@@ -114,25 +114,25 @@ var tagTableInfo = &TableInfo{
 }
 
 // TableName sets the insert table name for this struct type
-func (t *Tag) TableName() string {
-	return "tag"
+func (b *Bucket) TableName() string {
+	return "bucket"
 }
 
 // BeforeSave invoked before saving, return an error if field is not populated.
-func (t *Tag) BeforeSave() error {
+func (b *Bucket) BeforeSave() error {
 	return nil
 }
 
 // Prepare invoked before saving, can be used to populate fields etc.
-func (t *Tag) Prepare() {
+func (b *Bucket) Prepare() {
 }
 
 // Validate invoked before performing action, return an error if field is not populated.
-func (t *Tag) Validate(action Action) error {
+func (b *Bucket) Validate(action Action) error {
 	return nil
 }
 
 // TableInfo return table meta data
-func (t *Tag) TableInfo() *TableInfo {
-	return tagTableInfo
+func (b *Bucket) TableInfo() *TableInfo {
+	return bucketTableInfo
 }

@@ -47,6 +47,11 @@ func (k *KeycloakRepo) GetUsers(ctx context.Context, filters userFilters.Filters
 		}
 	}
 
+	if len(keycloakUsers) == 0 {
+		logutil.GetDefaultLogger().Warn("no users found")
+		return []entity.User{}, nil
+	}
+
 	users := make([]entity.User, 0, len(keycloakUsers))
 	for _, keycloakUser := range keycloakUsers {
 		if keycloakUser == nil {
