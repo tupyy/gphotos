@@ -2,7 +2,9 @@ package minio
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
 
 	"github.com/minio/minio-go/v7"
 )
@@ -47,6 +49,28 @@ func (m *MinioRepo) DeleteBucket(ctx context.Context, bucket string) error {
 	err = m.client.RemoveBucket(ctx, bucket)
 	if err != nil {
 		return fmt.Errorf("%w failed to delete bucket %s on endpoint %s", err, bucket, m.client.EndpointURL())
+	}
+
+	return nil
+}
+
+func (m *MinioRepo) PutFile(ctx context.Context, bucket, filename string, size int64, r io.Reader) error {
+	if len(bucket) == 0 || len(filename) == 0 {
+		return errors.New("failed to upload file to minio. bucket or filename missing.")
+	}
+
+	exists, err := m.client.BucketExists(ctx, bucket)
+	if err != nil {
+		return fmt.Errorf("%w failed to upload file %s to bucket %s on endpoint %s", err, filename, bucket, m.client.EndpointURL())
+	}
+
+	if !exists {
+		return fmt.Errorf("%w failed to upload file %s to bucket %s on endpoint %s. bucket does not exists", err, filename, bucket, m.client.EndpointURL())
+	}
+
+	_, err = m.client.PutObject(ctx, bucket, filename, r, size, minio.PutObjectOptions{ContentType: "application/octet-stream"})
+	if err != nil {
+		return fmt.Errorf("%w failed to upload file %s to bucket %s on endpoint %s", err, filename, bucket, m.client.EndpointURL())
 	}
 
 	return nil
