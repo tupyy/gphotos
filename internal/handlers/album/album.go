@@ -19,6 +19,7 @@ import (
 	"github.com/tupyy/gophoto/internal/domain/entity"
 	"github.com/tupyy/gophoto/internal/form"
 	"github.com/tupyy/gophoto/internal/handlers/common"
+	"github.com/tupyy/gophoto/internal/permissions"
 	"github.com/tupyy/gophoto/utils/encryption"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
@@ -66,12 +67,12 @@ func GetAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 		}
 
 		// check permissions to this album
-		atr := NewAlbumPermissionResolver()
-		hasPermission := atr.Policy(OwnerPolicy{}).
-			Policy(RolePolicy{entity.RoleAdmin}).
-			Policy(AnyUserPermissionPolicty{}).
-			Policy(AnyGroupPermissionPolicy{}).
-			Strategy(AtLeastOneStrategy).
+		atr := permissions.NewAlbumPermissionResolver()
+		hasPermission := atr.Policy(permissions.OwnerPolicy{}).
+			Policy(permissions.RolePolicy{Role: entity.RoleAdmin}).
+			Policy(permissions.AnyUserPermissionPolicty{}).
+			Policy(permissions.AnyGroupPermissionPolicy{}).
+			Strategy(permissions.AtLeastOneStrategy).
 			Resolve(album, session.User)
 
 		if !hasPermission {
@@ -226,10 +227,10 @@ func CreateAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 		logger := logutil.GetLogger(c)
 
 		// only editors and admins have the right to create albums
-		apr := NewAlbumPermissionResolver()
-		hasPermission := apr.Policy(RolePolicy{entity.RoleEditor}).
-			Policy(RolePolicy{entity.RoleAdmin}).
-			Strategy(AtLeastOneStrategy).
+		apr := permissions.NewAlbumPermissionResolver()
+		hasPermission := apr.Policy(permissions.RolePolicy{Role: entity.RoleEditor}).
+			Policy(permissions.RolePolicy{Role: entity.RoleAdmin}).
+			Strategy(permissions.AtLeastOneStrategy).
 			Resolve(entity.Album{}, session.User)
 
 		if !hasPermission {
@@ -431,10 +432,10 @@ func GetUpdateAlbumForm(r *gin.RouterGroup, repos domain.Repositories) {
 
 		// only users with editPermission set for this album or one of user's group with the same permission
 		// can edit this album
-		apr := NewAlbumPermissionResolver()
-		hasPermission := apr.Policy(UserPermissionPolicy{entity.PermissionEditAlbum}).
-			Policy(GroupPermissionPolicy{entity.PermissionEditAlbum}).
-			Strategy(AtLeastOneStrategy).
+		apr := permissions.NewAlbumPermissionResolver()
+		hasPermission := apr.Policy(permissions.UserPermissionPolicy{Permission: entity.PermissionEditAlbum}).
+			Policy(permissions.GroupPermissionPolicy{Permission: entity.PermissionEditAlbum}).
+			Strategy(permissions.AtLeastOneStrategy).
 			Resolve(album, session.User)
 
 		if !hasPermission {
@@ -503,12 +504,12 @@ func UpdateAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 
 		// only users with editPermission set for this album or one of user's group with the same permission
 		// can edit this album
-		apr := NewAlbumPermissionResolver()
-		hasPermission := apr.Policy(OwnerPolicy{}).
-			Policy(RolePolicy{entity.RoleAdmin}).
-			Policy(UserPermissionPolicy{entity.PermissionEditAlbum}).
-			Policy(GroupPermissionPolicy{entity.PermissionEditAlbum}).
-			Strategy(AtLeastOneStrategy).
+		apr := permissions.NewAlbumPermissionResolver()
+		hasPermission := apr.Policy(permissions.OwnerPolicy{}).
+			Policy(permissions.RolePolicy{Role: entity.RoleAdmin}).
+			Policy(permissions.UserPermissionPolicy{Permission: entity.PermissionEditAlbum}).
+			Policy(permissions.GroupPermissionPolicy{Permission: entity.PermissionEditAlbum}).
+			Strategy(permissions.AtLeastOneStrategy).
 			Resolve(album, session.User)
 
 		if !hasPermission {
@@ -615,11 +616,11 @@ func DeleteAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 
 		// only users with editPermission set for this album or one of user's group with the same permission
 		// can edit this album
-		apr := NewAlbumPermissionResolver()
-		hasPermission := apr.Policy(OwnerPolicy{}).
-			Policy(UserPermissionPolicy{entity.PermissionDeleteAlbum}).
-			Policy(GroupPermissionPolicy{entity.PermissionDeleteAlbum}).
-			Strategy(AtLeastOneStrategy).
+		apr := permissions.NewAlbumPermissionResolver()
+		hasPermission := apr.Policy(permissions.OwnerPolicy{}).
+			Policy(permissions.UserPermissionPolicy{Permission: entity.PermissionDeleteAlbum}).
+			Policy(permissions.GroupPermissionPolicy{Permission: entity.PermissionDeleteAlbum}).
+			Strategy(permissions.AtLeastOneStrategy).
 			Resolve(album, session.User)
 
 		if !hasPermission {

@@ -5,8 +5,8 @@ import (
 	"io"
 
 	"github.com/tupyy/gophoto/internal/domain/entity"
+	albumFilters "github.com/tupyy/gophoto/internal/domain/filters/album"
 	userFilters "github.com/tupyy/gophoto/internal/domain/filters/user"
-	albumFilters "github.com/tupyy/gophoto/internal/domain/posgres/album"
 )
 
 type Repositories map[RepoName]interface{}

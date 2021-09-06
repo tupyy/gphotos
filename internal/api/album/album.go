@@ -1,4 +1,4 @@
-package api
+package album
 
 import (
 	"bytes"
@@ -10,6 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	"github.com/tupyy/gophoto/internal/api/common"
 	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/domain"
 	"github.com/tupyy/gophoto/internal/domain/entity"
@@ -53,7 +54,7 @@ func GetAlbums(r *gin.RouterGroup, repos domain.Repositories) {
 			a, err := albumRepo.Get(reqCtx, reqParams.Filters)
 			if err != nil {
 				logger.WithError(err).Error("error fetching all albums")
-				AbortWithJson(c, http.StatusInternalServerError, err, "")
+				common.AbortWithJson(c, http.StatusInternalServerError, err, "")
 
 				return
 			}
@@ -64,7 +65,7 @@ func GetAlbums(r *gin.RouterGroup, repos domain.Repositories) {
 			c.JSON(http.StatusOK, gin.H{
 				"user_role": session.User.Role.String(),
 				"username":  fmt.Sprintf("%s %s", session.User.FirstName, session.User.LastName),
-				"albums":    newSimpleAlbums(a, users),
+				"albums":    serializeAlbums(a, users),
 			})
 
 			return
@@ -76,7 +77,7 @@ func GetAlbums(r *gin.RouterGroup, repos domain.Repositories) {
 			pa, err := albumRepo.GetByOwnerID(reqCtx, session.User.ID, reqParams.Filters)
 			if err != nil {
 				logger.WithError(err).Error("error fetching personal albums")
-				AbortWithJson(c, http.StatusInternalServerError, err, "")
+				common.AbortWithJson(c, http.StatusInternalServerError, err, "")
 
 				return
 			}
@@ -90,7 +91,7 @@ func GetAlbums(r *gin.RouterGroup, repos domain.Repositories) {
 			notOwnerFilter, err := albumFilter.GenerateFilterFuncs(albumFilter.NotFilterByOwnerID, []string{session.User.ID})
 			if err != nil {
 				logger.WithError(err).Error("error generate notOwnerFilter")
-				AbortWithJson(c, http.StatusInternalServerError, err, "")
+				common.AbortWithJson(c, http.StatusInternalServerError, err, "")
 
 				return
 			}
@@ -101,7 +102,7 @@ func GetAlbums(r *gin.RouterGroup, repos domain.Repositories) {
 				sharedAlbums, err := albumRepo.GetByUserID(reqCtx, session.User.ID, reqParams.Filters)
 				if err != nil {
 					logger.WithError(err).Error("error fetching shared albums")
-					AbortWithJson(c, http.StatusInternalServerError, err, "")
+					common.AbortWithJson(c, http.StatusInternalServerError, err, "")
 
 					return
 				}
@@ -115,7 +116,7 @@ func GetAlbums(r *gin.RouterGroup, repos domain.Repositories) {
 							"user_id": session.User.ID,
 							"groups":  session.User.Groups,
 						}).Error("cannot fetch albums by group name")
-					AbortWithJson(c, http.StatusInternalServerError, err, "")
+					common.AbortWithJson(c, http.StatusInternalServerError, err, "")
 
 					return
 				}
@@ -131,7 +132,7 @@ func GetAlbums(r *gin.RouterGroup, repos domain.Repositories) {
 		c.JSON(http.StatusOK, gin.H{
 			"user_role": session.User.Role.String(),
 			"username":  fmt.Sprintf("%s %s", session.User.FirstName, session.User.LastName),
-			"albums":    newSimpleAlbums(albums, users),
+			"albums":    serializeAlbums(albums, users),
 		})
 
 		return

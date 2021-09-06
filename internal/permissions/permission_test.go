@@ -1,4 +1,4 @@
-package album_test
+package permissions_test
 
 import (
 	"testing"

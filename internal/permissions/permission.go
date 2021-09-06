@@ -1,4 +1,4 @@
-package album
+package permissions
 
 import (
 	"github.com/tupyy/gophoto/internal/domain/entity"

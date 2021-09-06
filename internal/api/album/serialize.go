@@ -1,4 +1,4 @@
-package api
+package album
 
 import (
 	"fmt"
@@ -10,9 +10,9 @@ import (
 	"github.com/tupyy/gophoto/utils/logutil"
 )
 
-// simpleAlbum is a simplified struct of an album used in rendering templates.
+// serializedAlbum is a simplified struct of an album used in rendering templates.
 // The ID of the simple album is encrypted.
-type simpleAlbum struct {
+type serializedAlbum struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
 	Owner       string `json:"owner"`
@@ -21,7 +21,7 @@ type simpleAlbum struct {
 	Location    string `json:"location"`
 }
 
-func newSimpleAlbum(a entity.Album, owner entity.User) (simpleAlbum, error) {
+func serializeAlbum(a entity.Album, owner entity.User) (serializedAlbum, error) {
 	var ownerName string
 
 	if len(owner.FirstName) == 0 && len(owner.LastName) == 0 {
@@ -34,7 +34,7 @@ func newSimpleAlbum(a entity.Album, owner entity.User) (simpleAlbum, error) {
 	gen := encryption.NewGenerator(conf.GetEncryptionKey())
 	encryptedID, err := gen.EncryptData(fmt.Sprintf("%d", a.ID))
 	if err != nil {
-		return simpleAlbum{}, err
+		return serializedAlbum{}, err
 	}
 
 	logutil.GetDefaultLogger().WithFields(logrus.Fields{
@@ -42,7 +42,7 @@ func newSimpleAlbum(a entity.Album, owner entity.User) (simpleAlbum, error) {
 		"encrypted_id": encryptedID,
 	}).Trace("encrypt album id")
 
-	return simpleAlbum{
+	return serializedAlbum{
 		ID:          encryptedID,
 		Name:        a.Name,
 		Date:        a.CreatedAt.Format("2 January 2006"),
@@ -52,9 +52,9 @@ func newSimpleAlbum(a entity.Album, owner entity.User) (simpleAlbum, error) {
 	}, nil
 }
 
-// newSimpleAlbums returns a new list of simpleAlbums.
-func newSimpleAlbums(albums []entity.Album, users []entity.User) []simpleAlbum {
-	sAlbums := make([]simpleAlbum, 0, len(albums))
+// serializeAlbums returns a new list of simpleAlbums.
+func serializeAlbums(albums []entity.Album, users []entity.User) []serializedAlbum {
+	sAlbums := make([]serializedAlbum, 0, len(albums))
 
 	// put users into a map
 	usersMap := make(map[string]entity.User)
@@ -64,7 +64,7 @@ func newSimpleAlbums(albums []entity.Album, users []entity.User) []simpleAlbum {
 
 	for _, pa := range albums {
 		if user, found := usersMap[pa.OwnerID]; found {
-			sAlbum, err := newSimpleAlbum(pa, user)
+			sAlbum, err := serializeAlbum(pa, user)
 			if err != nil {
 				logutil.GetDefaultLogger().WithError(err).WithField("album", fmt.Sprintf("%+v", pa)).Error("cannot create simple album")
 
@@ -80,9 +80,9 @@ func newSimpleAlbums(albums []entity.Album, users []entity.User) []simpleAlbum {
 	return sAlbums
 }
 
-// SerializedUser is a simplified version of user to be used in templates.
+// serializedUser is a simplified version of user to be used in templates.
 // The username is encrypted.
-type SerializedUser struct {
+type serializedUser struct {
 	EncryptedID string
 	Username    string
 	Name        string
@@ -90,20 +90,20 @@ type SerializedUser struct {
 	CanShare    bool
 }
 
-func NewSerializedUser(u entity.User) (SerializedUser, error) {
+func serializeUser(u entity.User) (serializedUser, error) {
 	gen := encryption.NewGenerator(conf.GetEncryptionKey())
 
 	encryptedUsername, err := gen.EncryptData(u.Username)
 	if err != nil {
-		return SerializedUser{}, err
+		return serializedUser{}, err
 	}
 
 	encryptedID, err := gen.EncryptData(u.Username)
 	if err != nil {
-		return SerializedUser{}, err
+		return serializedUser{}, err
 	}
 
-	return SerializedUser{
+	return serializedUser{
 		EncryptedID: encryptedID,
 		Username:    encryptedUsername,
 		Name:        fmt.Sprintf("%s %s", u.FirstName, u.LastName),
