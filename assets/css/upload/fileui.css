@@ -1,0 +1,65 @@
+.container-upload {
+    margin: auto;
+}
+
+.container-upload .file-list-container {
+    margin-top: 10px;
+}
+
+.container-upload .file-ui {
+    display: flex;
+    align-items: center;
+}
+.container-upload input {
+    display: none;
+}
+
+.container-upload .btn.btn-outline-primary {
+    color: silver;
+    border: 1px solid deepskyblue;
+    border-radius: 20px;
+    margin-left: 20px;
+    width: 100px;
+}
+
+.container-upload .btn.btn-outline-primary:hover,.btn.btn-outline-primary:focus {
+    background: deepskyblue;
+    color: black;
+}
+
+.container-upload .btn.btn-outline-danger {
+    border-radius: 20px;
+    margin-left: 20px;
+    width: 100px;
+}
+
+.container-upload .file-ui .progress {
+    padding-left: 0;
+    padding-right: 0;
+    height: 0.15rem;
+    background-color: #6a6c6d;
+}
+
+.container-upload .file-ui .file-label {
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.container-upload .ui-upload-button {
+    width: 30px;
+    border: 0;
+    margin-left: 5px;
+    margin-right: 5px;
+    padding: 0.1rem 0.3rem;
+    font-size: 0.9rem;
+}
+
+.container-upload .ui-upload-button:hover {
+    background: transparent;
+}
+
+.container-upload .ui-upload-button:focus {
+    background: transparent;
+}
+
+

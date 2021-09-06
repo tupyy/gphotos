@@ -4,6 +4,10 @@
         {{ template "base_css" }}
         <link rel="stylesheet" href="/static/css/album-view.css"/>
         {{ template "js" }}
+        {{ if .write_permission }}
+            {{ template "upload" }}
+            <link rel="stylesheet" href="/static/css/upload/fileui.css"/>
+        {{ end }}
         <title>Photos</title>
     </head>
     <header>
@@ -68,7 +72,18 @@
                             <span class="col-12 title no-permissions">You don't have write permission for this album.</span>
                         </div>
                     {{ else }}
-                        upload
+                        <div class="container container-upload">
+                            <form id="upload-form">
+                                <span class="btn btn-outline-primary fileinput-button">
+                                <span>Add files...</span>
+                                    <input type="file" name="files[]" multiple>
+                                </span>
+                                <button class="btn btn-outline-primary" id="submitButton">Upload</button>
+                                <button class="btn btn-outline-danger" id="abortButton">Stop</button>
+                                <div class="file-list-container">
+                                </div>
+                            </form>
+                        </div>
                     {{ end }}
                 </div>
             </div>

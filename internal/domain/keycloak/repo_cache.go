@@ -51,7 +51,7 @@ func (r keycloakCacheRepo) GetUsers(ctx context.Context, filters userFilters.Fil
 		}
 
 		// set cache
-		r.cache.Set(allUsersKey, users, gocache.DefaultExpiration)
+		r.cache.Set(cacheKey, users, gocache.DefaultExpiration)
 		logutil.GetDefaultLogger().WithField("count users", len(users)).WithField("cache key", cacheKey).Debug("users cached")
 	} else {
 		logutil.GetDefaultLogger().WithField("count users", len(users)).WithField("cache key", cacheKey).Debug("served users from cache")
