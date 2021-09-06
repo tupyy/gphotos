@@ -110,7 +110,9 @@ $(() => {
                 badges +
                 `</div>
                 <div class="col permission-remove-btn">
-                    <button class="btn btn-outline-danger btn-sm remove-permission">Remove</button>
+                    <button class="btn btn-outline-danger btn-sm remove-permission">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
                 </div>
             </div>
         </li>`

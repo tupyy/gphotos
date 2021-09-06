@@ -17,7 +17,6 @@ import (
 	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/domain"
 	"github.com/tupyy/gophoto/internal/domain/entity"
-	"github.com/tupyy/gophoto/internal/domain/utils"
 	"github.com/tupyy/gophoto/internal/form"
 	"github.com/tupyy/gophoto/internal/handlers/common"
 	"github.com/tupyy/gophoto/utils/encryption"
@@ -121,10 +120,10 @@ func GetAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 
 		// check individual permissions for this album
 		permissions := make(map[entity.Permission]bool)
-		permissions[entity.PermissionReadAlbum] = utils.HasUserPermission(album, session.User.ID, entity.PermissionReadAlbum) || session.User.ID == album.OwnerID || session.User.Role == entity.RoleAdmin
-		permissions[entity.PermissionWriteAlbum] = utils.HasUserPermission(album, session.User.ID, entity.PermissionWriteAlbum) || session.User.ID == album.OwnerID || session.User.Role == entity.RoleAdmin
-		permissions[entity.PermissionEditAlbum] = utils.HasUserPermission(album, session.User.ID, entity.PermissionEditAlbum) || session.User.ID == album.OwnerID || session.User.Role == entity.RoleAdmin
-		permissions[entity.PermissionDeleteAlbum] = utils.HasUserPermission(album, session.User.ID, entity.PermissionDeleteAlbum) || session.User.ID == album.OwnerID || session.User.Role == entity.RoleAdmin
+		permissions[entity.PermissionReadAlbum] = entity.HasUserPermission(album, session.User.ID, entity.PermissionReadAlbum) || session.User.ID == album.OwnerID || session.User.Role == entity.RoleAdmin
+		permissions[entity.PermissionWriteAlbum] = entity.HasUserPermission(album, session.User.ID, entity.PermissionWriteAlbum) || session.User.ID == album.OwnerID || session.User.Role == entity.RoleAdmin
+		permissions[entity.PermissionEditAlbum] = entity.HasUserPermission(album, session.User.ID, entity.PermissionEditAlbum) || session.User.ID == album.OwnerID || session.User.Role == entity.RoleAdmin
+		permissions[entity.PermissionDeleteAlbum] = entity.HasUserPermission(album, session.User.ID, entity.PermissionDeleteAlbum) || session.User.ID == album.OwnerID || session.User.Role == entity.RoleAdmin
 
 		for _, g := range session.User.Groups {
 			if perms, found := album.GroupPermissions[g.Name]; found {

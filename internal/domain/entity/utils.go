@@ -1,16 +1,14 @@
-package utils
-
-import "github.com/tupyy/gophoto/internal/domain/entity"
+package entity
 
 // HasUserPermissions returns true if user has at least one permission.
-func HasUserPermissions(a entity.Album, userID string) bool {
+func HasUserPermissions(a Album, userID string) bool {
 	_, found := a.UserPermissions[userID]
 
 	return found
 }
 
 // HasUserPermission returns true if user has permission set for the album.
-func HasUserPermission(a entity.Album, userID string, permission entity.Permission) bool {
+func HasUserPermission(a Album, userID string, permission Permission) bool {
 	if !HasUserPermissions(a, userID) {
 		return false
 	}
@@ -25,7 +23,7 @@ func HasUserPermission(a entity.Album, userID string, permission entity.Permissi
 }
 
 // GetUserPermissions returns all permission of user.
-func GetUserPermissions(a entity.Album, userID string) (permissions []entity.Permission, found bool) {
+func GetUserPermissions(a Album, userID string) (permissions []Permission, found bool) {
 	if _, found = a.UserPermissions[userID]; !found {
 		return
 	}
@@ -34,7 +32,7 @@ func GetUserPermissions(a entity.Album, userID string) (permissions []entity.Per
 }
 
 // HasGroupPermission returns true if group has permission set for album.
-func HasGroupPermission(a entity.Album, groupName string, permission entity.Permission) bool {
+func HasGroupPermission(a Album, groupName string, permission Permission) bool {
 	if !HasGroupPermissions(a, groupName) {
 		return false
 	}
@@ -49,14 +47,14 @@ func HasGroupPermission(a entity.Album, groupName string, permission entity.Perm
 }
 
 // HasGroupPermissions returns true if group has at least one permission.
-func HasGroupPermissions(a entity.Album, groupName string) bool {
+func HasGroupPermissions(a Album, groupName string) bool {
 	_, found := a.GroupPermissions[groupName]
 
 	return found
 }
 
 // GetGroupPermissions returns all permission of group.
-func GetGroupPermissions(a entity.Album, groupName string) (permissions []entity.Permission, found bool) {
+func GetGroupPermissions(a Album, groupName string) (permissions []Permission, found bool) {
 	if _, found = a.GroupPermissions[groupName]; !found {
 		return
 	}

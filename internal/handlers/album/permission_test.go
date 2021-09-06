@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	ac "github.com/tupyy/gophoto/internal/handlers"
 	"github.com/tupyy/gophoto/internal/domain/entity"
+	ac "github.com/tupyy/gophoto/internal/handlers/album"
 )
 
 func TestPermissionResolver(t *testing.T) {
