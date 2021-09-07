@@ -27,20 +27,17 @@ $(function () {
             this.refresh();
         },
 
-        setSignedUrl: function (signed_url) {
-            this.options.signed_url = signed_url;
-            this._initXHRData(signed_url);
+        setUrl: function (url) {
+            this._initXHRData(url);
         },
-        _initXHRData: function (signed_url) {
+        _initXHRData: function (url) {
             const postData = new FormData();
             postData.append('file', this.options.file);
-            this.options.headers = {'Content-type': this.options.file.type};
             this.options.data = postData;
             this.options.processData = false;
-            this.options.type = 'PUT';
-            this.options.url = signed_url;
+            this.options.type = 'POST';
+            this.options.url = url;
         },
-
         send: function () {
             this.options.xhr = new XMLHttpRequest();
             let xhr = this.options.xhr;
@@ -58,7 +55,8 @@ $(function () {
                 }
             }, false);
 
-            xhr.onreadystatechange = function () {
+            xhr.onreadystatechange = function (e) {
+                console.log(e);
                 if (xhr.readyState === 4) {
                     self.refresh(100);
                     self.options.uploaded = true;
@@ -66,18 +64,16 @@ $(function () {
                     if (xhr.status === 200 || xhr.status === 204) {
                         dfd.resolve(self.options.id);
                     } else {
-                        dfd.failed(self.options.id);
+                        dfd.fail(self.options.id);
                     }
                 }
             };
 
-            xhr.open('PUT', this.options.url, true);
-            xhr.setRequestHeader('Content-type', this.options.file.type);
-            xhr.overrideMimeType(this.options.file.type);
-            xhr.send(this.options.file);
+            xhr.open(this.options.type, this.options.url, true);
+            xhr.send(this.options.data);
 
             let promise = dfd.promise();
-            promise.abort = this.abort();
+            promise.abort = this.abort;
             return promise;
         },
 

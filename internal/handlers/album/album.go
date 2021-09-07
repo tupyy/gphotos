@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -33,33 +32,14 @@ func GetAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 	albumRepo := repos[domain.AlbumRepoName].(domain.Album)
 	keycloakRepo := repos[domain.KeycloakRepoName].(domain.KeycloakRepo)
 
-	r.GET("/album/:id", func(c *gin.Context) {
+	r.GET("/album/:id", parseAlbumIDHandler, func(c *gin.Context) {
 		reqCtx := c.Request.Context()
 		logger := logutil.GetLogger(c)
 
 		s, _ := c.Get("sessionData")
 		session := s.(entity.Session)
 
-		// decrypt album id
-		gen := encryption.NewGenerator(conf.GetEncryptionKey())
-
-		decryptedID, err := gen.DecryptData(c.Param("id"))
-		if err != nil {
-			logger.WithError(err).Error("cannot decrypt album id")
-			c.AbortWithError(http.StatusNotFound, err) // explicit return not found here
-
-			return
-		}
-
-		id, err := strconv.Atoi(decryptedID)
-		if err != nil {
-			logger.WithError(err).WithField("id", decryptedID).Error("cannot parse album id")
-			c.AbortWithError(http.StatusNotFound, err)
-
-			return
-		}
-
-		album, err := albumRepo.GetByID(reqCtx, int32(id))
+		album, err := albumRepo.GetByID(reqCtx, int32(c.GetInt("id")))
 		if err != nil {
 			common.AbortNotFound(c, err, "update album")
 
@@ -97,7 +77,7 @@ func GetAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 		// if not owner get the owner from keycloak
 		owner, err := keycloakRepo.GetUserByID(reqCtx, album.OwnerID)
 		if err != nil {
-			logger.WithError(err).WithField("id", id).Error("fetch owner")
+			logger.WithError(err).WithField("album id", album.ID).Error("failed to fetch owner from keycloak")
 			common.AbortInternalError(c, errors.New("fetch owner from keyclosk"), "")
 
 			return
@@ -135,6 +115,7 @@ func GetAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 		}
 
 		// encrypt album id
+		gen := encryption.NewGenerator(conf.GetEncryptionKey())
 		encryptedID, err := gen.EncryptData(fmt.Sprintf("%d", album.ID))
 		if err != nil {
 			logger.WithError(err).Error("encrypt album id")
@@ -321,33 +302,14 @@ func GetUpdateAlbumForm(r *gin.RouterGroup, repos domain.Repositories) {
 	albumRepo := repos[domain.AlbumRepoName].(domain.Album)
 	keycloakRepo := repos[domain.KeycloakRepoName].(domain.KeycloakRepo)
 
-	r.GET("/album/:id/edit", func(c *gin.Context) {
+	r.GET("/album/:id/edit", parseAlbumIDHandler, func(c *gin.Context) {
 		reqCtx := c.Request.Context()
 		logger := logutil.GetLogger(c)
 
 		s, _ := c.Get("sessionData")
 		session := s.(entity.Session)
 
-		// decrypt album id
-		gen := encryption.NewGenerator(conf.GetEncryptionKey())
-
-		decryptedID, err := gen.DecryptData(c.Param("id"))
-		if err != nil {
-			logger.WithError(err).Error("cannot decrypt album id")
-			c.AbortWithError(http.StatusNotFound, err)
-
-			return
-		}
-
-		id, err := strconv.Atoi(decryptedID)
-		if err != nil {
-			logger.WithError(err).WithField("id", decryptedID).Error("cannot parse album id")
-			c.AbortWithError(http.StatusNotFound, err)
-
-			return
-		}
-
-		album, err := albumRepo.GetByID(reqCtx, int32(id))
+		album, err := albumRepo.GetByID(reqCtx, int32(c.GetInt("id")))
 		if err != nil {
 			common.AbortNotFound(c, err, "update album")
 
@@ -406,6 +368,7 @@ func GetUpdateAlbumForm(r *gin.RouterGroup, repos domain.Repositories) {
 				}
 			}
 
+			gen := encryption.NewGenerator(conf.GetEncryptionKey())
 			encryptedID, err := gen.EncryptData(fmt.Sprintf("%d", album.ID))
 			if err != nil {
 				logger.WithError(err).WithField("id", album.ID).Error("encrypt album id")
@@ -462,33 +425,14 @@ func GetUpdateAlbumForm(r *gin.RouterGroup, repos domain.Repositories) {
 func UpdateAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 	albumRepo := repos[domain.AlbumRepoName].(domain.Album)
 
-	r.POST("/album/:id/", func(c *gin.Context) {
+	r.POST("/album/:id/", parseAlbumIDHandler, func(c *gin.Context) {
 		reqCtx := c.Request.Context()
 		logger := logutil.GetLogger(c)
 
 		s, _ := c.Get("sessionData")
 		session := s.(entity.Session)
 
-		// decrypt album id
-		gen := encryption.NewGenerator(conf.GetEncryptionKey())
-
-		decryptedID, err := gen.DecryptData(c.Param("id"))
-		if err != nil {
-			logger.WithError(err).Error("cannot decrypt album id")
-			c.AbortWithError(http.StatusInternalServerError, err)
-
-			return
-		}
-
-		id, err := strconv.Atoi(decryptedID)
-		if err != nil {
-			logger.WithError(err).WithField("id", decryptedID).Error("cannot parse album id")
-			c.AbortWithError(http.StatusNotFound, err)
-
-			return
-		}
-
-		album, err := albumRepo.GetByID(reqCtx, int32(id))
+		album, err := albumRepo.GetByID(reqCtx, int32(c.GetInt("id")))
 		if err != nil {
 			common.AbortNotFound(c, err, "update album")
 
@@ -581,33 +525,14 @@ func UpdateAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 func DeleteAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 	albumRepo := repos[domain.AlbumRepoName].(domain.Album)
 
-	r.DELETE("/album/:id", func(c *gin.Context) {
+	r.DELETE("/album/:id", parseAlbumIDHandler, func(c *gin.Context) {
 		reqCtx := c.Request.Context()
 		logger := logutil.GetLogger(c)
 
 		s, _ := c.Get("sessionData")
 		session := s.(entity.Session)
 
-		// decrypt album id
-		gen := encryption.NewGenerator(conf.GetEncryptionKey())
-
-		decryptedID, err := gen.DecryptData(c.Param("id"))
-		if err != nil {
-			logger.WithError(err).Error("cannot decrypt album id")
-			c.AbortWithError(http.StatusInternalServerError, err)
-
-			return
-		}
-
-		id, err := strconv.Atoi(decryptedID)
-		if err != nil {
-			logger.WithError(err).WithField("id", decryptedID).Error("cannot parse album id")
-			c.AbortWithError(http.StatusNotFound, err)
-
-			return
-		}
-
-		album, err := albumRepo.GetByID(reqCtx, int32(id))
+		album, err := albumRepo.GetByID(reqCtx, int32(c.GetInt("id")))
 		if err != nil {
 			common.AbortNotFound(c, err, "update album")
 
@@ -635,7 +560,7 @@ func DeleteAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 
 		err = albumRepo.Delete(reqCtx, album.ID)
 		if err != nil {
-			common.AbortInternalError(c, common.ErrDeleteAlbum, fmt.Sprintf("album id: %d", id))
+			common.AbortInternalError(c, common.ErrDeleteAlbum, fmt.Sprintf("album id: %d", album.ID))
 
 			return
 		}

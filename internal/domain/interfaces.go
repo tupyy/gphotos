@@ -53,6 +53,8 @@ type Album interface {
 
 // Bucket describe postgres operation on bucket table.
 type Bucket interface {
+	// Get the bucket of the album with id.
+	Get(ctx context.Context, albumID int32) (entity.Bucket, error)
 	// Create a bucket
 	Create(ctx context.Context, bucket entity.Bucket) error
 	// Delete bucket from postgres

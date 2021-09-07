@@ -74,10 +74,7 @@
                     {{ else }}
                         <div class="container container-upload">
                             <form id="upload-form">
-                                <span class="btn btn-outline-primary fileinput-button">
-                                <span>Add files...</span>
-                                    <input type="file" name="files[]" multiple>
-                                </span>
+                                <input type="file" name="files[]" multiple id="upload">
                                 <button class="btn btn-outline-primary" id="submitButton">Upload</button>
                                 <button class="btn btn-outline-danger" id="abortButton">Stop</button>
                                 <div class="file-list-container">

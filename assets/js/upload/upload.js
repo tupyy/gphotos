@@ -92,7 +92,7 @@ $(function () {
         },
 
         // Delete UI
-        _deleteUI: function (event, data) {
+        _deleteUI: function (_, data) {
             let options = this.options;
             $.each(options.filesUI, function (id, entry) {
                 if (id === data.id) {
@@ -102,61 +102,25 @@ $(function () {
                 }
             });
         },
-
-        _initOptions: function (options) {
-            if (!options) {
-                options = {}
-            }
-            options.headers = {};
-            options.type = {};
-            options.data = {};
-            options.url = "";
-        },
-        // create the ajax settings for signing the files
-        _initDataforSigning: function (options) {
-            this._initOptions(options);
-            options.headers['Content-Type'] = 'application/json';
-            options.type = 'POST';
-            options.url = '/sign-s3';
-            tempData = {};
-            $.each(options.filesUI, (idx, value) => {
-                tempData[value.fileui('option', 'id')] = {
-                    'filename': value.fileui('option', 'filename'),
-                    'filetype': value.fileui('option', 'file').type
-                };
-            });
-            options.data = JSON.stringify(tempData)
-        },
         _submit: function () {
-            let self = this,
-                o = this.options;
-            self._initDataforSigning(o);
-            this.jqXHR = $.ajax(o);
-            this.jqXHR.done(function (result, textStatus, jqXHR) {
-                self._initDataForAws(result);
+            let self = this;
+            $.each(self.options.filesUI, (_, obj) => {
+                obj.fileui('setUrl',self._getUrl());
+                obj.fileui('send').then(function() {
+                    // TODO do something with the result
+                })
             });
-            this.jqXHR.then(function () {
-                $.each(self.options.filesUI, (id, obj) => {
-                    obj.fileui('send').then(function() {
-                        alert('done');
-                    })
-                });
-            })
         },
         _abort: function () {
             if (this.jqXHR) {
                 return this.jqXHR.abort();
             }
         },
-        _initDataForAws: function (signed_urls) {
-            let o = this.options;
-            for (let key in signed_urls) {
-                if (key in o.filesUI) {
-                    let item = o.filesUI[key];
-                    item.fileui('setSignedUrl', signed_urls[key]);
-                }
-            }
-        },
-
+        _getUrl: function() {
+            let url = window.location.href;
+            let parts = url.split('/');
+            let id = parts[parts.length - 1];
+            return '/api/albums/' + id + '/album/upload'
+        }
     });
 });

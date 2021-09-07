@@ -12,4 +12,6 @@ func RegisterApi(privateGroup *gin.RouterGroup, publicGroup *gin.RouterGroup, re
 	// register index controller
 	album.GetAlbums(privateGroup, repos)
 	logutil.GetDefaultLogger().Info("index controller registered")
+
+	UploadMedia(privateGroup, repos)
 }
