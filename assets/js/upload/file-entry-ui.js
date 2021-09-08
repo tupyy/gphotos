@@ -56,7 +56,6 @@ $(function () {
             }, false);
 
             xhr.onreadystatechange = function (e) {
-                console.log(e);
                 if (xhr.readyState === 4) {
                     self.refresh(100);
                     self.options.uploaded = true;

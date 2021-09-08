@@ -1,19 +1,29 @@
-package api
+package media
 
 import (
 	"errors"
+	"html"
 	"net/http"
+	"regexp"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
-	"github.com/tupyy/gophoto/internal/api/common"
+	"github.com/tupyy/gophoto/internal/common"
 	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/domain"
 	"github.com/tupyy/gophoto/internal/domain/entity"
 	"github.com/tupyy/gophoto/internal/permissions"
 	"github.com/tupyy/gophoto/utils/encryption"
 	"github.com/tupyy/gophoto/utils/logutil"
+)
+
+const (
+	FILENAME_MAX_LENGTH = 100
+)
+
+var (
+	filenameReg = regexp.MustCompile(`^[^±!@£$%&*+§¡€#¢§¶•ªº«\\/<>?:;|=,]*$`)
 )
 
 func UploadMedia(r *gin.RouterGroup, repos domain.Repositories) {
@@ -71,6 +81,14 @@ func UploadMedia(r *gin.RouterGroup, repos domain.Repositories) {
 			return
 		}
 
+		// validate filename
+		if err := validate(file.Filename); err != nil {
+			logger.WithField("filename", file.Filename).WithError(err).Error("failed to validate filename")
+			common.AbortBadRequestWithJson(c, err, "invalid filename")
+
+			return
+		}
+
 		src, err := file.Open()
 		if err != nil {
 			logger.WithField("album id", album.ID).WithError(err).Error("failed to open file from request")
@@ -80,7 +98,7 @@ func UploadMedia(r *gin.RouterGroup, repos domain.Repositories) {
 		}
 		defer src.Close()
 
-		err = minioRepo.PutFile(reqCtx, bucket.Urn, file.Filename, file.Size, src)
+		err = minioRepo.PutFile(reqCtx, bucket.Urn, html.EscapeString(file.Filename), file.Size, src)
 		if err != nil {
 			logger.WithField("filename", file.Filename).WithError(err).Error("failed to put file into the bucket")
 			common.AbortInternalError(c, err, "failed to open file")
@@ -89,6 +107,18 @@ func UploadMedia(r *gin.RouterGroup, repos domain.Repositories) {
 		}
 
 	})
+}
+
+func validate(filename string) error {
+	if len(filename) > FILENAME_MAX_LENGTH {
+		return errors.New("filename length exceeds max length")
+	}
+
+	if !filenameReg.MatchString(filename) {
+		return errors.New("filename container forbidden characters")
+	}
+
+	return nil
 }
 
 // parseAlbumIDHandler decrypt the album id passes as parameters and set the id in the context.

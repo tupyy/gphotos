@@ -74,10 +74,16 @@
                     {{ else }}
                         <div class="container container-upload">
                             <form id="upload-form">
-                                <input type="file" name="files[]" multiple id="upload">
-                                <button class="btn btn-outline-primary" id="submitButton">Upload</button>
-                                <button class="btn btn-outline-danger" id="abortButton">Stop</button>
-                                <div class="file-list-container">
+                                <div class="row">
+                                    <div class="col col-md-3">
+                                    <input type="file" name="files[]" multiple id="upload">
+                                    </div>
+                                    <div class="col col-md-6">
+                                        <button class="btn btn-outline-primary" id="submitButton">Upload</button>
+                                        <button class="btn btn-outline-danger" id="abortButton">Stop</button>
+                                    </div>
+                                </div>
+                                <div class="row file-list-container">
                                 </div>
                             </form>
                         </div>

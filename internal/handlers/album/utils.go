@@ -9,7 +9,7 @@ import (
 	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/domain/entity"
 	userFilters "github.com/tupyy/gophoto/internal/domain/filters/user"
-	"github.com/tupyy/gophoto/internal/handlers/common"
+	serializeUser "github.com/tupyy/gophoto/internal/handlers/serialize"
 	"github.com/tupyy/gophoto/utils/encryption"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
@@ -71,11 +71,11 @@ func generateFilters(currentUser entity.User) (userFilters.Filters, error) {
 }
 
 // serialize serialized a list of users
-func serialize(users []entity.User) []common.SerializedUser {
-	serializedUsers := make([]common.SerializedUser, 0, len(users))
+func serialize(users []entity.User) []serializeUser.SerializedUser {
+	serializedUsers := make([]serializeUser.SerializedUser, 0, len(users))
 
 	for _, u := range users {
-		s, err := common.NewSerializedUser(u)
+		s, err := serializeUser.NewSerializedUser(u)
 		if err != nil {
 			logutil.GetDefaultLogger().WithError(err).WithField("user", fmt.Sprintf("%+v", u)).Error("serialize user")
 

@@ -106,8 +106,9 @@ $(function () {
             let self = this;
             $.each(self.options.filesUI, (_, obj) => {
                 obj.fileui('setUrl',self._getUrl());
+                obj.fileui('updateStatus','Uploading')
                 obj.fileui('send').then(function() {
-                    // TODO do something with the result
+                    obj.fileui('uploadFinished');
                 })
             });
         },

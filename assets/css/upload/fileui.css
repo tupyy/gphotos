@@ -11,6 +11,12 @@
     align-items: center;
 }
 
+.container-upload .file-ui .ok-icon {
+    margin-left: 5px;
+    color: green;
+    font-weight: bold;
+}
+
 .container-upload .btn.btn-outline-primary {
     color: silver;
     border: 1px solid deepskyblue;
@@ -31,6 +37,7 @@
 }
 
 .container-upload .file-ui .progress {
+    margin-top: 5px;
     padding-left: 0;
     padding-right: 0;
     height: 0.15rem;
@@ -42,13 +49,18 @@
     padding-right: 5px;
 }
 
-.container-upload .ui-upload-button {
+.container-upload .file-ui .ui-upload-button {
     width: 30px;
     border: 0;
     margin-left: 5px;
     margin-right: 5px;
     padding: 0.1rem 0.3rem;
     font-size: 0.9rem;
+}
+
+.container-upload .file-ui .upload-status {
+    margin-left: 5px;
+    margin-right: 5px;
 }
 
 .container-upload .ui-upload-button:hover {
@@ -59,3 +71,9 @@
     background: transparent;
 }
 
+@media (max-width: 768px) {
+    #upload-form .row:first-child .col:last-child {
+        display:flex;
+        justify-content: center;
+        margin-top: 10px;
+    }
