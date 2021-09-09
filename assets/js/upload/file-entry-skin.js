@@ -48,9 +48,13 @@ $(function () {
             } else {
                 this.deleteButton.remove();
                 
+                this.iconContainer = $('<div>', {
+                    'class': 'upload-complete-container'
+                }).appendTo(this.mainElement);
+
                 this.iconComplete = $("<i>", {
                     "class": "ok-icon fas fa-check"
-                }).appendTo(this.mainElement);
+                }).appendTo(this.iconContainer);
 
                 this.updateStatus("Done");
             }

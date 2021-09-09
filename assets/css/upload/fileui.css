@@ -11,23 +11,32 @@
     align-items: center;
 }
 
+.container-upload .file-ui .upload-complete-container {
+    background-color: #238636;
+    border-radius: 20px;
+    width: 25px;
+    height: 25px;
+    position: relative;
+}
+
 .container-upload .file-ui .ok-icon {
-    margin-left: 5px;
-    color: green;
-    font-weight: bold;
+    color: white;
+    position: absolute;
+    top: 3px;
+    left: 5px;
 }
 
 .container-upload .btn.btn-outline-primary {
     color: silver;
-    border: 1px solid deepskyblue;
     border-radius: 20px;
     margin-left: 20px;
     width: 100px;
 }
 
 .container-upload .btn.btn-outline-primary:hover,.btn.btn-outline-primary:focus {
-    background: deepskyblue;
-    color: black;
+    background: #238636;
+    color: white;
+    border: 1px solid #238636;
 }
 
 .container-upload .btn.btn-outline-danger {
@@ -42,6 +51,7 @@
     padding-right: 0;
     height: 0.15rem;
     background-color: #6a6c6d;
+    color: #238636;
 }
 
 .container-upload .file-ui .file-label {
@@ -77,3 +87,4 @@
         justify-content: center;
         margin-top: 10px;
     }
+}
