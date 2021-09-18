@@ -14,6 +14,7 @@ import (
 	"github.com/tupyy/gophoto/internal/domain"
 	"github.com/tupyy/gophoto/internal/domain/entity"
 	"github.com/tupyy/gophoto/internal/permissions"
+	"github.com/tupyy/gophoto/internal/workers"
 	"github.com/tupyy/gophoto/utils/encryption"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
@@ -30,6 +31,7 @@ func UploadMedia(r *gin.RouterGroup, repos domain.Repositories) {
 	albumRepo := repos[domain.AlbumRepoName].(domain.Album)
 	minioRepo := repos[domain.MinioRepoName].(domain.Store)
 	bucketRepo := repos[domain.BucketRepoName].(domain.Bucket)
+	jobManager := workers.NewJobManager(2, minioRepo)
 
 	r.POST("/api/albums/:id/album/upload", parseAlbumIDHandler, func(c *gin.Context) {
 		reqCtx := c.Request.Context()
@@ -98,7 +100,9 @@ func UploadMedia(r *gin.RouterGroup, repos domain.Repositories) {
 		}
 		defer src.Close()
 
-		err = minioRepo.PutFile(reqCtx, bucket.Urn, html.EscapeString(file.Filename), file.Size, src)
+		sanitizedFilename := html.EscapeString(file.Filename)
+
+		err = minioRepo.PutFile(reqCtx, conf.GetMinioTemporaryBucket(), sanitizedFilename, file.Size, src)
 		if err != nil {
 			logger.WithField("filename", file.Filename).WithError(err).Error("failed to put file into the bucket")
 			common.AbortInternalError(c, err, "failed to open file")
@@ -106,6 +110,9 @@ func UploadMedia(r *gin.RouterGroup, repos domain.Repositories) {
 			return
 		}
 
+		// do image processing
+		id := jobManager.NewImageProcessingJob(conf.GetMinioTemporaryBucket(), sanitizedFilename, bucket.Urn)
+		logger.WithField("id", id).Info("image processing job started")
 	})
 }
 

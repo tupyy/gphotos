@@ -69,13 +69,13 @@ type User interface {
 // Store describe photo store operations
 type Store interface {
 	// GetFile returns a reader to file.
-	// GetFile(ctx context.Context, bucket, filename string) (io.Reader, error)
+	GetFile(ctx context.Context, bucket, filename string) (io.Reader, error)
 	// PutFile save a file to a bucket.
 	PutFile(ctx context.Context, bucket, filename string, size int64, r io.Reader) error
 	// // ListFiles list the content of a bucket
 	// ListFiles(ctx context.Context, bucket string) ([]string, error)
-	// // DeleteFile deletes a file from a bucket.
-	// DeleteFile(ctx context.Context, bucket, filename string) error
+	// DeleteFile deletes a file from a bucket.
+	DeleteFile(ctx context.Context, bucket, filename string) error
 	// CreateBucket create a bucket.
 	CreateBucket(ctx context.Context, bucket string) error
 	// DeleteBucket removes bucket.
