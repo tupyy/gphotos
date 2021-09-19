@@ -31,6 +31,8 @@ const (
 func GetAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 	albumRepo := repos[domain.AlbumRepoName].(domain.Album)
 	keycloakRepo := repos[domain.KeycloakRepoName].(domain.KeycloakRepo)
+	minioRepo := repos[domain.MinioRepoName].(domain.Store)
+	bucketRepo := repos[domain.BucketRepoName].(domain.Bucket)
 
 	r.GET("/album/:id", parseAlbumIDHandler, func(c *gin.Context) {
 		reqCtx := c.Request.Context()
@@ -124,7 +126,40 @@ func GetAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 			return
 		}
 
+		// get the media for this album
+		bucket, err := bucketRepo.Get(reqCtx, album.ID)
+		if err != nil {
+			logger.WithField("album id", album.ID).WithError(err).Error("failed to get bucket for album")
+			common.AbortInternalError(c, err, "failed to get bucket for album")
+
+			return
+		}
+
+		medias, err := minioRepo.ListBucket(reqCtx, bucket.Urn)
+		if err != nil {
+			logger.WithField("album id", album.ID).WithError(err).Error("failed to list media for album")
+			common.AbortInternalError(c, err, "failed to list media for album")
+
+			return
+		}
+
+		// encrypt thumbnail filenames
+		thumbnails := make([]string, 0, len(medias))
+		for _, m := range medias {
+			if m.MediaType == entity.Photo && len(m.Thumbnail) > 0 {
+				encryptedFilename, err := gen.EncryptData(m.Thumbnail)
+				if err != nil {
+					logger.WithError(err).WithField("thumbnail filename", m.Thumbnail).Error("failed to encrypted filename")
+
+					continue
+				}
+
+				thumbnails = append(thumbnails, encryptedFilename)
+			}
+		}
+
 		c.HTML(http.StatusOK, "album_view.html", gin.H{
+			"id":                encryptedID,
 			"name":              album.Name,
 			"description":       album.Description,
 			"location":          album.Location,
@@ -140,6 +175,7 @@ func GetAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 			"edit_permission":   permissions[entity.PermissionEditAlbum],
 			"delete_permission": permissions[entity.PermissionDeleteAlbum],
 			"is_admin":          session.User.Role == entity.RoleAdmin,
+			"photos":            thumbnails,
 		})
 	})
 }

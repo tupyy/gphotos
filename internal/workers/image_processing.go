@@ -63,7 +63,7 @@ func (i *imageProcessingWorker) Run(ctx context.Context) error {
 	}
 
 	// create the thumbnail
-	newImage := resize.Resize(160, 0, img, resize.Lanczos3)
+	newImage := resize.Resize(200, 200, img, resize.Lanczos3)
 
 	thumbnailTmp, err := ioutil.TempFile("", "thumbnail_")
 	if err != nil {

@@ -153,3 +153,20 @@ func parseAlbumIDHandler(c *gin.Context) {
 
 	c.Set("id", id)
 }
+
+func parseMediaFilenameHandler(c *gin.Context) {
+	logger := logutil.GetLogger(c)
+
+	// decrypt album id
+	gen := encryption.NewGenerator(conf.GetEncryptionKey())
+
+	decryptedMedia, err := gen.DecryptData(c.Param("media"))
+	if err != nil {
+		logger.WithError(err).Error("cannot decrypt media filename")
+		c.AbortWithError(http.StatusNotFound, err) // explicit return not found here
+
+		return
+	}
+
+	c.Set("media", decryptedMedia)
+}

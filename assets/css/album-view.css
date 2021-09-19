@@ -74,3 +74,8 @@
 .tab-content .container-tab {
     margin-top: 20px;
 }
+
+.container-photos img {
+    width: 200px;
+    height: 200px;
+}

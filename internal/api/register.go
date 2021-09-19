@@ -17,4 +17,6 @@ func RegisterApi(privateGroup *gin.RouterGroup, publicGroup *gin.RouterGroup, re
 	// register media upload api
 	media.UploadMedia(privateGroup, repos)
 	logutil.GetDefaultLogger().Info("api media registered")
+
+    media.DownloadMedia(privateGroup, repos)
 }

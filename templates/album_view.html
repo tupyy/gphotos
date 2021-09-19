@@ -33,14 +33,21 @@
                             </div>
                     {{ else }}
                         {{if .photos}}
-                            <div>photos</div>
-                        {{ else }}
-                        <div class="container">
-                            <div class="row no-photos-row">
-                                <div class="col-12 title no-photos">Nothing to see here!!</div>
-                                <div class="col-12 no-photos">Please upload some photos</div>
+                            <div class="container container-photos">
+                                <div class="row gx-1 gy-2">
+                                    {{ $id := .id }}
+                                    {{ range .photos }}
+                                        <img src="/api/albums/{{$id}}/album/{{.}}/media"/>
+                                    {{ end }}
+                                </div>
                             </div>
-                        </div>
+                        {{ else }}
+                            <div class="container">
+                                <div class="row no-photos-row">
+                                    <div class="col-12 title no-photos">Nothing to see here!!</div>
+                                    <div class="col-12 no-photos">Please upload some photos</div>
+                                </div>
+                            </div>
                         {{ end }}
                     {{ end }}
                 </div>
