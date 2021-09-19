@@ -34,7 +34,7 @@
                     {{ else }}
                         {{if .photos}}
                             <div class="container container-photos">
-                                <div class="row gx-1 gy-2">
+                                <div class="row gx-1 gy-1">
                                     {{ $id := .id }}
                                     {{ range .photos }}
                                         <img src="/api/albums/{{$id}}/album/{{.}}/media"/>

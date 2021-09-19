@@ -30,7 +30,6 @@ var (
 func UploadMedia(r *gin.RouterGroup, repos domain.Repositories) {
 	albumRepo := repos[domain.AlbumRepoName].(domain.Album)
 	minioRepo := repos[domain.MinioRepoName].(domain.Store)
-	bucketRepo := repos[domain.BucketRepoName].(domain.Bucket)
 	jobManager := workers.NewJobManager(2, minioRepo)
 
 	r.POST("/api/albums/:id/album/upload", parseAlbumIDHandler, func(c *gin.Context) {
@@ -62,15 +61,6 @@ func UploadMedia(r *gin.RouterGroup, repos domain.Repositories) {
 			}).Error("user has no permissions to upload media to this album")
 
 			common.AbortForbidden(c, errors.New("user has no permission to upload media"), "")
-
-			return
-		}
-
-		// get the bucket of this album
-		bucket, err := bucketRepo.Get(reqCtx, album.ID)
-		if err != nil {
-			logger.WithField("album id", album.ID).WithError(err).Error("failed to get bucket for album")
-			common.AbortInternalError(c, err, "failed to get bucket for album")
 
 			return
 		}
@@ -111,7 +101,7 @@ func UploadMedia(r *gin.RouterGroup, repos domain.Repositories) {
 		}
 
 		// do image processing
-		id := jobManager.NewImageProcessingJob(conf.GetMinioTemporaryBucket(), sanitizedFilename, bucket.Urn)
+		id := jobManager.NewImageProcessingJob(conf.GetMinioTemporaryBucket(), sanitizedFilename, album.Bucket)
 		logger.WithField("id", id).Info("image processing job started")
 	})
 }

@@ -12,6 +12,7 @@ func toModel(e entity.Album) models.Album {
 		OwnerID:     e.OwnerID,
 		Description: &e.Description,
 		Location:    &e.Location,
+		Bucket:      e.Bucket,
 	}
 }
 
@@ -21,6 +22,7 @@ func fromModel(m models.Album) entity.Album {
 		Name:      m.Name,
 		CreatedAt: m.CreatedAt,
 		OwnerID:   m.OwnerID,
+		Bucket:    m.Bucket,
 	}
 
 	if m.Description != nil {

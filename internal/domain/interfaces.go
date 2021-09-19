@@ -17,7 +17,6 @@ const (
 	KeycloakRepoName RepoName = iota
 	AlbumRepoName
 	UserRepoName
-	BucketRepoName
 	MinioRepoName
 )
 
@@ -49,16 +48,6 @@ type Album interface {
 	GetByGroupName(ctx context.Context, groupName string, filters albumFilters.Filters) ([]entity.Album, error)
 	// GetByGroups returns a list of albums with at least one persmission for at least on group in the list.
 	GetByGroups(ctx context.Context, groups []string, filters albumFilters.Filters) ([]entity.Album, error)
-}
-
-// Bucket describe postgres operation on bucket table.
-type Bucket interface {
-	// Get the bucket of the album with id.
-	Get(ctx context.Context, albumID int32) (entity.Bucket, error)
-	// Create a bucket
-	Create(ctx context.Context, bucket entity.Bucket) error
-	// Delete bucket from postgres
-	Delete(ctx context.Context, bucket entity.Bucket) error
 }
 
 // Postgres repo to handler relationships between users

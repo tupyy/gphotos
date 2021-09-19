@@ -28,7 +28,7 @@ Table: album_user_permissions
 
 JSON Sample
 -------------------------------------
-{    "user_id": "UWySVmCZHKULCXFXKArrOoEoO",    "album_id": 38,    "permissions": 14}
+{    "permissions": 15,    "user_id": "bPwzhpuRkjwxakCktykUgyvQD",    "album_id": 49}
 
 
 

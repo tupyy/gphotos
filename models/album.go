@@ -27,11 +27,12 @@ Table: album
 [ 3] owner_id                                       TEXT                 null: false  primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
 [ 4] description                                    TEXT                 null: true   primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
 [ 5] location                                       TEXT                 null: true   primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
+[ 6] bucket                                         TEXT                 null: false  primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
 
 
 JSON Sample
 -------------------------------------
-{    "id": 98,    "name": "WqyfkUFLEWWvWVSTlCNtvwAhj",    "created_at": "2308-03-15T23:43:21.044444605+01:00",    "owner_id": "IIFpbVbeGaIkKQMneKcYGqFQn",    "description": "BYricXDHJuDoGUzxBGEdexAQU",    "location": "pymixLVUsfHAVoVQNYajBWQKq"}
+{    "owner_id": "vTnuFyjwlADacqyYleXCifYAN",    "description": "tIeigkdsJTEORDNlzllXyRmMw",    "location": "SuZkszQPyotCLfGkaTqjDxJKB",    "bucket": "hRaPzfzBzuUHzzjcHGAXMWDqj",    "id": 99,    "name": "EsSbKHuygCLIXpLSgBKRAFZAC",    "created_at": "2245-07-13T13:23:51.455247397+02:00"}
 
 
 
@@ -51,6 +52,8 @@ type Album struct {
 	Description *string `gorm:"column:description;type:TEXT;"`
 	//[ 5] location                                       TEXT                 null: true   primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
 	Location *string `gorm:"column:location;type:TEXT;"`
+	//[ 6] bucket                                         TEXT                 null: false  primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
+	Bucket string `gorm:"column:bucket;type:TEXT;"`
 }
 
 var albumTableInfo = &TableInfo{
@@ -181,6 +184,27 @@ var albumTableInfo = &TableInfo{
 			ProtobufFieldName:  "location",
 			ProtobufType:       "",
 			ProtobufPos:        6,
+		},
+
+		&ColumnInfo{
+			Index:              6,
+			Name:               "bucket",
+			Comment:            ``,
+			Notes:              ``,
+			Nullable:           false,
+			DatabaseTypeName:   "TEXT",
+			DatabaseTypePretty: "TEXT",
+			IsPrimaryKey:       false,
+			IsAutoIncrement:    false,
+			IsArray:            false,
+			ColumnType:         "TEXT",
+			ColumnLength:       -1,
+			GoFieldName:        "Bucket",
+			GoFieldType:        "string",
+			JSONFieldName:      "bucket",
+			ProtobufFieldName:  "bucket",
+			ProtobufType:       "",
+			ProtobufPos:        7,
 		},
 	},
 }

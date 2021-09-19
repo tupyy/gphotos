@@ -28,7 +28,7 @@ Table: albums_tags
 
 JSON Sample
 -------------------------------------
-{    "album_id": 71,    "tag_id": 65,    "user_id": "rDeCWUnttVIogfGirxBlDVjsX"}
+{    "user_id": "QyClhujQydTkSPOqVaKVFWDfK",    "album_id": 23,    "tag_id": 43}
 
 
 

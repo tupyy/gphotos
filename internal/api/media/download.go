@@ -3,7 +3,6 @@ package media
 import (
 	"errors"
 	"io"
-	"log"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -18,7 +17,6 @@ import (
 func DownloadMedia(r *gin.RouterGroup, repos domain.Repositories) {
 	albumRepo := repos[domain.AlbumRepoName].(domain.Album)
 	minioRepo := repos[domain.MinioRepoName].(domain.Store)
-	bucketRepo := repos[domain.BucketRepoName].(domain.Bucket)
 
 	r.GET("/api/albums/:id/album/:media/media", parseAlbumIDHandler, parseMediaFilenameHandler, func(c *gin.Context) {
 		reqCtx := c.Request.Context()
@@ -53,16 +51,7 @@ func DownloadMedia(r *gin.RouterGroup, repos domain.Repositories) {
 			return
 		}
 
-		// get the bucket of this album
-		bucket, err := bucketRepo.Get(reqCtx, album.ID)
-		if err != nil {
-			logger.WithField("album id", album.ID).WithError(err).Error("failed to get bucket for album")
-			common.AbortInternalError(c, err, "failed to get bucket for album")
-
-			return
-		}
-
-		r, err := minioRepo.GetFile(reqCtx, bucket.Urn, c.GetString("media"))
+		r, err := minioRepo.GetFile(reqCtx, album.Bucket, c.GetString("media"))
 		if err != nil {
 			logger.WithFields(logrus.Fields{
 				"album_id": album.ID,
@@ -87,8 +76,15 @@ func DownloadMedia(r *gin.RouterGroup, repos domain.Repositories) {
 		w := c.Writer
 		w.Header().Set("Content-Type", "image/jpeg")
 		w.Header().Set("Content-Length", strconv.Itoa(len(fileContent)))
+
 		if _, err := w.Write(fileContent); err != nil {
-			log.Println("unable to write image.")
+			logger.WithFields(logrus.Fields{
+				"album_id": album.ID,
+				"media":    c.GetString("media"),
+			}).WithError(err).Error("failed to write media")
+			common.AbortInternalError(c, err, "failed to write media")
+
+			return
 		}
 
 		return

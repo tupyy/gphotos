@@ -32,7 +32,6 @@ func GetAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 	albumRepo := repos[domain.AlbumRepoName].(domain.Album)
 	keycloakRepo := repos[domain.KeycloakRepoName].(domain.KeycloakRepo)
 	minioRepo := repos[domain.MinioRepoName].(domain.Store)
-	bucketRepo := repos[domain.BucketRepoName].(domain.Bucket)
 
 	r.GET("/album/:id", parseAlbumIDHandler, func(c *gin.Context) {
 		reqCtx := c.Request.Context()
@@ -126,16 +125,7 @@ func GetAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 			return
 		}
 
-		// get the media for this album
-		bucket, err := bucketRepo.Get(reqCtx, album.ID)
-		if err != nil {
-			logger.WithField("album id", album.ID).WithError(err).Error("failed to get bucket for album")
-			common.AbortInternalError(c, err, "failed to get bucket for album")
-
-			return
-		}
-
-		medias, err := minioRepo.ListBucket(reqCtx, bucket.Urn)
+		medias, err := minioRepo.ListBucket(reqCtx, album.Bucket)
 		if err != nil {
 			logger.WithField("album id", album.ID).WithError(err).Error("failed to list media for album")
 			common.AbortInternalError(c, err, "failed to list media for album")
@@ -234,7 +224,6 @@ func GetCreateAlbumForm(r *gin.RouterGroup, repos domain.Repositories) {
 func CreateAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 	albumRepo := repos[domain.AlbumRepoName].(domain.Album)
 	minioRepo := repos[domain.MinioRepoName].(domain.Store)
-	bucketRepo := repos[domain.BucketRepoName].(domain.Bucket)
 
 	r.POST("/album", func(c *gin.Context) {
 		s, _ := c.Get("sessionData")
@@ -301,27 +290,24 @@ func CreateAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 			}
 		}
 
-		albumID, err := albumRepo.Create(reqCtx, album)
-		if err != nil {
+		// generate bucket name
+		bucketID := strings.ReplaceAll(uuid.New().String(), "-", "")
+
+		// create the bucket
+		if err := minioRepo.CreateBucket(reqCtx, bucketID); err != nil {
+			logger.WithError(err).Error("failed to create bucket on store")
 			common.AbortInternalError(c, err, fmt.Sprintf("album: %+v", album))
 
 			return
 		}
 
-		// generate bucket urn
-		id := strings.ReplaceAll(uuid.New().String(), "-", "")
-		err = minioRepo.CreateBucket(reqCtx, id)
-		if err != nil {
-			logger.WithError(err).WithField("album_id", albumID).Error("failed to create bucket on store")
-		}
+		album.Bucket = bucketID
 
-		// create bucket on pg
-		err = bucketRepo.Create(reqCtx, entity.Bucket{
-			AlbumID: albumID,
-			Urn:     id,
-		})
+		albumID, err := albumRepo.Create(reqCtx, album)
 		if err != nil {
-			logger.WithError(err).WithField("album_id", albumID).Error("failed to create bucket on pg")
+			common.AbortInternalError(c, err, fmt.Sprintf("album: %+v", album))
+
+			return
 		}
 
 		logger.WithFields(logrus.Fields{

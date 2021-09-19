@@ -28,7 +28,7 @@ Table: tag
 
 JSON Sample
 -------------------------------------
-{    "name": "RzxKaykDTOwoOzSLJwnHGqBSI",    "color": "MizIoboWswpVBzfvmHPIbVhNV",    "id": 7}
+{    "id": 79,    "name": "icuHMwgZQCWDIyDYXbWbXlrRc",    "color": "YYasvFaFULPzjnKyxWzwweUUG"}
 
 
 

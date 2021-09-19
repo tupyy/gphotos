@@ -17,6 +17,7 @@ type customAlbum struct {
 	OwnerID          string               `gorm:"column:owner_id;type:INT4;"`
 	Description      *string              `gorm:"column:description;type:TEXT;"`
 	Location         *string              `gorm:"column:location;type:TEXT;"`
+	Bucket           string               `gorm:"column:bucket;type:TEXT;"`
 	UserPermissions  models.PermissionIDs `gorm:"column:user_permissions;type:_PERMISSION_ID;"`
 	GroupPermissions models.PermissionIDs `gorm:"column:group_permissions;type:_PERMISSION_ID;"`
 	UserID           string               `gorm:"column:user_id;type:TEXT;"`
@@ -31,6 +32,7 @@ func (ca customAlbum) ToEntity() (entity.Album, error) {
 		Name:      ca.Name,
 		CreatedAt: ca.CreatedAt,
 		OwnerID:   ca.OwnerID,
+		Bucket:    ca.Bucket,
 	}
 
 	if ca.Description != nil {

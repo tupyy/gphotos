@@ -12,14 +12,9 @@ CREATE TABLE album (
     name TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT (now() AT TIME ZONE 'UTC') NOT NULL,
     owner_id TEXT NOT NULL,
+    bucket TEXT NOT NULL,
     description TEXT,
     location TEXT
-);
-
-CREATE TABLE bucket (
-    id SERIAL PRIMARY KEY,
-    urn TEXT NOT NULL UNIQUE,
-    album_ID SERIAL REFERENCES album(id)
 );
 
 CREATE TYPE permission_id as ENUM (
