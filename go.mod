@@ -6,6 +6,7 @@ require (
 	github.com/Nerzal/gocloak/v8 v8.5.0
 	github.com/coreos/go-oidc/v3 v3.0.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/disintegration/imaging v1.6.2
 	github.com/docker/go-connections v0.4.0
 	github.com/gin-contrib/multitemplate v0.0.0-20210428235909-8a2f6dd269a0
 	github.com/gin-contrib/sessions v0.0.3
@@ -21,6 +22,7 @@ require (
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pkg/errors v0.9.1
+	github.com/rwcarlsen/goexif v0.0.0-20190401172101-9e8deecbddbd
 	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.1.3

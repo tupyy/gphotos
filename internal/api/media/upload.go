@@ -1,11 +1,14 @@
 package media
 
 import (
+	"bytes"
 	"errors"
+	"fmt"
 	"html"
 	"net/http"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -30,7 +33,6 @@ var (
 func UploadMedia(r *gin.RouterGroup, repos domain.Repositories) {
 	albumRepo := repos[domain.AlbumRepoName].(domain.Album)
 	minioRepo := repos[domain.MinioRepoName].(domain.Store)
-	jobManager := workers.NewJobManager(2, minioRepo)
 
 	r.POST("/api/albums/:id/album/upload", parseAlbumIDHandler, func(c *gin.Context) {
 		reqCtx := c.Request.Context()
@@ -101,8 +103,34 @@ func UploadMedia(r *gin.RouterGroup, repos domain.Repositories) {
 		}
 
 		// do image processing
-		id := jobManager.NewImageProcessingJob(conf.GetMinioTemporaryBucket(), sanitizedFilename, album.Bucket)
-		logger.WithField("id", id).Info("image processing job started")
+		var imgBuffer bytes.Buffer
+		var imgThumbnailBuffer bytes.Buffer
+		if err := workers.ProcessImage(src, &imgBuffer, &imgThumbnailBuffer); err != nil {
+			logger.WithError(err).Error("failed to process image")
+			common.AbortInternalError(c, err, "failed to process file")
+
+			return
+		}
+
+		logger.Info("image processing done")
+		// save images
+
+		basename := strings.Split(sanitizedFilename, ".")[0]
+
+		if err := minioRepo.PutFile(reqCtx, album.Bucket, fmt.Sprintf("%s.jpg", basename), int64(imgBuffer.Len()), &imgBuffer); err != nil {
+			logger.WithError(err).Error("failed to write image to bucket %s", album.Bucket)
+			common.AbortInternalError(c, err, "failed to save file")
+
+			return
+		}
+
+		if err := minioRepo.PutFile(reqCtx, album.Bucket, fmt.Sprintf("%s_thumbnail.jpg", basename), int64(imgThumbnailBuffer.Len()), &imgThumbnailBuffer); err != nil {
+			logger.WithError(err).Error("failed to write thumbnail to bucket %s", album.Bucket)
+			common.AbortInternalError(c, err, "failed to save thumbnail")
+
+			return
+		}
+
 	})
 }
 
