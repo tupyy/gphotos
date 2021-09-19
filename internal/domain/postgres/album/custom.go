@@ -10,7 +10,7 @@ import (
 )
 
 // custom struct to map the join
-type customAlbum struct {
+type albumJoinRow struct {
 	ID               int32                `gorm:"column_name:id;type:INT4"`
 	Name             string               `gorm:"column:name;type:TEXT;"`
 	CreatedAt        time.Time            `gorm:"column:created_at;type:TIMESTAMP;default:timezone('UTC');"`
@@ -24,7 +24,7 @@ type customAlbum struct {
 	GroupName        string               `gorm:"column:group_name;type:TEXT;"`
 }
 
-func (ca customAlbum) ToEntity() (entity.Album, error) {
+func (ca albumJoinRow) ToEntity() (entity.Album, error) {
 	var emptyAlbum entity.Album
 
 	album := entity.Album{
@@ -82,10 +82,10 @@ func (ca customAlbum) ToEntity() (entity.Album, error) {
 	return album, nil
 }
 
-type customAlbums []customAlbum
+type albumJoinRows []albumJoinRow
 
 // mergeAlbums merge a list of customAlbums into a list of distinct albums.
-func (albums customAlbums) Merge() []entity.Album {
+func (albums albumJoinRows) Merge() []entity.Album {
 	entitiesMap := make(map[int32]entity.Album)
 
 	for _, ca := range albums {
