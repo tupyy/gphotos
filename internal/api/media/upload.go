@@ -16,8 +16,8 @@ import (
 	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/domain"
 	"github.com/tupyy/gophoto/internal/domain/entity"
+	"github.com/tupyy/gophoto/internal/image"
 	"github.com/tupyy/gophoto/internal/permissions"
-	"github.com/tupyy/gophoto/internal/workers"
 	"github.com/tupyy/gophoto/utils/encryption"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
@@ -105,7 +105,7 @@ func UploadMedia(r *gin.RouterGroup, repos domain.Repositories) {
 		// do image processing
 		var imgBuffer bytes.Buffer
 		var imgThumbnailBuffer bytes.Buffer
-		if err := workers.ProcessImage(src, &imgBuffer, &imgThumbnailBuffer); err != nil {
+		if err := image.Process(src, &imgBuffer, &imgThumbnailBuffer); err != nil {
 			logger.WithError(err).Error("failed to process image")
 			common.AbortInternalError(c, err, "failed to process file")
 
