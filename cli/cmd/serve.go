@@ -33,7 +33,6 @@ import (
 	keycloakRepo "github.com/tupyy/gophoto/internal/domain/keycloak"
 	miniorepo "github.com/tupyy/gophoto/internal/domain/minio"
 	"github.com/tupyy/gophoto/internal/domain/postgres/album"
-	"github.com/tupyy/gophoto/internal/domain/postgres/bucket"
 	"github.com/tupyy/gophoto/internal/domain/postgres/user"
 	"github.com/tupyy/gophoto/internal/handlers"
 	"github.com/tupyy/gophoto/utils/logutil"
@@ -124,14 +123,6 @@ func createRepos(client pgclient.Client, mclient *minio.Client) (domain.Reposito
 		return repos, err
 	}
 	repos[domain.AlbumRepoName] = albumRepo
-
-	bucketRepo, err := bucket.NewPostgresRepo(client)
-	if err != nil {
-		logutil.GetDefaultLogger().WithError(err).Warn("failed to create bucket repo")
-
-		return repos, err
-	}
-	repos[domain.BucketRepoName] = bucketRepo
 
 	// create user repo
 	userRepo, err := user.NewPostgresRepo(client)

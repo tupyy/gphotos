@@ -28,7 +28,7 @@ Table: album_group_permissions
 
 JSON Sample
 -------------------------------------
-{    "group_name": "liLamtXqCPzGTxNmPoBuiYJWP",    "album_id": 35,    "permissions": 7}
+{    "group_name": "sDcJyPRyySPOCOuPFrQqXLArg",    "album_id": 80,    "permissions": 39}
 
 
 

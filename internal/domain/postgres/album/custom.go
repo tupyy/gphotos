@@ -10,20 +10,21 @@ import (
 )
 
 // custom struct to map the join
-type customAlbum struct {
+type albumJoinRow struct {
 	ID               int32                `gorm:"column_name:id;type:INT4"`
 	Name             string               `gorm:"column:name;type:TEXT;"`
 	CreatedAt        time.Time            `gorm:"column:created_at;type:TIMESTAMP;default:timezone('UTC');"`
 	OwnerID          string               `gorm:"column:owner_id;type:INT4;"`
 	Description      *string              `gorm:"column:description;type:TEXT;"`
 	Location         *string              `gorm:"column:location;type:TEXT;"`
+	Bucket           string               `gorm:"column:bucket;type:TEXT;"`
 	UserPermissions  models.PermissionIDs `gorm:"column:user_permissions;type:_PERMISSION_ID;"`
 	GroupPermissions models.PermissionIDs `gorm:"column:group_permissions;type:_PERMISSION_ID;"`
 	UserID           string               `gorm:"column:user_id;type:TEXT;"`
 	GroupName        string               `gorm:"column:group_name;type:TEXT;"`
 }
 
-func (ca customAlbum) ToEntity() (entity.Album, error) {
+func (ca albumJoinRow) ToEntity() (entity.Album, error) {
 	var emptyAlbum entity.Album
 
 	album := entity.Album{
@@ -31,6 +32,7 @@ func (ca customAlbum) ToEntity() (entity.Album, error) {
 		Name:      ca.Name,
 		CreatedAt: ca.CreatedAt,
 		OwnerID:   ca.OwnerID,
+		Bucket:    ca.Bucket,
 	}
 
 	if ca.Description != nil {
@@ -80,10 +82,10 @@ func (ca customAlbum) ToEntity() (entity.Album, error) {
 	return album, nil
 }
 
-type customAlbums []customAlbum
+type albumJoinRows []albumJoinRow
 
 // mergeAlbums merge a list of customAlbums into a list of distinct albums.
-func (albums customAlbums) Merge() []entity.Album {
+func (albums albumJoinRows) Merge() []entity.Album {
 	entitiesMap := make(map[int32]entity.Album)
 
 	for _, ca := range albums {

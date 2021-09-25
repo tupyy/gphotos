@@ -52,7 +52,7 @@ func GenerateFilterFuncs(filter FilterName, filterValues interface{}) (Filter, e
 		}
 		return func(tx *gorm.DB) *gorm.DB {
 			midnight := time.Date(v.Year(), v.Month(), v.Day(), 0, 0, 0, 0, time.UTC)
-			return tx.Where("album.create_at < ?", midnight)
+			return tx.Where("album.created_at < ?", midnight)
 		}, nil
 	case FilterAfterDate:
 		v, ok := filterValues.(time.Time)

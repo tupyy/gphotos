@@ -17,8 +17,10 @@ type Album struct {
 	OwnerID string `validate:"required"`
 	// Description - description of the album
 	Description string
-	// Location - location of the albul
+	// Location - location of the album
 	Location string
+	// Bucket - name of bucket in the store
+	Bucket string
 	// UserPermissions - holds the list of permissions of other users for this album.
 	// The key is the user id.
 	UserPermissions Permissions
@@ -43,6 +45,7 @@ func (a Album) String() string {
 	fmt.Fprintf(&sb, "created_at = %+v ", a.CreatedAt)
 	fmt.Fprintf(&sb, "description = %s ", a.Description)
 	fmt.Fprintf(&sb, "location = %s ", a.Location)
+	fmt.Fprintf(&sb, "bucket = %s", a.Bucket)
 
 	for k, v := range a.UserPermissions {
 		fmt.Fprintf(&sb, "user = %s, permisions = %+v ", k, v)

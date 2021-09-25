@@ -92,7 +92,7 @@ func (a *AlbumPostgresRepo) Delete(ctx context.Context, id int32) error {
 }
 
 func (a *AlbumPostgresRepo) Update(ctx context.Context, album entity.Album) error {
-	var ca customAlbum
+	var ca albumJoinRow
 
 	logger := logutil.GetDefaultLogger()
 
@@ -179,7 +179,7 @@ func (a *AlbumPostgresRepo) Update(ctx context.Context, album entity.Album) erro
 
 // Get returns all the albums sorted by id.
 func (a *AlbumPostgresRepo) Get(ctx context.Context, filters albumFilters.Filters) ([]entity.Album, error) {
-	var albums customAlbums
+	var albums albumJoinRows
 
 	tx := a.db.WithContext(ctx).Table("album").
 		Select(`album.*, album_user_permissions.permissions as user_permissions, album_user_permissions.user_id as user_id,
@@ -209,7 +209,7 @@ func (a *AlbumPostgresRepo) Get(ctx context.Context, filters albumFilters.Filter
 
 // GetByID return the album if any with id id.
 func (a *AlbumPostgresRepo) GetByID(ctx context.Context, id int32) (entity.Album, error) {
-	var albums customAlbums
+	var albums albumJoinRows
 
 	tx := a.db.WithContext(ctx).Table("album").
 		Select(`album.*, album_user_permissions.permissions as user_permissions, album_user_permissions.user_id as user_id,
@@ -236,7 +236,7 @@ func (a *AlbumPostgresRepo) GetByID(ctx context.Context, id int32) (entity.Album
 // GetByOwnerID return all albums of an user.
 // It does not sort or filter the album here. The sorting and filter is done at cache level.
 func (a *AlbumPostgresRepo) GetByOwnerID(ctx context.Context, ownerID string, filters albumFilters.Filters) ([]entity.Album, error) {
-	var albums customAlbums
+	var albums albumJoinRows
 
 	tx := a.db.WithContext(ctx).Table("album").
 		Select(`album.*, album_user_permissions.permissions as user_permissions, album_user_permissions.user_id as user_id,
@@ -268,7 +268,7 @@ func (a *AlbumPostgresRepo) GetByOwnerID(ctx context.Context, ownerID string, fi
 // GetByUserID returns a list of albums for which the user has at one permission set.
 // It does not sort or filter the album here. The sorting and filter is done at cache level.
 func (a *AlbumPostgresRepo) GetByUserID(ctx context.Context, userID string, filters albumFilters.Filters) ([]entity.Album, error) {
-	var albums customAlbums
+	var albums albumJoinRows
 
 	tx := a.db.WithContext(ctx).Table("album").
 		Select(`album.*, album_user_permissions.permissions as user_permissions, album_user_permissions.user_id as user_id,
@@ -300,7 +300,7 @@ func (a *AlbumPostgresRepo) GetByUserID(ctx context.Context, userID string, filt
 // GetAlbumsByGroup returns a list of albums for which the group has at one permission set.
 // It does not sort or filter the album here. The sorting and filter is done at cache level.
 func (a *AlbumPostgresRepo) GetByGroupName(ctx context.Context, groupName string, filters albumFilters.Filters) ([]entity.Album, error) {
-	var albums customAlbums
+	var albums albumJoinRows
 
 	tx := a.db.WithContext(ctx).Table("album").
 		Select(`album.*, album_user_permissions.permissions as user_permissions, album_user_permissions.user_id as user_id,
@@ -331,7 +331,7 @@ func (a *AlbumPostgresRepo) GetByGroupName(ctx context.Context, groupName string
 
 // GetByGroups returns a list of albums with at least one persmission for at least on group in the list.
 func (a *AlbumPostgresRepo) GetByGroups(ctx context.Context, groupNames []string, filters albumFilters.Filters) ([]entity.Album, error) {
-	var albums customAlbums
+	var albums albumJoinRows
 
 	if len(groupNames) == 0 {
 		return []entity.Album{}, nil

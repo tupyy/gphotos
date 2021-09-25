@@ -31,6 +31,7 @@ const (
 func GetAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 	albumRepo := repos[domain.AlbumRepoName].(domain.Album)
 	keycloakRepo := repos[domain.KeycloakRepoName].(domain.KeycloakRepo)
+	minioRepo := repos[domain.MinioRepoName].(domain.Store)
 
 	r.GET("/album/:id", parseAlbumIDHandler, func(c *gin.Context) {
 		reqCtx := c.Request.Context()
@@ -124,7 +125,31 @@ func GetAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 			return
 		}
 
+		medias, err := minioRepo.ListBucket(reqCtx, album.Bucket)
+		if err != nil {
+			logger.WithField("album id", album.ID).WithError(err).Error("failed to list media for album")
+			common.AbortInternalError(c, err, "failed to list media for album")
+
+			return
+		}
+
+		// encrypt thumbnail filenames
+		thumbnails := make([]string, 0, len(medias))
+		for _, m := range medias {
+			if m.MediaType == entity.Photo && len(m.Thumbnail) > 0 {
+				encryptedFilename, err := gen.EncryptData(m.Thumbnail)
+				if err != nil {
+					logger.WithError(err).WithField("thumbnail filename", m.Thumbnail).Error("failed to encrypted filename")
+
+					continue
+				}
+
+				thumbnails = append(thumbnails, encryptedFilename)
+			}
+		}
+
 		c.HTML(http.StatusOK, "album_view.html", gin.H{
+			"id":                encryptedID,
 			"name":              album.Name,
 			"description":       album.Description,
 			"location":          album.Location,
@@ -140,6 +165,7 @@ func GetAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 			"edit_permission":   permissions[entity.PermissionEditAlbum],
 			"delete_permission": permissions[entity.PermissionDeleteAlbum],
 			"is_admin":          session.User.Role == entity.RoleAdmin,
+			"photos":            thumbnails,
 		})
 	})
 }
@@ -198,7 +224,6 @@ func GetCreateAlbumForm(r *gin.RouterGroup, repos domain.Repositories) {
 func CreateAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 	albumRepo := repos[domain.AlbumRepoName].(domain.Album)
 	minioRepo := repos[domain.MinioRepoName].(domain.Store)
-	bucketRepo := repos[domain.BucketRepoName].(domain.Bucket)
 
 	r.POST("/album", func(c *gin.Context) {
 		s, _ := c.Get("sessionData")
@@ -265,27 +290,24 @@ func CreateAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 			}
 		}
 
-		albumID, err := albumRepo.Create(reqCtx, album)
-		if err != nil {
+		// generate bucket name
+		bucketID := strings.ReplaceAll(uuid.New().String(), "-", "")
+
+		// create the bucket
+		if err := minioRepo.CreateBucket(reqCtx, bucketID); err != nil {
+			logger.WithError(err).Error("failed to create bucket on store")
 			common.AbortInternalError(c, err, fmt.Sprintf("album: %+v", album))
 
 			return
 		}
 
-		// generate bucket urn
-		id := strings.ReplaceAll(uuid.New().String(), "-", "")
-		err = minioRepo.CreateBucket(reqCtx, id)
-		if err != nil {
-			logger.WithError(err).WithField("album_id", albumID).Error("failed to create bucket on store")
-		}
+		album.Bucket = bucketID
 
-		// create bucket on pg
-		err = bucketRepo.Create(reqCtx, entity.Bucket{
-			AlbumID: albumID,
-			Urn:     id,
-		})
+		albumID, err := albumRepo.Create(reqCtx, album)
 		if err != nil {
-			logger.WithError(err).WithField("album_id", albumID).Error("failed to create bucket on pg")
+			common.AbortInternalError(c, err, fmt.Sprintf("album: %+v", album))
+
+			return
 		}
 
 		logger.WithFields(logrus.Fields{

@@ -17,7 +17,6 @@ const (
 	KeycloakRepoName RepoName = iota
 	AlbumRepoName
 	UserRepoName
-	BucketRepoName
 	MinioRepoName
 )
 
@@ -51,16 +50,6 @@ type Album interface {
 	GetByGroups(ctx context.Context, groups []string, filters albumFilters.Filters) ([]entity.Album, error)
 }
 
-// Bucket describe postgres operation on bucket table.
-type Bucket interface {
-	// Get the bucket of the album with id.
-	Get(ctx context.Context, albumID int32) (entity.Bucket, error)
-	// Create a bucket
-	Create(ctx context.Context, bucket entity.Bucket) error
-	// Delete bucket from postgres
-	Delete(ctx context.Context, bucket entity.Bucket) error
-}
-
 // Postgres repo to handler relationships between users
 type User interface {
 	GetRelatedUsers(ctx context.Context, user entity.User) (ids []string, err error)
@@ -72,8 +61,8 @@ type Store interface {
 	GetFile(ctx context.Context, bucket, filename string) (io.Reader, error)
 	// PutFile save a file to a bucket.
 	PutFile(ctx context.Context, bucket, filename string, size int64, r io.Reader) error
-	// // ListFiles list the content of a bucket
-	// ListFiles(ctx context.Context, bucket string) ([]string, error)
+	// ListFiles list the content of a bucket
+	ListBucket(ctx context.Context, bucket string) ([]entity.Media, error)
 	// DeleteFile deletes a file from a bucket.
 	DeleteFile(ctx context.Context, bucket, filename string) error
 	// CreateBucket create a bucket.
