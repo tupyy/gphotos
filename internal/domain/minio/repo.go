@@ -9,6 +9,7 @@ import (
 
 	"github.com/minio/minio-go/v7"
 	"github.com/tupyy/gophoto/internal/domain/entity"
+	"github.com/tupyy/gophoto/utils/logutil"
 )
 
 type MinioRepo struct {
@@ -46,6 +47,56 @@ func (m *MinioRepo) DeleteBucket(ctx context.Context, bucket string) error {
 
 	if !exists {
 		return nil
+	}
+
+	// remove all objects
+	objectsCh := make(chan minio.ObjectInfo)
+	doneCh := make(chan interface{}, 1)
+	errCh := make(chan error)
+
+	// Send object names that are needed to be removed to objectsCh
+	go func() {
+		defer close(objectsCh)
+		// List all objects from a bucket-name with a matching prefix.
+		for object := range m.client.ListObjects(ctx, bucket, minio.ListObjectsOptions{}) {
+			if object.Err != nil {
+				logutil.GetDefaultLogger().WithError(err).Errorf("failed to list bucket '%s'", bucket)
+
+				errCh <- object.Err
+				break
+			}
+			objectsCh <- object
+
+			select {
+			case <-doneCh:
+				break
+			default:
+			}
+		}
+
+		close(objectsCh)
+	}()
+
+	opts := minio.RemoveObjectsOptions{
+		GovernanceBypass: true,
+	}
+
+	for {
+		rerr, more := <-m.client.RemoveObjects(ctx, bucket, objectsCh, opts)
+		if !more {
+			break
+		}
+
+		if rerr.Err != nil {
+			doneCh <- struct{}{}
+			return rerr.Err
+		}
+
+		select {
+		case e := <-errCh:
+			return e
+		default:
+		}
 	}
 
 	err = m.client.RemoveBucket(ctx, bucket)

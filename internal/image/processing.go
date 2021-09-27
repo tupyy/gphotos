@@ -26,7 +26,7 @@ func Process(r io.Reader, imgWriter, thumbnailWriter io.Writer) error {
 	logutil.GetDefaultLogger().Debug("image encoded as jpg")
 
 	// create the thumbnail
-	thumbnail := imaging.Resize(img, 150, 0, imaging.Lanczos)
+	thumbnail := imaging.Resize(img, 0, 150, imaging.Lanczos)
 
 	err = imaging.Encode(thumbnailWriter, thumbnail, imaging.JPEG, imaging.JPEGQuality(100))
 	if err != nil {

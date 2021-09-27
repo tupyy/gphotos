@@ -3,10 +3,20 @@
     <head>
         {{ template "base_css" }}
         <link rel="stylesheet" href="/static/css/album-view.css"/>
+        <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.2.1/css/lightgallery-bundle.min.css" />
+        {{ if .write_permission }}
+            <link rel="stylesheet" href="/static/css/upload/fileui.css"/>
+        {{ end }}
+
         {{ template "js" }}
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.2.1/lightgallery.umd.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.2.1/plugins/zoom/lg-zoom.umd.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.2.1/plugins/thumbnail/lg-thumbnail.umd.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/js/jquery.justifiedGallery.js"></script>
+        <script src="/static/js/album/gallery.js"></script>
+        <script src="/static/js/album/delete.js"></script>
         {{ if .write_permission }}
             {{ template "upload" }}
-            <link rel="stylesheet" href="/static/css/upload/fileui.css"/>
         {{ end }}
         <title>Photos</title>
     </head>
@@ -33,12 +43,15 @@
                             </div>
                     {{ else }}
                         {{if .photos}}
-                            <div class="container container-photos">
-                                <div class="row gx-1 gy-1">
-                                    {{ $id := .id }}
-                                    {{ range .photos }}
-                                        <img src="/api/albums/{{$id}}/album/{{.}}/media"/>
-                                    {{ end }}
+                            <div class="container container-sm container-photos">
+                                <div class="row justify-content-center">
+                                    <div class="col col-md-10" id="album-gallery">
+                                        {{ range .photos }}
+                                        <a href="/api/albums/{{$.id}}/album/{{.Filename}}/media">
+                                            <img src="/api/albums/{{$.id}}/album/{{.Thumbnail}}/media"/>
+                                        </a>
+                                        {{ end }}
+                                    </div>
                                 </div>
                             </div>
                         {{ else }}
@@ -209,10 +222,10 @@
                                 </div>
                             </div>
                             <div class="col-3">
-                                <a href="{{.delete_link}}">
+                                <a onclick="deleteAlbum()">
                                     <button class="btn btn-danger">Delete this album</button>
                                 </a>
-                            </div>
+                           </div>
                         </div>
                     {{ end }}
                 </div>

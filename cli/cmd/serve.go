@@ -136,7 +136,8 @@ func createRepos(client pgclient.Client, mclient *minio.Client) (domain.Reposito
 
 	// create minio repo
 	minioRepo := miniorepo.New(mclient)
-	repos[domain.MinioRepoName] = minioRepo
+	minioCache := miniorepo.NewCacheRepo(minioRepo, ttl, interval)
+	repos[domain.MinioRepoName] = minioCache
 
 	return repos, nil
 }

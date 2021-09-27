@@ -134,17 +134,21 @@ func GetAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 		}
 
 		// encrypt thumbnail filenames
-		thumbnails := make([]string, 0, len(medias))
+		encryptedPhotos := make([]entity.Media, 0, len(medias))
+		encryptedVideos := make([]entity.Media, 0, len(medias))
 		for _, m := range medias {
-			if m.MediaType == entity.Photo && len(m.Thumbnail) > 0 {
-				encryptedFilename, err := gen.EncryptData(m.Thumbnail)
-				if err != nil {
-					logger.WithError(err).WithField("thumbnail filename", m.Thumbnail).Error("failed to encrypted filename")
+			encryptedMedia, err := encryptMedia(m, gen)
+			if err != nil {
+				logger.WithError(err).WithField("media", fmt.Sprintf("%+v", m)).Error("failed to encrypted media")
 
-					continue
-				}
+				continue
+			}
 
-				thumbnails = append(thumbnails, encryptedFilename)
+			switch m.MediaType {
+			case entity.Photo:
+				encryptedPhotos = append(encryptedPhotos, encryptedMedia)
+			case entity.Video:
+				encryptedVideos = append(encryptedVideos, encryptedMedia)
 			}
 		}
 
@@ -165,7 +169,7 @@ func GetAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 			"edit_permission":   permissions[entity.PermissionEditAlbum],
 			"delete_permission": permissions[entity.PermissionDeleteAlbum],
 			"is_admin":          session.User.Role == entity.RoleAdmin,
-			"photos":            thumbnails,
+			"photos":            encryptedPhotos,
 		})
 	})
 }
@@ -546,6 +550,7 @@ func UpdateAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 // DELETE /album/:id
 func DeleteAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 	albumRepo := repos[domain.AlbumRepoName].(domain.Album)
+	minioRepo := repos[domain.MinioRepoName].(domain.Store)
 
 	r.DELETE("/album/:id", parseAlbumIDHandler, func(c *gin.Context) {
 		reqCtx := c.Request.Context()
@@ -576,6 +581,18 @@ func DeleteAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 				"album owner id":  album.OwnerID,
 			}).Error("album can be edit either by user with delete permission or the owner")
 			common.AbortForbidden(c, common.NewMissingPermissionError(entity.PermissionDeleteAlbum, album, session.User), "delete album")
+
+			return
+		}
+
+		err = minioRepo.DeleteBucket(reqCtx, album.Bucket)
+		if err != nil {
+			logger.WithFields(logrus.Fields{
+				"bucket":   album.Bucket,
+				"album id": album.ID,
+			}).WithError(err).Error("failed to remove album's bucket")
+
+			common.AbortInternalError(c, err, "internal error")
 
 			return
 		}
