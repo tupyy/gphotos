@@ -115,43 +115,6 @@ func GetAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 			}
 		}
 
-		// encrypt album id
-		gen := encryption.NewGenerator(conf.GetEncryptionKey())
-		encryptedID, err := gen.EncryptData(fmt.Sprintf("%d", album.ID))
-		if err != nil {
-			logger.WithError(err).Error("encrypt album id")
-			common.AbortInternalError(c, err, fmt.Sprintf("album id: %d", album.ID))
-
-			return
-		}
-
-		medias, err := minioRepo.ListBucket(reqCtx, album.Bucket)
-		if err != nil {
-			logger.WithField("album id", album.ID).WithError(err).Error("failed to list media for album")
-			common.AbortInternalError(c, err, "failed to list media for album")
-
-			return
-		}
-
-		// encrypt thumbnail filenames
-		encryptedPhotos := make([]entity.Media, 0, len(medias))
-		encryptedVideos := make([]entity.Media, 0, len(medias))
-		for _, m := range medias {
-			encryptedMedia, err := encryptMedia(m, gen)
-			if err != nil {
-				logger.WithError(err).WithField("media", fmt.Sprintf("%+v", m)).Error("failed to encrypted media")
-
-				continue
-			}
-
-			switch m.MediaType {
-			case entity.Photo:
-				encryptedPhotos = append(encryptedPhotos, encryptedMedia)
-			case entity.Video:
-				encryptedVideos = append(encryptedVideos, encryptedMedia)
-			}
-		}
-
 		c.HTML(http.StatusOK, "album_view.html", gin.H{
 			"id":                encryptedID,
 			"name":              album.Name,
@@ -244,7 +207,7 @@ func CreateAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 			Resolve(entity.Album{}, session.User)
 
 		if !hasPermission {
-			common.AbortForbidden(c, errors.New("user has no editor of admin role"), "user role forbids the creation of albums")
+			common.AbortForbidden(c, errors.New("user has no editor or admin role"), "user role forbids the creation of albums")
 
 			return
 		}
@@ -535,14 +498,6 @@ func UpdateAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 			}
 		}
 
-		// edit permissions don't allow a user other than the owner to change permissions
-		err = albumRepo.Update(reqCtx, album)
-		if err != nil {
-			common.AbortInternalError(c, err, "update album")
-
-			return
-		}
-
 		c.Redirect(http.StatusFound, rootURL)
 	})
 }
@@ -581,25 +536,6 @@ func DeleteAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 				"album owner id":  album.OwnerID,
 			}).Error("album can be edit either by user with delete permission or the owner")
 			common.AbortForbidden(c, common.NewMissingPermissionError(entity.PermissionDeleteAlbum, album, session.User), "delete album")
-
-			return
-		}
-
-		err = minioRepo.DeleteBucket(reqCtx, album.Bucket)
-		if err != nil {
-			logger.WithFields(logrus.Fields{
-				"bucket":   album.Bucket,
-				"album id": album.ID,
-			}).WithError(err).Error("failed to remove album's bucket")
-
-			common.AbortInternalError(c, err, "internal error")
-
-			return
-		}
-
-		err = albumRepo.Delete(reqCtx, album.ID)
-		if err != nil {
-			common.AbortInternalError(c, common.ErrDeleteAlbum, fmt.Sprintf("album id: %d", album.ID))
 
 			return
 		}

@@ -87,27 +87,3 @@ func serialize(users []entity.User) []serializeUser.SerializedUser {
 
 	return serializedUsers
 }
-
-func encryptMedia(m entity.Media, gen *encryption.Generator) (entity.Media, error) {
-	encryptedFilename, err := gen.EncryptData(m.Filename)
-	if err != nil {
-		return entity.Media{}, err
-	}
-
-	encryptedThumbnail, err := gen.EncryptData(m.Thumbnail)
-	if err != nil {
-		return entity.Media{}, err
-	}
-
-	encryptedBucket, err := gen.EncryptData(m.Bucket)
-	if err != nil {
-		return entity.Media{}, err
-	}
-
-	return entity.Media{
-		MediaType: m.MediaType,
-		Filename:  encryptedFilename,
-		Bucket:    encryptedBucket,
-		Thumbnail: encryptedThumbnail,
-	}, nil
-}

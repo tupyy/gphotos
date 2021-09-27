@@ -9,6 +9,8 @@ import (
 type Album struct {
 	// ID - id of the album
 	ID int32
+	// EncryptedID - id of the album encrypted with server encryption key. it is not deterministic.
+	EncryptedID string
 	// Name - name of the album
 	Name string `validate:"required"`
 	// CreateAt - creation date
@@ -27,6 +29,10 @@ type Album struct {
 	// GroupPermissions - holds the list of permissions of groups for this album.
 	// The key is the group name.
 	GroupPermissions Permissions
+	// Photos - list of photos
+	Photos []Media
+	// Videos - list of videos
+	Videos []Media
 }
 
 func (a Album) Validate() error {
@@ -45,7 +51,9 @@ func (a Album) String() string {
 	fmt.Fprintf(&sb, "created_at = %+v ", a.CreatedAt)
 	fmt.Fprintf(&sb, "description = %s ", a.Description)
 	fmt.Fprintf(&sb, "location = %s ", a.Location)
-	fmt.Fprintf(&sb, "bucket = %s", a.Bucket)
+	fmt.Fprintf(&sb, "bucket = %s ", a.Bucket)
+	fmt.Fprintf(&sb, "number of photos = %d ", len(a.Photos))
+	fmt.Fprintf(&sb, "number of videos = %d ", len(a.Videos))
 
 	for k, v := range a.UserPermissions {
 		fmt.Fprintf(&sb, "user = %s, permisions = %+v ", k, v)
