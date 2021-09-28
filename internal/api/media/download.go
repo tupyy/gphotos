@@ -62,7 +62,7 @@ func GetAlbumMedia(r *gin.RouterGroup, repos domain.Repositories) {
 				"user_id":  session.User.ID,
 			}).Error("failed to read bucket")
 
-			common.AbortInternalErrorWithJson(c, errors.New("failed to read bucket"), "")
+			common.AbortInternalErrorWithJson(c)
 
 			return
 		}
@@ -117,7 +117,7 @@ func DownloadMedia(r *gin.RouterGroup, repos domain.Repositories) {
 				"album_id": album.ID,
 				"media":    c.GetString("media"),
 			}).WithError(err).Error("failed to open media")
-			common.AbortInternalError(c, err, "failed to open media")
+			common.AbortInternalError(c)
 
 			return
 		}
@@ -128,7 +128,7 @@ func DownloadMedia(r *gin.RouterGroup, repos domain.Repositories) {
 				"album_id": album.ID,
 				"media":    c.GetString("media"),
 			}).WithError(err).Error("failed to read from media")
-			common.AbortInternalError(c, err, "failed to read media")
+			common.AbortInternalError(c)
 
 			return
 		}
@@ -142,7 +142,7 @@ func DownloadMedia(r *gin.RouterGroup, repos domain.Repositories) {
 				"album_id": album.ID,
 				"media":    c.GetString("media"),
 			}).WithError(err).Error("failed to write media")
-			common.AbortInternalError(c, err, "failed to write media")
+			common.AbortInternalError(c)
 
 			return
 		}

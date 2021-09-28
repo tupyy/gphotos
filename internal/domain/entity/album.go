@@ -9,8 +9,6 @@ import (
 type Album struct {
 	// ID - id of the album
 	ID int32
-	// EncryptedID - id of the album encrypted with server encryption key. it is not deterministic.
-	EncryptedID string
 	// Name - name of the album
 	Name string `validate:"required"`
 	// CreateAt - creation date

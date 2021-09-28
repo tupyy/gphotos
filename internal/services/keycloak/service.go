@@ -1,4 +1,4 @@
-package services
+package keycloak
 
 import (
 	"context"
@@ -9,15 +9,15 @@ import (
 	"github.com/tupyy/gophoto/utils/logutil"
 )
 
-type User struct {
+type Service struct {
 	repos domain.Repositories
 }
 
-func NewUserService(repos domain.Repositories) *User {
-	return &User{repos}
+func New(repos domain.Repositories) *Service {
+	return &Service{repos}
 }
 
-func (u *User) Get(ctx context.Context, id string) (entity.User, error) {
+func (u *Service) Get(ctx context.Context, id string) (entity.User, error) {
 	keycloakRepo := u.repos[domain.KeycloakRepoName].(domain.KeycloakRepo)
 
 	logger := logutil.GetLogger(ctx)
@@ -34,7 +34,7 @@ func (u *User) Get(ctx context.Context, id string) (entity.User, error) {
 	return user, nil
 }
 
-func (u *User) GetUsers(ctx context.Context) ([]entity.User, error) {
+func (u *Service) GetUsers(ctx context.Context) ([]entity.User, error) {
 	keycloakRepo := u.repos[domain.KeycloakRepoName].(domain.KeycloakRepo)
 
 	logger := logutil.GetLogger(ctx)

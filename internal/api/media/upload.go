@@ -70,7 +70,7 @@ func UploadMedia(r *gin.RouterGroup, repos domain.Repositories) {
 		file, err := c.FormFile("file")
 		if err != nil {
 			logger.WithField("album id", album.ID).WithError(err).Error("failed to file from request")
-			common.AbortInternalError(c, err, "failed to file from request")
+			common.AbortInternalError(c)
 
 			return
 		}
@@ -86,7 +86,7 @@ func UploadMedia(r *gin.RouterGroup, repos domain.Repositories) {
 		src, err := file.Open()
 		if err != nil {
 			logger.WithField("album id", album.ID).WithError(err).Error("failed to open file from request")
-			common.AbortInternalError(c, err, "failed to open file")
+			common.AbortInternalError(c)
 
 			return
 		}
@@ -97,7 +97,7 @@ func UploadMedia(r *gin.RouterGroup, repos domain.Repositories) {
 		err = minioRepo.PutFile(reqCtx, conf.GetMinioTemporaryBucket(), sanitizedFilename, file.Size, src)
 		if err != nil {
 			logger.WithField("filename", file.Filename).WithError(err).Error("failed to put file into the bucket")
-			common.AbortInternalError(c, err, "failed to open file")
+			common.AbortInternalError(c)
 
 			return
 		}
@@ -107,7 +107,7 @@ func UploadMedia(r *gin.RouterGroup, repos domain.Repositories) {
 		var imgThumbnailBuffer bytes.Buffer
 		if err := image.Process(src, &imgBuffer, &imgThumbnailBuffer); err != nil {
 			logger.WithError(err).Error("failed to process image")
-			common.AbortInternalError(c, err, "failed to process file")
+			common.AbortInternalError(c)
 
 			return
 		}
@@ -118,15 +118,15 @@ func UploadMedia(r *gin.RouterGroup, repos domain.Repositories) {
 		basename := strings.Split(sanitizedFilename, ".")[0]
 
 		if err := minioRepo.PutFile(reqCtx, album.Bucket, fmt.Sprintf("%s.jpg", basename), int64(imgBuffer.Len()), &imgBuffer); err != nil {
-			logger.WithError(err).Error("failed to write image to bucket %s", album.Bucket)
-			common.AbortInternalError(c, err, "failed to save file")
+			logger.WithError(err).Errorf("failed to write image to bucket %s", album.Bucket)
+			common.AbortInternalError(c)
 
 			return
 		}
 
 		if err := minioRepo.PutFile(reqCtx, album.Bucket, fmt.Sprintf("%s_thumbnail.jpg", basename), int64(imgThumbnailBuffer.Len()), &imgThumbnailBuffer); err != nil {
-			logger.WithError(err).Error("failed to write thumbnail to bucket %s", album.Bucket)
-			common.AbortInternalError(c, err, "failed to save thumbnail")
+			logger.WithError(err).Errorf("failed to write thumbnail to bucket %s", album.Bucket)
+			common.AbortInternalError(c)
 
 			return
 		}

@@ -1,40 +1,39 @@
 package index
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/tupyy/gophoto/internal/common"
-	"github.com/tupyy/gophoto/internal/domain"
 	"github.com/tupyy/gophoto/internal/domain/entity"
+	"github.com/tupyy/gophoto/internal/dto"
+	"github.com/tupyy/gophoto/internal/services/album"
+	"github.com/tupyy/gophoto/internal/services/keycloak"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
 
-func Index(r *gin.RouterGroup, repos domain.Repositories) {
-	keycloakRepo := repos[domain.KeycloakRepoName].(domain.KeycloakRepo)
-	userRepo := repos[domain.UserRepoName].(domain.User)
-
+func Index(r *gin.RouterGroup, albumService album.Service, keycloakService keycloak.Service) {
 	r.GET("/", func(c *gin.Context) {
 		s, _ := c.Get("sessionData")
-
 		session := s.(entity.Session)
 
-		reqCtx := c.Request.Context()
-		logger := logutil.GetLogger(c)
+		ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
+		logger := logutil.GetLogger(ctx)
 
-		filters, err := generateFilters(session.User)
+		_, err := generateFilters(session.User)
 		if err != nil {
 			logger.WithError(err).Error("failed to create user filters")
-			common.AbortInternalError(c, err, "")
+			common.AbortInternalError(c)
 
 			return
 		}
 
-		users, err := keycloakRepo.GetUsers(reqCtx, filters)
+		users, err := keycloakService.GetUsers(ctx)
 		if err != nil {
 			logger.WithError(err).Error("fetch user filters")
-			common.AbortInternalError(c, err, "")
+			common.AbortInternalError(c)
 
 			return
 		}
@@ -45,31 +44,31 @@ func Index(r *gin.RouterGroup, repos domain.Repositories) {
 				"name":      fmt.Sprintf("%s %s", session.User.FirstName, session.User.LastName),
 				"user_role": session.User.Role.String(),
 				"can_share": session.User.CanShare,
-				"users":     serialize(users),
+				"users":     dto.NewUserDTOs(users),
 			})
 
 			return
 		}
 
 		// if current user can share get all users that share an album with the current one.
-		if session.User.CanShare {
-			// get all shared albums in order to filtered users which don't share albums with the current user
-			ids, err := userRepo.GetRelatedUsers(reqCtx, session.User)
-			if err != nil {
-				logger.WithError(err).WithField("user id", session.User.ID).Error("fetch related users")
-				common.AbortInternalError(c, err, "")
+		// if session.User.CanShare {
+		// 	// get all shared albums in order to filtered users which don't share albums with the current user
+		// 	ids, err := userRepo.GetRelatedUsers(reqCtx, session.User)
+		// 	if err != nil {
+		// 		logger.WithError(err).WithField("user id", session.User.ID).Error("fetch related users")
+		// 		common.AbortInternalError(c, err, "")
 
-				return
-			}
+		// 		return
+		// 	}
 
-			users = mapUsers(users, ids)
-		}
+		// 	users = mapUsers(users, ids)
+		// }
 
 		c.HTML(http.StatusOK, "index.html", gin.H{
 			"name":      fmt.Sprintf("%s %s", session.User.FirstName, session.User.LastName),
 			"user_role": session.User.Role.String(),
 			"can_share": session.User.CanShare,
-			"users":     serialize(users),
+			"users":     dto.NewUserDTOs(users),
 		})
 	})
 }

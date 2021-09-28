@@ -1,30 +1,9 @@
 package index
 
 import (
-	"fmt"
-
 	"github.com/tupyy/gophoto/internal/domain/entity"
 	userFilters "github.com/tupyy/gophoto/internal/domain/filters/user"
-	serializeUser "github.com/tupyy/gophoto/internal/handlers/serialize"
-	"github.com/tupyy/gophoto/utils/logutil"
 )
-
-func serialize(users []entity.User) []serializeUser.SerializedUser {
-	serializedUsers := make([]serializeUser.SerializedUser, 0, len(users))
-
-	for _, u := range users {
-		s, err := serializeUser.NewSerializedUser(u)
-		if err != nil {
-			logutil.GetDefaultLogger().WithError(err).WithField("user", fmt.Sprintf("%+v", u)).Error("serialize user")
-
-			continue
-		}
-
-		serializedUsers = append(serializedUsers, s)
-	}
-
-	return serializedUsers
-}
 
 // generateFilters generates 3 filters: notUserNameFilter, FilterByRole and FilterByCanShare.
 func generateFilters(currentUser entity.User) (userFilters.Filters, error) {

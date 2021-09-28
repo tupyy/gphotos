@@ -44,8 +44,8 @@ func AbortBadRequest(c *gin.Context, err error, msg string) {
 	Abort(c, http.StatusBadRequest, err, msg)
 }
 
-func AbortInternalError(c *gin.Context, err error, msg string) {
-	Abort(c, http.StatusInternalServerError, err, msg)
+func AbortInternalError(c *gin.Context) {
+	Abort(c, http.StatusInternalServerError, errors.New("internal error"), "")
 }
 
 func AbortForbidden(c *gin.Context, err error, msg string) {

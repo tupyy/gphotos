@@ -1,7 +1,6 @@
 package album
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -9,7 +8,6 @@ import (
 	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/domain/entity"
 	userFilters "github.com/tupyy/gophoto/internal/domain/filters/user"
-	serializeUser "github.com/tupyy/gophoto/internal/handlers/serialize"
 	"github.com/tupyy/gophoto/utils/encryption"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
@@ -68,22 +66,4 @@ func generateFilters(currentUser entity.User) (userFilters.Filters, error) {
 
 	filters["admin"] = notAdminFilter
 	return filters, nil
-}
-
-// serialize serialized a list of users
-func serialize(users []entity.User) []serializeUser.SerializedUser {
-	serializedUsers := make([]serializeUser.SerializedUser, 0, len(users))
-
-	for _, u := range users {
-		s, err := serializeUser.NewSerializedUser(u)
-		if err != nil {
-			logutil.GetDefaultLogger().WithError(err).WithField("user", fmt.Sprintf("%+v", u)).Error("serialize user")
-
-			continue
-		}
-
-		serializedUsers = append(serializedUsers, s)
-	}
-
-	return serializedUsers
 }
