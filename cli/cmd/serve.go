@@ -35,6 +35,8 @@ import (
 	"github.com/tupyy/gophoto/internal/domain/postgres/album"
 	"github.com/tupyy/gophoto/internal/domain/postgres/user"
 	"github.com/tupyy/gophoto/internal/handlers"
+	albumService "github.com/tupyy/gophoto/internal/services/album"
+	keycloakService "github.com/tupyy/gophoto/internal/services/keycloak"
 	"github.com/tupyy/gophoto/utils/logutil"
 	"github.com/tupyy/gophoto/utils/minioclient"
 	"github.com/tupyy/gophoto/utils/pgclient"
@@ -64,6 +66,7 @@ var serveCmd = &cobra.Command{
 		if err != nil {
 			panic(err)
 		}
+		logutil.GetDefaultLogger().Info("connected to db")
 
 		// init minio client
 		minioClient, err := minioclient.New(conf.GetMinioConfig())
@@ -76,6 +79,12 @@ var serveCmd = &cobra.Command{
 		if err != nil {
 			panic(err)
 		}
+		logutil.GetDefaultLogger().Info("repositories created")
+
+		// create services
+		albumService := albumService.New(repos)
+		keycloakService := keycloakService.New(repos)
+		logutil.GetDefaultLogger().Info("services created")
 
 		// create keycloak
 		keycloakAuthenticator := auth.NewKeyCloakAuthenticator(conf.GetKeycloakConfig(), conf.GetServerAuthCallback())
@@ -85,9 +94,9 @@ var serveCmd = &cobra.Command{
 
 		handlers.Logout(r.PrivateGroup, keycloakAuthenticator)
 
-		handlers.Register(r.PrivateGroup, r.PublicGroup, repos)
+		handlers.Register(r.PrivateGroup, r.PublicGroup, albumService, keycloakService)
 
-		api.RegisterApi(r.PrivateGroup, r.PublicGroup, repos)
+		api.RegisterApi(r.PrivateGroup, r.PublicGroup, albumService, keycloakService)
 
 		// run server
 		r.Run()

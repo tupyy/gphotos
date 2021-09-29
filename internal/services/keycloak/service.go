@@ -2,51 +2,67 @@ package keycloak
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/tupyy/gophoto/internal/domain"
 	"github.com/tupyy/gophoto/internal/domain/entity"
-	"github.com/tupyy/gophoto/utils/logutil"
+	"github.com/tupyy/gophoto/internal/domain/filters/user"
 )
 
 type Service struct {
 	repos domain.Repositories
 }
 
+type Query struct {
+	predicates   []Predicate
+	keycloakRepo domain.KeycloakRepo
+}
+
 func New(repos domain.Repositories) *Service {
 	return &Service{repos}
 }
 
-func (u *Service) Get(ctx context.Context, id string) (entity.User, error) {
-	keycloakRepo := u.repos[domain.KeycloakRepoName].(domain.KeycloakRepo)
+func (s *Service) Query() *Query {
+	return &Query{
+		predicates:   []Predicate{},
+		keycloakRepo: s.repos[domain.KeycloakRepoName].(domain.KeycloakRepo),
+	}
+}
 
-	logger := logutil.GetLogger(ctx)
+func (q *Query) Where(p Predicate) *Query {
+	q.predicates = append(q.predicates, p)
 
-	user, err := keycloakRepo.GetUserByID(ctx, id)
-	if err != nil {
-		logger.WithError(err).WithField("user id", id).Error("failed to get user")
+	return q
+}
 
-		return entity.User{}, fmt.Errorf("[%w] failed to get user '%s'", err, id)
+func (q *Query) AllUsers(ctx context.Context) ([]entity.User, error) {
+	filters := make([]user.Filter, 0, len(q.predicates))
+	for _, p := range q.predicates {
+		filters = append(filters, p())
 	}
 
-	// TODO get user's groups
+	users, err := q.keycloakRepo.GetUsers(ctx, filters)
+	if err != nil {
+		return []entity.User{}, err
+	}
+
+	return users, nil
+
+}
+
+func (q *Query) FirstUser(ctx context.Context, id string) (entity.User, error) {
+	user, err := q.keycloakRepo.GetUserByID(ctx, id)
+	if err != nil {
+		return entity.User{}, err
+	}
 
 	return user, nil
 }
 
-func (u *Service) GetUsers(ctx context.Context) ([]entity.User, error) {
-	keycloakRepo := u.repos[domain.KeycloakRepoName].(domain.KeycloakRepo)
-
-	logger := logutil.GetLogger(ctx)
-
-	users, err := keycloakRepo.GetUsers(ctx, nil)
+func (q *Query) AllGroups(ctx context.Context) ([]entity.Group, error) {
+	groups, err := q.keycloakRepo.GetGroups(ctx)
 	if err != nil {
-		logger.WithError(err).Error("failed to get users")
-
-		return []entity.User{}, err
+		return []entity.Group{}, err
 	}
 
-	// TODO get users groups
-
-	return users, nil
+	return groups, nil
 }

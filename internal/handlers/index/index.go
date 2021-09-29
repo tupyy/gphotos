@@ -9,12 +9,11 @@ import (
 	"github.com/tupyy/gophoto/internal/common"
 	"github.com/tupyy/gophoto/internal/domain/entity"
 	"github.com/tupyy/gophoto/internal/dto"
-	"github.com/tupyy/gophoto/internal/services/album"
 	"github.com/tupyy/gophoto/internal/services/keycloak"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
 
-func Index(r *gin.RouterGroup, albumService album.Service, keycloakService keycloak.Service) {
+func Index(r *gin.RouterGroup, keycloakService *keycloak.Service) {
 	r.GET("/", func(c *gin.Context) {
 		s, _ := c.Get("sessionData")
 		session := s.(entity.Session)
@@ -22,17 +21,13 @@ func Index(r *gin.RouterGroup, albumService album.Service, keycloakService keycl
 		ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
 		logger := logutil.GetLogger(ctx)
 
-		_, err := generateFilters(session.User)
+		users, err := keycloakService.Query().
+			Where(keycloak.NotUsername(session.User.Username)).
+			Where(keycloak.CanShare(true)).
+			Where(keycloak.Roles([]entity.Role{entity.RoleEditor, entity.RoleUser})).
+			AllUsers(ctx)
 		if err != nil {
-			logger.WithError(err).Error("failed to create user filters")
-			common.AbortInternalError(c)
-
-			return
-		}
-
-		users, err := keycloakService.GetUsers(ctx)
-		if err != nil {
-			logger.WithError(err).Error("fetch user filters")
+			logger.WithError(err).Error("failed to get users")
 			common.AbortInternalError(c)
 
 			return

@@ -4,22 +4,23 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/tupyy/gophoto/internal/handlers/album"
 	"github.com/tupyy/gophoto/internal/handlers/index"
-	"github.com/tupyy/gophoto/internal/domain"
+	albumService "github.com/tupyy/gophoto/internal/services/album"
+	"github.com/tupyy/gophoto/internal/services/keycloak"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
 
-func Register(privateGroup *gin.RouterGroup, publicGroup *gin.RouterGroup, repos domain.Repositories) {
+func Register(privateGroup *gin.RouterGroup, publicGroup *gin.RouterGroup, albumService *albumService.Service, keycloakService *keycloak.Service) {
 
 	// register index controller
-	index.Index(privateGroup, repos)
+	index.Index(privateGroup, keycloakService)
 	logutil.GetDefaultLogger().Info("index controller registered")
 
 	// album handlers
-	album.GetAlbum(privateGroup, repos)
-	album.GetCreateAlbumForm(privateGroup, repos)
-	album.GetUpdateAlbumForm(privateGroup, repos)
-	album.CreateAlbum(privateGroup, repos)
-	album.UpdateAlbum(privateGroup, repos)
-	album.DeleteAlbum(privateGroup, repos)
+	album.GetAlbum(privateGroup, albumService, keycloakService)
+	album.GetCreateAlbumForm(privateGroup, keycloakService)
+	album.GetUpdateAlbumForm(privateGroup, albumService, keycloakService)
+	album.CreateAlbum(privateGroup, albumService)
+	album.UpdateAlbum(privateGroup, albumService)
+	album.DeleteAlbum(privateGroup, albumService)
 	logutil.GetDefaultLogger().Info("album handlers registered")
 }

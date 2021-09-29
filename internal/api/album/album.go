@@ -22,7 +22,7 @@ import (
 	"github.com/tupyy/gophoto/utils/logutil"
 )
 
-func GetAlbums(r *gin.RouterGroup, albumService album.Service, keycloakService keycloak.Service) {
+func GetAlbums(r *gin.RouterGroup, albumService *album.Service, keycloakService *keycloak.Service) {
 	r.GET("/api/albums", func(c *gin.Context) {
 		s, _ := c.Get("sessionData")
 		session := s.(entity.Session)
@@ -31,10 +31,14 @@ func GetAlbums(r *gin.RouterGroup, albumService album.Service, keycloakService k
 		logger := logutil.GetLogger(c)
 
 		// fetch users from keycloak
-		users, err := keycloakService.GetUsers(ctx)
+		users, err := keycloakService.Query().
+			Where(keycloak.NotUsername(session.User.Username)).
+			Where(keycloak.CanShare(true)).
+			Where(keycloak.Roles([]entity.Role{entity.RoleEditor, entity.RoleUser})).
+			AllUsers(ctx)
 		if err != nil {
 			logger.WithError(err).Error("failed to get users")
-			common.AbortInternalErrorWithJson(c)
+			common.AbortInternalError(c)
 
 			return
 		}
