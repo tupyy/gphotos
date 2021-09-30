@@ -10,6 +10,7 @@ import (
 	"github.com/tupyy/gophoto/utils/logutil"
 )
 
+// TODO move it to services
 // Process encode the image as jpg and create a thumbnail.
 // It also tries to rotate the image if the "Orientation" is set in the Exif.
 func Process(r io.Reader, imgWriter, thumbnailWriter io.Writer) error {

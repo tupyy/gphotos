@@ -16,8 +16,8 @@ import (
 	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/domain"
 	"github.com/tupyy/gophoto/internal/domain/entity"
-	"github.com/tupyy/gophoto/internal/image"
-	"github.com/tupyy/gophoto/internal/permissions"
+	"github.com/tupyy/gophoto/internal/services/image"
+	"github.com/tupyy/gophoto/internal/services/permissions"
 	"github.com/tupyy/gophoto/utils/encryption"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
@@ -49,7 +49,7 @@ func UploadMedia(r *gin.RouterGroup, repos domain.Repositories) {
 		}
 
 		// check permissions to this album
-		atr := permissions.NewAlbumPermissionResolver()
+		atr := permissions.NewAlbumPermissionService()
 		hasPermission := atr.Policy(permissions.OwnerPolicy{}).
 			Policy(permissions.UserPermissionPolicy{Permission: entity.PermissionWriteAlbum}).
 			Policy(permissions.GroupPermissionPolicy{Permission: entity.PermissionWriteAlbum}).

@@ -38,7 +38,6 @@ func (m *MinioRepo) CreateBucket(ctx context.Context, bucket string) error {
 	return nil
 }
 
-// TODO delete the content before removing the bucket
 func (m *MinioRepo) DeleteBucket(ctx context.Context, bucket string) error {
 	exists, err := m.client.BucketExists(ctx, bucket)
 	if err != nil {

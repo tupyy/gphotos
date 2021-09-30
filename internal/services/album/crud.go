@@ -20,6 +20,7 @@ func New(repos domain.Repositories) *Service {
 	return &Service{repos}
 }
 
+// TODO remove the logs for returned error and create typed errors
 func (s *Service) Create(ctx context.Context, newAlbum entity.Album) (int32, error) {
 	minioRepo := s.repos[domain.MinioRepoName].(domain.Store)
 	albumRepo := s.repos[domain.AlbumRepoName].(domain.Album)

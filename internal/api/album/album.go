@@ -1,9 +1,7 @@
 package album
 
 import (
-	"bytes"
 	"context"
-	"encoding/base64"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -13,7 +11,6 @@ import (
 	"github.com/tupyy/gophoto/internal/common"
 	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/domain/entity"
-	albumFilter "github.com/tupyy/gophoto/internal/domain/filters/album"
 	albumSort "github.com/tupyy/gophoto/internal/domain/sort/album"
 	"github.com/tupyy/gophoto/internal/dto"
 	"github.com/tupyy/gophoto/internal/services/album"
@@ -31,14 +28,10 @@ func GetAlbums(r *gin.RouterGroup, albumService *album.Service, keycloakService 
 		logger := logutil.GetLogger(c)
 
 		// fetch users from keycloak
-		users, err := keycloakService.Query().
-			Where(keycloak.NotUsername(session.User.Username)).
-			Where(keycloak.CanShare(true)).
-			Where(keycloak.Roles([]entity.Role{entity.RoleEditor, entity.RoleUser})).
-			AllUsers(ctx)
+		users, err := keycloakService.Query().AllUsers(ctx)
 		if err != nil {
 			logger.WithError(err).Error("failed to get users")
-			common.AbortInternalError(c)
+			common.AbortInternalErrorWithJson(c)
 
 			return
 		}
@@ -46,17 +39,22 @@ func GetAlbums(r *gin.RouterGroup, albumService *album.Service, keycloakService 
 		// generate the req filters and sorter
 		reqParams := bindRequestParams(c)
 
-		albums, err := albumService.Query().
+		q := albumService.Query().
 			OwnAlbums(reqParams.FetchPersonalAlbums).
-			SharedAlbums(reqParams.FetchSharedAlbums).
-			All(ctx, session.User)
+			SharedAlbums(reqParams.FetchSharedAlbums)
+
+		for _, p := range reqParams.Filters {
+			q.Where(p)
+		}
+
+		albums, err := q.All(ctx, session.User)
 		if err != nil {
 			logger.WithError(err).Error("failed to get albums")
 
 			common.AbortInternalErrorWithJson(c)
 		}
 
-		// sort all of them
+		// TODO move sort to album service
 		reqParams.Sorter.Sort(albums)
 
 		c.JSON(http.StatusOK, gin.H{
@@ -72,7 +70,7 @@ func GetAlbums(r *gin.RouterGroup, albumService *album.Service, keycloakService 
 type requestParams struct {
 	FetchPersonalAlbums bool
 	FetchSharedAlbums   bool
-	Filters             albumFilter.Filters
+	Filters             []album.Predicate
 	Sorter              albumSort.Sorter
 }
 
@@ -111,8 +109,8 @@ func bindRequestParams(c *gin.Context) requestParams {
 }
 
 // GenerateAlbumFilters generates a list of filters from the query parameters.
-func generateFilters(c *gin.Context) albumFilter.Filters {
-	albumFilters := make(map[string]albumFilter.Filter)
+func generateFilters(c *gin.Context) []album.Predicate {
+	predicates := make([]album.Predicate, 0, 3)
 
 	logger := logutil.GetLogger(c)
 
@@ -120,16 +118,8 @@ func generateFilters(c *gin.Context) albumFilter.Filters {
 		if startDate, err := time.Parse("02/01/2006", c.Query("start_date")); err != nil {
 			logger.WithError(err).Error("cannot parse start_date query param")
 		} else {
-			f, err := albumFilter.GenerateFilterFuncs(albumFilter.FilterAfterDate, startDate)
-			if err != nil {
-				logger.WithError(err).Error("error create FilterAfterDate filter")
-			}
-
-			logger.WithField("start date", startDate).Debug("filter start date created")
-
-			// hash the date
-			key := string(base64.StdEncoding.EncodeToString([]byte(startDate.String())))
-			albumFilters[key] = f
+			f := album.AfterDate(startDate)
+			predicates = append(predicates, f)
 		}
 	}
 
@@ -137,15 +127,8 @@ func generateFilters(c *gin.Context) albumFilter.Filters {
 		if endDate, err := time.Parse("02/01/2006", c.Query("end_date")); err != nil {
 			logger.WithError(err).Error("cannot parse end_date query param")
 		} else {
-			f, err := albumFilter.GenerateFilterFuncs(albumFilter.FilterBeforeDate, endDate)
-			if err != nil {
-				logger.WithError(err).Error("error create FilterBeforeDate filter")
-			}
-
-			logger.WithField("end date", endDate).Debug("filter end date created")
-
-			key := string(base64.StdEncoding.EncodeToString([]byte(endDate.String())))
-			albumFilters[key] = f
+			f := album.BeforeDate(endDate)
+			predicates = append(predicates, f)
 		}
 	}
 
@@ -166,24 +149,11 @@ func generateFilters(c *gin.Context) albumFilter.Filters {
 			logger.WithField("owner_id", ownerID).Debug("filter by owner id created")
 		}
 
-		f, err := albumFilter.GenerateFilterFuncs(albumFilter.FilterByOwnerID, ownerIDs)
-		if err != nil {
-			logger.WithError(err).Error("error create FilterOwnerID filter")
-		}
-
-		keyBytes := []byte{}
-		b := bytes.NewBuffer(keyBytes)
-		for _, o := range ownerIDs {
-			if _, err := b.WriteString(o); err != nil {
-				logger.WithError(err).WithField("data", o).Error("failed to write owner id as bytes")
-				continue
-			}
-		}
-		key := string(base64.StdEncoding.EncodeToString(keyBytes))
-		albumFilters[key] = f
+		f := album.Owner(ownerIDs)
+		predicates = append(predicates, f)
 	}
 
-	return nil
+	return predicates
 }
 
 func generateSort(c *gin.Context) albumSort.Sorter {

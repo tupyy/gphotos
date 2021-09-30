@@ -45,6 +45,7 @@ func Index(r *gin.RouterGroup, keycloakService *keycloak.Service) {
 			return
 		}
 
+		// TODO add GetRelatedUsers to keycloak service
 		// if current user can share get all users that share an album with the current one.
 		// if session.User.CanShare {
 		// 	// get all shared albums in order to filtered users which don't share albums with the current user

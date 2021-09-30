@@ -22,7 +22,7 @@ func AfterDate(date time.Time) Predicate {
 	}
 }
 
-func OwnerID(id string) Predicate {
+func Owner(id []string) Predicate {
 	return func() album.Filter {
 		f, _ := album.GenerateFilterFuncs(album.FilterByOwnerID, id)
 		return f

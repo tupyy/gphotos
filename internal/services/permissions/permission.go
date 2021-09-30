@@ -17,38 +17,38 @@ type Policy interface {
 	Resolve(entity.Album, entity.User) bool
 }
 
-// albumPermissionResolver resolve a set of conditions set on an album against an user.
+// albumPermissionService resolve a set of conditions set on an album against an user.
 // For example in case of editing an album at least one of three conditions must met:
 //    - user is the owner of the album
 //	  - user has edit permission set directly to him by the owner
 //    - the user's group has edit permission set by the owner
 // To resolve this case the Album
-type albumPermissionResolver struct {
+type albumPermissionService struct {
 	policies []Policy
 	strategy StrategyType
 }
 
 // Create a new albumPermissionResolver with AtLeastOneStrategy by default.
-func NewAlbumPermissionResolver() *albumPermissionResolver {
-	return &albumPermissionResolver{
+func NewAlbumPermissionService() *albumPermissionService {
+	return &albumPermissionService{
 		policies: make([]Policy, 0, 3), // often we have 3 policies
 		strategy: AtLeastOneStrategy,
 	}
 }
 
-func (apr *albumPermissionResolver) Policy(p Policy) *albumPermissionResolver {
+func (apr *albumPermissionService) Policy(p Policy) *albumPermissionService {
 	apr.policies = append(apr.policies, p)
 
 	return apr
 }
 
-func (apr *albumPermissionResolver) Strategy(s StrategyType) *albumPermissionResolver {
+func (apr *albumPermissionService) Strategy(s StrategyType) *albumPermissionService {
 	apr.strategy = s
 
 	return apr
 }
 
-func (apr *albumPermissionResolver) Resolve(album entity.Album, user entity.User) bool {
+func (apr *albumPermissionService) Resolve(album entity.Album, user entity.User) bool {
 	switch apr.strategy {
 	case AtLeastOneStrategy:
 		for _, policy := range apr.policies {

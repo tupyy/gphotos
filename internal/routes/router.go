@@ -25,7 +25,6 @@ type PhotoRouter struct {
 func NewRouter(store sessions.Store, authenticator auth.Authenticator) *PhotoRouter {
 	r := gin.Default()
 
-	// TODO remove hotreloading in prod
 	r.Use(sessions.Sessions("gophoto", store))
 	r.Static("/static", conf.GetStaticsFolder())
 

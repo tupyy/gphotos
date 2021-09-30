@@ -12,7 +12,7 @@ import (
 	"github.com/tupyy/gophoto/internal/common"
 	"github.com/tupyy/gophoto/internal/domain"
 	"github.com/tupyy/gophoto/internal/domain/entity"
-	"github.com/tupyy/gophoto/internal/permissions"
+	"github.com/tupyy/gophoto/internal/services/permissions"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
 
@@ -37,7 +37,7 @@ func GetAlbumMedia(r *gin.RouterGroup, repos domain.Repositories) {
 		}
 
 		// check permissions to this album
-		atr := permissions.NewAlbumPermissionResolver()
+		atr := permissions.NewAlbumPermissionService()
 		hasPermission := atr.Policy(permissions.OwnerPolicy{}).
 			Policy(permissions.UserPermissionPolicy{Permission: entity.PermissionReadAlbum}).
 			Policy(permissions.GroupPermissionPolicy{Permission: entity.PermissionReadAlbum}).
@@ -93,7 +93,7 @@ func DownloadMedia(r *gin.RouterGroup, repos domain.Repositories) {
 		}
 
 		// check permissions to this album
-		atr := permissions.NewAlbumPermissionResolver()
+		atr := permissions.NewAlbumPermissionService()
 		hasPermission := atr.Policy(permissions.OwnerPolicy{}).
 			Policy(permissions.UserPermissionPolicy{Permission: entity.PermissionReadAlbum}).
 			Policy(permissions.GroupPermissionPolicy{Permission: entity.PermissionReadAlbum}).

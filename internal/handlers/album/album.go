@@ -16,9 +16,9 @@ import (
 	"github.com/tupyy/gophoto/internal/domain/entity"
 	"github.com/tupyy/gophoto/internal/dto"
 	"github.com/tupyy/gophoto/internal/form"
-	"github.com/tupyy/gophoto/internal/permissions"
 	"github.com/tupyy/gophoto/internal/services/album"
 	"github.com/tupyy/gophoto/internal/services/keycloak"
+	"github.com/tupyy/gophoto/internal/services/permissions"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
 
@@ -26,6 +26,7 @@ const (
 	rootURL = "/"
 )
 
+// TODO fix the error management. it totally crap.
 // GET /album/:id
 func GetAlbum(r *gin.RouterGroup, albumService *album.Service, keycloakService *keycloak.Service) {
 
@@ -39,13 +40,13 @@ func GetAlbum(r *gin.RouterGroup, albumService *album.Service, keycloakService *
 		album, err := albumService.Query().First(ctx, int32(c.GetInt("id")))
 		if err != nil {
 			logger.WithError(err).WithField("id", c.GetInt("id")).Error("album not found")
-			common.AbortNotFound(c, err, "update album")
+			common.AbortNotFound(c, err, "failed to album")
 
 			return
 		}
 
 		// check permissions to this album
-		atr := permissions.NewAlbumPermissionResolver()
+		atr := permissions.NewAlbumPermissionService()
 		hasPermission := atr.Policy(permissions.OwnerPolicy{}).
 			Policy(permissions.RolePolicy{Role: entity.RoleAdmin}).
 			Policy(permissions.AnyUserPermissionPolicty{}).
@@ -201,7 +202,7 @@ func CreateAlbum(r *gin.RouterGroup, albumService *album.Service) {
 		logger := logutil.GetLogger(ctx)
 
 		// only editors and admins have the right to create albums
-		apr := permissions.NewAlbumPermissionResolver()
+		apr := permissions.NewAlbumPermissionService()
 		hasPermission := apr.Policy(permissions.RolePolicy{Role: entity.RoleEditor}).
 			Policy(permissions.RolePolicy{Role: entity.RoleAdmin}).
 			Strategy(permissions.AtLeastOneStrategy).
@@ -339,7 +340,7 @@ func GetUpdateAlbumForm(r *gin.RouterGroup, albumService *album.Service, keycloa
 
 		// only users with editPermission set for this album or one of user's group with the same permission
 		// can edit this album
-		apr := permissions.NewAlbumPermissionResolver()
+		apr := permissions.NewAlbumPermissionService()
 		hasPermission := apr.Policy(permissions.UserPermissionPolicy{Permission: entity.PermissionEditAlbum}).
 			Policy(permissions.GroupPermissionPolicy{Permission: entity.PermissionEditAlbum}).
 			Strategy(permissions.AtLeastOneStrategy).
@@ -392,7 +393,7 @@ func UpdateAlbum(r *gin.RouterGroup, albumService *album.Service) {
 
 		// only users with editPermission set for this album or one of user's group with the same permission
 		// can edit this album
-		apr := permissions.NewAlbumPermissionResolver()
+		apr := permissions.NewAlbumPermissionService()
 		hasPermission := apr.Policy(permissions.OwnerPolicy{}).
 			Policy(permissions.RolePolicy{Role: entity.RoleAdmin}).
 			Policy(permissions.UserPermissionPolicy{Permission: entity.PermissionEditAlbum}).
@@ -476,7 +477,7 @@ func DeleteAlbum(r *gin.RouterGroup, albumService *album.Service) {
 
 		// only users with editPermission set for this album or one of user's group with the same permission
 		// can edit this album
-		apr := permissions.NewAlbumPermissionResolver()
+		apr := permissions.NewAlbumPermissionService()
 		hasPermission := apr.Policy(permissions.OwnerPolicy{}).
 			Policy(permissions.UserPermissionPolicy{Permission: entity.PermissionDeleteAlbum}).
 			Policy(permissions.GroupPermissionPolicy{Permission: entity.PermissionDeleteAlbum}).
