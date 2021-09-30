@@ -49,8 +49,8 @@ func UploadMedia(r *gin.RouterGroup, repos domain.Repositories) {
 		}
 
 		// check permissions to this album
-		atr := permissions.NewAlbumPermissionService()
-		hasPermission := atr.Policy(permissions.OwnerPolicy{}).
+		ats := permissions.NewAlbumPermissionService()
+		hasPermission := ats.Policy(permissions.OwnerPolicy{}).
 			Policy(permissions.UserPermissionPolicy{Permission: entity.PermissionWriteAlbum}).
 			Policy(permissions.GroupPermissionPolicy{Permission: entity.PermissionWriteAlbum}).
 			Strategy(permissions.AtLeastOneStrategy).

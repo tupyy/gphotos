@@ -46,8 +46,8 @@ func GetAlbum(r *gin.RouterGroup, albumService *album.Service, keycloakService *
 		}
 
 		// check permissions to this album
-		atr := permissions.NewAlbumPermissionService()
-		hasPermission := atr.Policy(permissions.OwnerPolicy{}).
+		ats := permissions.NewAlbumPermissionService()
+		hasPermission := ats.Policy(permissions.OwnerPolicy{}).
 			Policy(permissions.RolePolicy{Role: entity.RoleAdmin}).
 			Policy(permissions.AnyUserPermissionPolicty{}).
 			Policy(permissions.AnyGroupPermissionPolicy{}).

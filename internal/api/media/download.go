@@ -37,8 +37,8 @@ func GetAlbumMedia(r *gin.RouterGroup, repos domain.Repositories) {
 		}
 
 		// check permissions to this album
-		atr := permissions.NewAlbumPermissionService()
-		hasPermission := atr.Policy(permissions.OwnerPolicy{}).
+		ats := permissions.NewAlbumPermissionService()
+		hasPermission := ats.Policy(permissions.OwnerPolicy{}).
 			Policy(permissions.UserPermissionPolicy{Permission: entity.PermissionReadAlbum}).
 			Policy(permissions.GroupPermissionPolicy{Permission: entity.PermissionReadAlbum}).
 			Strategy(permissions.AtLeastOneStrategy).
@@ -93,8 +93,8 @@ func DownloadMedia(r *gin.RouterGroup, repos domain.Repositories) {
 		}
 
 		// check permissions to this album
-		atr := permissions.NewAlbumPermissionService()
-		hasPermission := atr.Policy(permissions.OwnerPolicy{}).
+		ats := permissions.NewAlbumPermissionService()
+		hasPermission := ats.Policy(permissions.OwnerPolicy{}).
 			Policy(permissions.UserPermissionPolicy{Permission: entity.PermissionReadAlbum}).
 			Policy(permissions.GroupPermissionPolicy{Permission: entity.PermissionReadAlbum}).
 			Strategy(permissions.AtLeastOneStrategy).
