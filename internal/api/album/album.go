@@ -11,7 +11,6 @@ import (
 	"github.com/tupyy/gophoto/internal/common"
 	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/domain/entity"
-	albumSort "github.com/tupyy/gophoto/internal/domain/sort/album"
 	"github.com/tupyy/gophoto/internal/dto"
 	"github.com/tupyy/gophoto/internal/services/album"
 	"github.com/tupyy/gophoto/internal/services/keycloak"
@@ -36,15 +35,26 @@ func GetAlbums(r *gin.RouterGroup, albumService *album.Service, keycloakService 
 			return
 		}
 
-		// generate the req filters and sorter
 		reqParams := bindRequestParams(c)
 
 		q := albumService.Query().
 			OwnAlbums(reqParams.FetchPersonalAlbums).
 			SharedAlbums(reqParams.FetchSharedAlbums)
 
-		for _, p := range reqParams.Filters {
-			q.Where(p)
+		for _, f := range reqParams.Filters {
+			q.Where(f)
+		}
+
+		// setup sort
+		switch c.Query("sort") {
+		case "name":
+			q.Sort(album.SortByName, album.NormalOrder)
+		case "location":
+			q.Sort(album.SortByLocation, album.NormalOrder)
+		case "date-normal":
+			q.Sort(album.SortByDate, album.NormalOrder)
+		default:
+			q.Sort(album.SortByDate, album.ReverseOrder)
 		}
 
 		albums, err := q.All(ctx, session.User)
@@ -53,9 +63,6 @@ func GetAlbums(r *gin.RouterGroup, albumService *album.Service, keycloakService 
 
 			common.AbortInternalErrorWithJson(c)
 		}
-
-		// TODO move sort to album service
-		reqParams.Sorter.Sort(albums)
 
 		c.JSON(http.StatusOK, gin.H{
 			"user_role": session.User.Role.String(),
@@ -71,7 +78,6 @@ type requestParams struct {
 	FetchPersonalAlbums bool
 	FetchSharedAlbums   bool
 	Filters             []album.Predicate
-	Sorter              albumSort.Sorter
 }
 
 // bindRequestParams returns a struct with filters and a sorter generated from query parameters
@@ -102,7 +108,6 @@ func bindRequestParams(c *gin.Context) requestParams {
 	}
 
 	reqParams.Filters = generateFilters(c)
-	reqParams.Sorter = generateSort(c)
 
 	return reqParams
 
@@ -154,17 +159,4 @@ func generateFilters(c *gin.Context) []album.Predicate {
 	}
 
 	return predicates
-}
-
-func generateSort(c *gin.Context) albumSort.Sorter {
-	switch c.Query("sort") {
-	case "name":
-		return albumSort.NewSorter(albumSort.SortByName, albumSort.NormalOrder)
-	case "location":
-		return albumSort.NewSorter(albumSort.SortByLocation, albumSort.NormalOrder)
-	case "date-normal":
-		return albumSort.NewSorter(albumSort.SortByDate, albumSort.NormalOrder)
-	default:
-		return albumSort.NewSorter(albumSort.SortByDate, albumSort.ReverseOrder)
-	}
 }

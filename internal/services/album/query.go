@@ -21,6 +21,7 @@ type Query struct {
 	predicates   []Predicate
 	albumRepo    domain.Album
 	minioRepo    domain.Store
+	sorter       *albumSorter
 }
 
 func (s *Service) Query() *Query {
@@ -54,6 +55,13 @@ func (q *Query) Offset(offset int) *Query {
 
 func (q *Query) OwnAlbums(b bool) *Query {
 	q.personalAlbums = b
+
+	return q
+}
+
+func (q *Query) Sort(name SortType, order SortOrder) *Query {
+	as := newSorter(name, order)
+	q.sorter = as
 
 	return q
 }
@@ -145,6 +153,10 @@ func (q *Query) All(ctx context.Context, user entity.User) ([]entity.Album, erro
 	aa := make([]entity.Album, 0, len(albums))
 	for _, v := range albums {
 		aa = append(aa, v)
+	}
+
+	if q.sorter != nil {
+		q.sorter.Sort(aa)
 	}
 
 	return aa, nil
