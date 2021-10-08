@@ -10,26 +10,22 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"github.com/tupyy/gophoto/internal/common"
-	"github.com/tupyy/gophoto/internal/domain"
 	"github.com/tupyy/gophoto/internal/domain/entity"
+	"github.com/tupyy/gophoto/internal/services/album"
+	"github.com/tupyy/gophoto/internal/services/media"
 	"github.com/tupyy/gophoto/internal/services/permissions"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
 
-func GetAlbumMedia(r *gin.RouterGroup, repos domain.Repositories) {
-	albumRepo := repos[domain.AlbumRepoName].(domain.Album)
-	minioRepo := repos[domain.MinioRepoName].(domain.Store)
-
+func GetAlbumMedia(r *gin.RouterGroup, albumService *album.Service, mediaService *media.Service) {
 	r.GET("/api/albums/:id/album/media", parseAlbumIDHandler, func(c *gin.Context) {
-		logger := logutil.GetLogger(c)
-
 		s, _ := c.Get("sessionData")
 		session := s.(entity.Session)
 
-		// add username to context for logging
-		reqCtx := context.WithValue(c.Request.Context(), "username", session.User.Username)
+		ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
+		logger := logutil.GetLogger(ctx)
 
-		album, err := albumRepo.GetByID(reqCtx, int32(c.GetInt("id")))
+		album, err := albumService.Query().First(ctx, int32(c.GetInt("id")))
 		if err != nil {
 			common.AbortNotFound(c, err, "download media")
 
@@ -55,37 +51,31 @@ func GetAlbumMedia(r *gin.RouterGroup, repos domain.Repositories) {
 			return
 		}
 
-		medias, err := minioRepo.ListBucket(reqCtx, album.Bucket)
+		media, err := mediaService.List(ctx, album)
 		if err != nil {
 			logger.WithFields(logrus.Fields{
 				"album_id": album.ID,
-				"user_id":  session.User.ID,
-			}).Error("failed to read bucket")
+				"bucket":   album.Bucket,
+			}).Error("failed to get media")
 
-			common.AbortInternalErrorWithJson(c)
-
-			return
 		}
 
-		c.JSON(http.StatusOK, medias)
+		c.JSON(http.StatusOK, media)
 
 		return
 
 	})
 }
 
-func DownloadMedia(r *gin.RouterGroup, repos domain.Repositories) {
-	albumRepo := repos[domain.AlbumRepoName].(domain.Album)
-	minioRepo := repos[domain.MinioRepoName].(domain.Store)
-
+func DownloadMedia(r *gin.RouterGroup, albumService *album.Service, mediaService *media.Service) {
 	r.GET("/api/albums/:id/album/:media/media", parseAlbumIDHandler, parseMediaFilenameHandler, func(c *gin.Context) {
-		reqCtx := c.Request.Context()
-		logger := logutil.GetLogger(c)
-
 		s, _ := c.Get("sessionData")
 		session := s.(entity.Session)
 
-		album, err := albumRepo.GetByID(reqCtx, int32(c.GetInt("id")))
+		ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
+		logger := logutil.GetLogger(ctx)
+
+		album, err := albumService.Query().First(ctx, int32(c.GetInt("id")))
 		if err != nil {
 			common.AbortNotFound(c, err, "download media")
 
@@ -111,12 +101,13 @@ func DownloadMedia(r *gin.RouterGroup, repos domain.Repositories) {
 			return
 		}
 
-		r, err := minioRepo.GetFile(reqCtx, album.Bucket, c.GetString("media"))
+		r, err := mediaService.GetPhoto(ctx, album.Bucket, c.GetString("media"))
 		if err != nil {
 			logger.WithFields(logrus.Fields{
 				"album_id": album.ID,
 				"media":    c.GetString("media"),
 			}).WithError(err).Error("failed to open media")
+
 			common.AbortInternalError(c)
 
 			return

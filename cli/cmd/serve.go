@@ -37,6 +37,7 @@ import (
 	"github.com/tupyy/gophoto/internal/handlers"
 	albumService "github.com/tupyy/gophoto/internal/services/album"
 	keycloakService "github.com/tupyy/gophoto/internal/services/keycloak"
+	"github.com/tupyy/gophoto/internal/services/media"
 	"github.com/tupyy/gophoto/utils/logutil"
 	"github.com/tupyy/gophoto/utils/minioclient"
 	"github.com/tupyy/gophoto/utils/pgclient"
@@ -84,6 +85,7 @@ var serveCmd = &cobra.Command{
 		// create services
 		albumService := albumService.New(repos)
 		keycloakService := keycloakService.New(repos)
+		mediaService := media.New(repos)
 		logutil.GetDefaultLogger().Info("services created")
 
 		// create keycloak
@@ -96,7 +98,7 @@ var serveCmd = &cobra.Command{
 
 		handlers.Register(r.PrivateGroup, r.PublicGroup, albumService, keycloakService)
 
-		api.RegisterApi(r.PrivateGroup, r.PublicGroup, albumService, keycloakService)
+		api.RegisterApi(r.PrivateGroup, r.PublicGroup, albumService, mediaService, keycloakService)
 
 		// run server
 		r.Run()

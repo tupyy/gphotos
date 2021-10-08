@@ -42,13 +42,13 @@
                                 <span class="col-12 title no-permissions">You don't have read permission for this album.</span>
                             </div>
                     {{ else }}
-                        {{if .photos}}
+                        {{if .album.Photos}}
                             <div class="container container-sm container-photos">
                                 <div class="row justify-content-center">
                                     <div class="col col-md-10" id="album-gallery">
-                                        {{ range .photos }}
-                                        <a href="/api/albums/{{$.id}}/album/{{.Filename}}/media">
-                                            <img src="/api/albums/{{$.id}}/album/{{.Thumbnail}}/media"/>
+                                        {{ range .album.Photos }}
+                                        <a href="/api/albums/{{$.album.ID}}/album/{{.Filename}}/media">
+                                            <img src="/api/albums/{{$.album.ID}}/album/{{.Thumbnail}}/media"/>
                                         </a>
                                         {{ end }}
                                     </div>
@@ -72,7 +72,7 @@
                             <span class="col-12 title no-permissions">You don't have read permission for this album.</span>
                         </div>
                     {{ else }}
-                        {{if .videos}}
+                        {{if .album.Videos}}
                             <div>videos</div>
                         {{ else }}
                         <div class="container">
@@ -121,24 +121,24 @@
                             {{ if .is_owner }}
                                 <div class="col-lg-4 col">You</div>
                             {{ else }}
-                                <div class="col-lg-4 col">{{.owner}}</div>
+                                <div class="col-lg-4 col">{{.album.Owner}}</div>
                             {{ end }}
                         </div>
                         <div class="row">
                             <div class="col-lg-2 col title">Name</div>
-                            <div class="col-lg-4 col">{{.name}}</div>
+                            <div class="col-lg-4 col">{{.album.Name}}</div>
                         </div>
                         <div class="row">
                             <div class="col-lg-2 col title">Created at</div>
-                            <div class="col-lg-4 col">{{date .created_at}}</div>
+                            <div class="col-lg-4 col">{{.album.Date}}</div>
                         </div>
                         <div class="row">
                             <div class="col-lg-2 col title">Description</div>
-                            <div class="col-lg-4 col">{{.description}}</div>
+                            <div class="col-lg-4 col">{{.album.Description}}</div>
                         </div>
                         <div class="row">
                             <div class="col-lg-2 col title">Location</div>
-                            <div class="col-lg-4 col">{{.location}}</div>
+                            <div class="col-lg-4 col">{{.album.Location}}</div>
                         </div>
                     </div>
                     {{ if or .is_owner .is_admin }}
