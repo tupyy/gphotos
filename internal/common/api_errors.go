@@ -1,6 +1,7 @@
 package common
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -17,8 +18,8 @@ func AbortBadRequestWithJson(c *gin.Context, err error, msg string) {
 	AbortWithJson(c, http.StatusBadRequest, err, msg)
 }
 
-func AbortInternalErrorWithJson(c *gin.Context, err error, msg string) {
-	AbortWithJson(c, http.StatusInternalServerError, err, msg)
+func AbortInternalErrorWithJson(c *gin.Context) {
+	AbortWithJson(c, http.StatusInternalServerError, errors.New("internal error"), "")
 }
 
 func AbortForbiddenWithJson(c *gin.Context, err error, msg string) {

@@ -79,6 +79,10 @@
     width: 150px;
 }
 
+#deleteModal {
+    color: black;
+}
+
 @media (max-width: 576px) {
     .container-photos img {
         width: 70px;

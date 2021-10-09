@@ -67,7 +67,7 @@ func (r *minioRepoCache) DeleteFile(ctx context.Context, bucket, filename string
 }
 
 func (r *minioRepoCache) CreateBucket(ctx context.Context, bucket string) error {
-	return r.CreateBucket(ctx, bucket)
+	return r.repo.CreateBucket(ctx, bucket)
 }
 
 func (r *minioRepoCache) DeleteBucket(ctx context.Context, bucket string) error {

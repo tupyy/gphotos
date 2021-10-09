@@ -23,7 +23,7 @@ type Filter func(user entity.User) bool
 
 // Filters defines a collection of filters. The key is the id of the filter which depends on the value of the filter.
 // The id is used to compute cache keys in order to cache query results based on filters' values.
-type Filters map[string]Filter
+type Filters []Filter
 
 func GenerateFilterFuncs(filter FilterName, filterValues interface{}) (Filter, error) {
 	switch filter {
@@ -61,8 +61,12 @@ func GenerateFilterFuncs(filter FilterName, filterValues interface{}) (Filter, e
 			return !utils.StringMatchRegexSlice(user.Username, v)
 		}, nil
 	case FilterByCanShare:
+		v, ok := filterValues.(bool)
+		if !ok {
+			return nil, errors.Errorf("%v invalid value. expecting bool", filter)
+		}
 		return func(user entity.User) bool {
-			return user.CanShare == true
+			return user.CanShare == v
 		}, nil
 	}
 

@@ -5,8 +5,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"golang.org/x/oauth2"
 )
+
+type Alert struct {
+	Message string
+	IsError bool
+}
 
 type Session struct {
 	User       User
@@ -16,9 +22,17 @@ type Session struct {
 	ExpireAt   time.Time
 	IssueAt    time.Time
 	Attributes map[string]interface{}
+	Alerts     map[string]Alert
 }
 
-func (s Session) String() string {
+func NewSession() *Session {
+	return &Session{
+		Attributes: make(map[string]interface{}),
+		Alerts:     make(map[string]Alert),
+	}
+}
+
+func (s *Session) String() string {
 	var sb strings.Builder
 
 	fmt.Fprintf(&sb, "username: %s ", s.User.Username)
@@ -29,4 +43,13 @@ func (s Session) String() string {
 	fmt.Fprintf(&sb, "IssueAt: %s ", s.ExpireAt.Format("Mon Jan 2 15:04:05 MST 2006"))
 
 	return sb.String()
+}
+
+func (s *Session) AddAlert(a Alert) {
+	id := uuid.New()
+	s.Alerts[id.String()] = a
+}
+
+func (s *Session) ClearAlerts() {
+	s.Alerts = make(map[string]Alert)
 }

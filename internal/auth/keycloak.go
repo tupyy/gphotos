@@ -157,14 +157,14 @@ func (k *keyCloakAuthenticator) Callback() gin.HandlerFunc {
 		loggedUser := entityFromClaims(*username, claims)
 		loggedUser.Groups = getGroupsFromClaims(claims)
 
-		sessionData := entity.Session{
-			User:      loggedUser,
-			TokenID:   claims.StandardClaims.Id,
-			SessionID: claims.SessionState,
-			Token:     oauth2Token,
-			ExpireAt:  time.Unix(claims.StandardClaims.ExpiresAt, 0),
-			IssueAt:   time.Unix(claims.StandardClaims.IssuedAt, 0),
-		}
+		sessionData := entity.NewSession()
+
+		sessionData.User = loggedUser
+		sessionData.TokenID = claims.StandardClaims.Id
+		sessionData.SessionID = claims.SessionState
+		sessionData.Token = oauth2Token
+		sessionData.ExpireAt = time.Unix(claims.StandardClaims.ExpiresAt, 0)
+		sessionData.IssueAt = time.Unix(claims.StandardClaims.IssuedAt, 0)
 
 		session.Set(uuid.String(), sessionData)
 		session.Save()

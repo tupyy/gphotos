@@ -25,7 +25,7 @@ type Filter func(tx *gorm.DB) *gorm.DB
 // Filters defines a collection of filters. The key is the id of the filter which depends on the value of the filter.
 // e.g. a filter BeforeDate with value of "01/01/2021" has a different id from the same filter with value "02/01/2021"
 // The id is used to compute cache keys in order to cache query results based on filters' values.
-type Filters map[string]Filter
+type Filters []Filter
 
 func GenerateFilterFuncs(filter FilterName, filterValues interface{}) (Filter, error) {
 	switch filter {

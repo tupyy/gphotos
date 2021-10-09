@@ -222,7 +222,7 @@ func generateCacheKey(initialKey string, filters albumFilters.Filters) string {
 
 	fmt.Fprintf(&sb, "%s", initialKey)
 	for k := range filters {
-		fmt.Fprintf(&sb, "%s", k)
+		fmt.Fprintf(&sb, "%d", k)
 	}
 
 	h := base64.StdEncoding.EncodeToString([]byte(sb.String()))

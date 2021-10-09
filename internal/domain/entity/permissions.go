@@ -18,7 +18,7 @@ const (
 	PermissionReadAlbum Permission = iota
 	// PermissionWriteAlbum gives the user the right to update photos.
 	PermissionWriteAlbum
-	// PermissionEditAlbum gives the user the right to edit album informations.
+	// PermissionEditAlbum gives the user the right to edit album information.
 	PermissionEditAlbum
 	// PermissionDeleteAlbum gives the user the right to delete the album.
 	PermissionDeleteAlbum

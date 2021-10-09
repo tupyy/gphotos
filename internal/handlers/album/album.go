@@ -2,24 +2,24 @@ package album
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/gorilla/csrf"
 	"github.com/sirupsen/logrus"
 	"github.com/tupyy/gophoto/internal/common"
-	"github.com/tupyy/gophoto/internal/conf"
-	"github.com/tupyy/gophoto/internal/domain"
 	"github.com/tupyy/gophoto/internal/domain/entity"
+	"github.com/tupyy/gophoto/internal/dto"
 	"github.com/tupyy/gophoto/internal/form"
-	"github.com/tupyy/gophoto/internal/permissions"
-	"github.com/tupyy/gophoto/utils/encryption"
+	"github.com/tupyy/gophoto/internal/services/album"
+	"github.com/tupyy/gophoto/internal/services/permissions"
+	"github.com/tupyy/gophoto/internal/services/users"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
 
@@ -27,29 +27,28 @@ const (
 	rootURL = "/"
 )
 
+// TODO fix the error management. it totally crap.
 // GET /album/:id
-func GetAlbum(r *gin.RouterGroup, repos domain.Repositories) {
-	albumRepo := repos[domain.AlbumRepoName].(domain.Album)
-	keycloakRepo := repos[domain.KeycloakRepoName].(domain.KeycloakRepo)
-	minioRepo := repos[domain.MinioRepoName].(domain.Store)
+func GetAlbum(r *gin.RouterGroup, albumService *album.Service, usersService *users.Service) {
 
 	r.GET("/album/:id", parseAlbumIDHandler, func(c *gin.Context) {
-		reqCtx := c.Request.Context()
-		logger := logutil.GetLogger(c)
-
 		s, _ := c.Get("sessionData")
 		session := s.(entity.Session)
 
-		album, err := albumRepo.GetByID(reqCtx, int32(c.GetInt("id")))
+		ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
+		logger := logutil.GetLogger(ctx)
+
+		album, err := albumService.Query().First(ctx, int32(c.GetInt("id")))
 		if err != nil {
-			common.AbortNotFound(c, err, "update album")
+			logger.WithError(err).WithField("id", c.GetInt("id")).Error("album not found")
+			common.AbortNotFound(c, err, "failed to album")
 
 			return
 		}
 
 		// check permissions to this album
-		atr := permissions.NewAlbumPermissionResolver()
-		hasPermission := atr.Policy(permissions.OwnerPolicy{}).
+		ats := permissions.NewAlbumPermissionService()
+		hasPermission := ats.Policy(permissions.OwnerPolicy{}).
 			Policy(permissions.RolePolicy{Role: entity.RoleAdmin}).
 			Policy(permissions.AnyUserPermissionPolicty{}).
 			Policy(permissions.AnyGroupPermissionPolicy{}).
@@ -67,19 +66,23 @@ func GetAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 			return
 		}
 
-		users, err := keycloakRepo.GetUsers(reqCtx, nil)
+		users, err := usersService.Query().
+			Where(users.NotUsername(session.User.Username)).
+			Where(users.CanShare(true)).
+			Where(users.Roles([]entity.Role{entity.RoleEditor, entity.RoleUser})).
+			AllUsers(ctx)
 		if err != nil {
-			logger.WithError(err).Error("fetch users")
-			common.AbortInternalError(c, errors.New("fetch users from keyclosk"), "")
+			logger.WithError(err).Error("failed to get users")
+			common.AbortInternalError(c)
 
 			return
 		}
 
 		// if not owner get the owner from keycloak
-		owner, err := keycloakRepo.GetUserByID(reqCtx, album.OwnerID)
+		owner, err := usersService.Query().FirstUser(ctx, album.OwnerID)
 		if err != nil {
 			logger.WithError(err).WithField("album id", album.ID).Error("failed to fetch owner from keycloak")
-			common.AbortInternalError(c, errors.New("fetch owner from keyclosk"), "")
+			common.AbortInternalError(c)
 
 			return
 		}
@@ -115,107 +118,73 @@ func GetAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 			}
 		}
 
-		// encrypt album id
-		gen := encryption.NewGenerator(conf.GetEncryptionKey())
-		encryptedID, err := gen.EncryptData(fmt.Sprintf("%d", album.ID))
+		albumDTO, err := dto.NewAlbumDTO(album, owner)
 		if err != nil {
-			logger.WithError(err).Error("encrypt album id")
-			common.AbortInternalError(c, err, fmt.Sprintf("album id: %d", album.ID))
+			logger.WithError(err).WithField("album", album.String()).Error("failed to serialize album")
+
+			common.AbortInternalError(c)
 
 			return
-		}
-
-		medias, err := minioRepo.ListBucket(reqCtx, album.Bucket)
-		if err != nil {
-			logger.WithField("album id", album.ID).WithError(err).Error("failed to list media for album")
-			common.AbortInternalError(c, err, "failed to list media for album")
-
-			return
-		}
-
-		// encrypt thumbnail filenames
-		encryptedPhotos := make([]entity.Media, 0, len(medias))
-		encryptedVideos := make([]entity.Media, 0, len(medias))
-		for _, m := range medias {
-			encryptedMedia, err := encryptMedia(m, gen)
-			if err != nil {
-				logger.WithError(err).WithField("media", fmt.Sprintf("%+v", m)).Error("failed to encrypted media")
-
-				continue
-			}
-
-			switch m.MediaType {
-			case entity.Photo:
-				encryptedPhotos = append(encryptedPhotos, encryptedMedia)
-			case entity.Video:
-				encryptedVideos = append(encryptedVideos, encryptedMedia)
-			}
 		}
 
 		c.HTML(http.StatusOK, "album_view.html", gin.H{
-			"id":                encryptedID,
-			"name":              album.Name,
-			"description":       album.Description,
-			"location":          album.Location,
-			"created_at":        album.CreatedAt,
+			"album":             albumDTO,
 			"is_owner":          session.User.ID == album.OwnerID,
 			"owner":             fmt.Sprintf("%s %s", owner.FirstName, owner.LastName),
 			"user_permissions":  userPermissions,
 			"group_permissions": album.GroupPermissions,
-			"delete_link":       fmt.Sprintf("/album/%s", encryptedID),
-			"edit_link":         fmt.Sprintf("/album/%s/edit", encryptedID),
+			"delete_link":       fmt.Sprintf("/album/%s/delete", albumDTO.ID),
+			"edit_link":         fmt.Sprintf("/album/%s/edit", albumDTO.ID),
 			"read_permission":   permissions[entity.PermissionReadAlbum],
 			"write_permission":  permissions[entity.PermissionWriteAlbum],
 			"edit_permission":   permissions[entity.PermissionEditAlbum],
 			"delete_permission": permissions[entity.PermissionDeleteAlbum],
 			"is_admin":          session.User.Role == entity.RoleAdmin,
-			"photos":            encryptedPhotos,
 		})
 	})
 }
 
 // GET /album
-func GetCreateAlbumForm(r *gin.RouterGroup, repos domain.Repositories) {
-	keycloakRepo := repos[domain.KeycloakRepoName].(domain.KeycloakRepo)
-
+func GetCreateAlbumForm(r *gin.RouterGroup, usersService *users.Service) {
 	r.GET("/album", func(c *gin.Context) {
 		s, _ := c.Get("sessionData")
 		session := s.(entity.Session)
 
-		reqCtx := c.Request.Context()
+		ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
+		logger := logutil.GetLogger(ctx)
 
 		// only editors and admins have the right to create albums
 		if session.User.Role == entity.RoleUser {
+			logger.Error("user with user role cannot create albums")
 			c.AbortWithError(http.StatusBadRequest, fmt.Errorf("user with user role cannot create albums"))
 
 			return
 		}
 
-		// filter out current user, admins and with can_share false
-		userFilters, err := generateFilters(session.User)
+		users, err := usersService.Query().
+			Where(users.NotUsername(session.User.Username)).
+			Where(users.CanShare(true)).
+			Where(users.Roles([]entity.Role{entity.RoleEditor, entity.RoleUser})).
+			AllUsers(ctx)
 		if err != nil {
-			logutil.GetLogger(c).WithError(err).Error("create user fitlers")
-			common.AbortInternalError(c, err, "")
+			logger.WithError(err).Error("failed to get users")
+			common.AbortInternalError(c)
 
 			return
 		}
 
-		users, err := keycloakRepo.GetUsers(reqCtx, userFilters)
-		if err != nil && errors.Is(err, domain.ErrInternalError) {
-			common.AbortInternalError(c, err, "cannot fetch users")
+		groups, err := usersService.Query().AllGroups(ctx)
+		if err != nil {
+			logger.WithError(err).Error("failed to get groups")
+			common.AbortInternalError(c)
 
 			return
 		}
 
-		groups, err := keycloakRepo.GetGroups(reqCtx)
-		if err != nil && errors.Is(err, domain.ErrInternalError) {
-			common.AbortInternalError(c, err, "cannot fetch groups")
-
-			return
-		}
+		usersDTO := dto.NewUserDTOs(users)
 
 		c.HTML(http.StatusOK, "album_form.html", gin.H{
-			"users":          serialize(users),
+			"users":          usersDTO,
 			"groups":         groups,
 			"canShare":       session.User.CanShare,
 			"isOwner":        true,
@@ -225,26 +194,23 @@ func GetCreateAlbumForm(r *gin.RouterGroup, repos domain.Repositories) {
 }
 
 // POST /album
-func CreateAlbum(r *gin.RouterGroup, repos domain.Repositories) {
-	albumRepo := repos[domain.AlbumRepoName].(domain.Album)
-	minioRepo := repos[domain.MinioRepoName].(domain.Store)
-
+func CreateAlbum(r *gin.RouterGroup, albumService *album.Service) {
 	r.POST("/album", func(c *gin.Context) {
 		s, _ := c.Get("sessionData")
 		session := s.(entity.Session)
 
-		reqCtx := c.Request.Context()
-		logger := logutil.GetLogger(c)
+		ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
+		logger := logutil.GetLogger(ctx)
 
 		// only editors and admins have the right to create albums
-		apr := permissions.NewAlbumPermissionResolver()
+		apr := permissions.NewAlbumPermissionService()
 		hasPermission := apr.Policy(permissions.RolePolicy{Role: entity.RoleEditor}).
 			Policy(permissions.RolePolicy{Role: entity.RoleAdmin}).
 			Strategy(permissions.AtLeastOneStrategy).
 			Resolve(entity.Album{}, session.User)
 
 		if !hasPermission {
-			common.AbortForbidden(c, errors.New("user has no editor of admin role"), "user role forbids the creation of albums")
+			common.AbortForbidden(c, errors.New("user has no editor or admin role"), "user role forbids the creation of albums")
 
 			return
 		}
@@ -294,22 +260,9 @@ func CreateAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 			}
 		}
 
-		// generate bucket name
-		bucketID := strings.ReplaceAll(uuid.New().String(), "-", "")
-
-		// create the bucket
-		if err := minioRepo.CreateBucket(reqCtx, bucketID); err != nil {
-			logger.WithError(err).Error("failed to create bucket on store")
-			common.AbortInternalError(c, err, fmt.Sprintf("album: %+v", album))
-
-			return
-		}
-
-		album.Bucket = bucketID
-
-		albumID, err := albumRepo.Create(reqCtx, album)
+		albumID, err := albumService.Create(ctx, album)
 		if err != nil {
-			common.AbortInternalError(c, err, fmt.Sprintf("album: %+v", album))
+			common.AbortInternalError(c)
 
 			return
 		}
@@ -319,101 +272,82 @@ func CreateAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 			"id":    albumID,
 		}).Info("album entity created")
 
+		alert := entity.Alert{
+			Message: fmt.Sprintf("Album %s created.", album.Name),
+			IsError: false,
+		}
+		session.AddAlert(alert)
+		session.AddAlert(entity.Alert{
+			Message: "test",
+			IsError: true,
+		})
+
+		ss := sessions.Default(c)
+		ss.Set(session.SessionID, session)
+		ss.Save()
+
 		c.Redirect(http.StatusFound, rootURL)
 	})
 }
 
 // GET /album/:id/edit
-func GetUpdateAlbumForm(r *gin.RouterGroup, repos domain.Repositories) {
-	albumRepo := repos[domain.AlbumRepoName].(domain.Album)
-	keycloakRepo := repos[domain.KeycloakRepoName].(domain.KeycloakRepo)
-
+func GetUpdateAlbumForm(r *gin.RouterGroup, albumService *album.Service, usersService *users.Service) {
 	r.GET("/album/:id/edit", parseAlbumIDHandler, func(c *gin.Context) {
-		reqCtx := c.Request.Context()
-		logger := logutil.GetLogger(c)
-
 		s, _ := c.Get("sessionData")
 		session := s.(entity.Session)
 
-		album, err := albumRepo.GetByID(reqCtx, int32(c.GetInt("id")))
+		ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
+		logger := logutil.GetLogger(c)
+
+		album, err := albumService.Query().First(ctx, int32(c.GetInt("id")))
 		if err != nil {
 			common.AbortNotFound(c, err, "update album")
 
 			return
 		}
 
+		albumDTO, err := dto.NewAlbumDTO(album, session.User)
+		if err != nil {
+			logger.WithError(err).WithField("id", album.ID).Error("failed to serialize the album")
+			common.AbortInternalError(c)
+
+			return
+
+		}
+
 		// check if user is the owner or it has the edit permission set
 		if album.OwnerID == session.User.ID || session.User.Role == entity.RoleAdmin {
 			logger.Info("edit permission granted. user is the owner")
 
-			// filter out current user, admins and with can_share false
-			userFilters, err := generateFilters(session.User)
+			users, err := usersService.Query().
+				Where(users.NotUsername(session.User.Username)).
+				Where(users.CanShare(true)).
+				Where(users.Roles([]entity.Role{entity.RoleEditor, entity.RoleUser})).
+				AllUsers(ctx)
 			if err != nil {
-				logutil.GetLogger(c).WithError(err).Error("create user fitlers")
-				common.AbortInternalError(c, err, "")
+				logger.WithError(err).Error("failed to get users")
+				common.AbortInternalError(c)
 
 				return
 			}
 
-			users, err := keycloakRepo.GetUsers(reqCtx, userFilters)
-			if err != nil && errors.Is(err, domain.ErrInternalError) {
-				common.AbortInternalError(c, err, "cannot fetch users")
-
-				return
-			}
-
-			serializedUsers := serialize(users)
-			userPermissions := make(entity.Permissions)
-			for _, u := range serializedUsers {
-				if perm, found := album.UserPermissions[u.ID]; found {
-					userPermissions[u.EncryptedID] = perm
-				}
-			}
-
-			groups, err := keycloakRepo.GetGroups(reqCtx)
-			if err != nil && errors.Is(err, domain.ErrInternalError) {
-				common.AbortInternalError(c, err, "cannot fetch groups")
-
-				return
-			}
-
-			var permUserJson string
-			if len(album.UserPermissions) > 0 {
-				permUserJson, err = userPermissions.Json()
-				if err != nil {
-					logger.WithField("user permissions", fmt.Sprintf("%+v", userPermissions)).WithError(err).Error("marshal to json")
-				}
-			}
-
-			var permGroupJson string
-			if len(album.GroupPermissions) > 0 {
-				var err error
-				permGroupJson, err = album.GroupPermissions.Json()
-				if err != nil {
-					logger.WithField("group permissions", fmt.Sprintf("%+v", album.GroupPermissions)).WithError(err).Error("marshal to json")
-				}
-			}
-
-			gen := encryption.NewGenerator(conf.GetEncryptionKey())
-			encryptedID, err := gen.EncryptData(fmt.Sprintf("%d", album.ID))
+			groups, err := usersService.Query().AllGroups(ctx)
 			if err != nil {
-				logger.WithError(err).WithField("id", album.ID).Error("encrypt album id")
-				common.AbortInternalError(c, err, "")
+				logger.WithError(err).Error("failed to get groups")
+				common.AbortInternalError(c)
 
 				return
 			}
 
 			c.HTML(http.StatusOK, "album_form.html", gin.H{
-				"update_link":        fmt.Sprintf("/album/%s", encryptedID),
-				"album":              album,
-				"canShare":           session.User.CanShare,
-				"isOwner":            true,
-				"users":              serializedUsers,
-				"groups":             groups,
-				"users_permissions":  permUserJson,
-				"groups_permissions": permGroupJson,
-				"is_admin":           session.User.Role == entity.RoleAdmin,
-				csrf.TemplateTag:     csrf.TemplateField(c.Request),
+				"update_link":    fmt.Sprintf("/album/%s", albumDTO.ID),
+				"album":          albumDTO,
+				"canShare":       session.User.CanShare,
+				"isOwner":        true,
+				"users":          dto.NewUserDTOs(users),
+				"groups":         groups,
+				"is_admin":       session.User.Role == entity.RoleAdmin,
+				csrf.TemplateTag: csrf.TemplateField(c.Request),
 			})
 
 			return
@@ -421,7 +355,7 @@ func GetUpdateAlbumForm(r *gin.RouterGroup, repos domain.Repositories) {
 
 		// only users with editPermission set for this album or one of user's group with the same permission
 		// can edit this album
-		apr := permissions.NewAlbumPermissionResolver()
+		apr := permissions.NewAlbumPermissionService()
 		hasPermission := apr.Policy(permissions.UserPermissionPolicy{Permission: entity.PermissionEditAlbum}).
 			Policy(permissions.GroupPermissionPolicy{Permission: entity.PermissionEditAlbum}).
 			Strategy(permissions.AtLeastOneStrategy).
@@ -438,7 +372,7 @@ func GetUpdateAlbumForm(r *gin.RouterGroup, repos domain.Repositories) {
 		}
 
 		c.HTML(http.StatusOK, "album_form.html", gin.H{
-			"album":          album,
+			"album":          albumDTO,
 			"canShare":       session.User.CanShare,
 			"isOwner":        false,
 			csrf.TemplateTag: csrf.TemplateField(c.Request),
@@ -448,18 +382,17 @@ func GetUpdateAlbumForm(r *gin.RouterGroup, repos domain.Repositories) {
 }
 
 // PUT /album/:id/
-func UpdateAlbum(r *gin.RouterGroup, repos domain.Repositories) {
-	albumRepo := repos[domain.AlbumRepoName].(domain.Album)
-
+func UpdateAlbum(r *gin.RouterGroup, albumService *album.Service) {
 	r.POST("/album/:id/", parseAlbumIDHandler, func(c *gin.Context) {
-		reqCtx := c.Request.Context()
-		logger := logutil.GetLogger(c)
-
 		s, _ := c.Get("sessionData")
 		session := s.(entity.Session)
 
-		album, err := albumRepo.GetByID(reqCtx, int32(c.GetInt("id")))
+		ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
+		logger := logutil.GetLogger(ctx)
+
+		album, err := albumService.Query().First(ctx, int32(c.GetInt("id")))
 		if err != nil {
+			logger.WithError(err).WithField("album id", c.GetInt("id")).Error("failed to get album")
 			common.AbortNotFound(c, err, "update album")
 
 			return
@@ -467,6 +400,7 @@ func UpdateAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 
 		var albumForm form.Album
 		if err := c.ShouldBind(&albumForm); err != nil {
+			logger.WithError(err).WithField("query parameters", fmt.Sprintf("%v", albumForm)).Error("failed to bind query parameters to form")
 			common.AbortBadRequest(c, err, "fail to bind to form")
 
 			return
@@ -474,7 +408,7 @@ func UpdateAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 
 		// only users with editPermission set for this album or one of user's group with the same permission
 		// can edit this album
-		apr := permissions.NewAlbumPermissionResolver()
+		apr := permissions.NewAlbumPermissionService()
 		hasPermission := apr.Policy(permissions.OwnerPolicy{}).
 			Policy(permissions.RolePolicy{Role: entity.RoleAdmin}).
 			Policy(permissions.UserPermissionPolicy{Permission: entity.PermissionEditAlbum}).
@@ -535,32 +469,22 @@ func UpdateAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 			}
 		}
 
-		// edit permissions don't allow a user other than the owner to change permissions
-		err = albumRepo.Update(reqCtx, album)
-		if err != nil {
-			common.AbortInternalError(c, err, "update album")
-
-			return
-		}
-
 		c.Redirect(http.StatusFound, rootURL)
 	})
 }
 
 // DELETE /album/:id
-func DeleteAlbum(r *gin.RouterGroup, repos domain.Repositories) {
-	albumRepo := repos[domain.AlbumRepoName].(domain.Album)
-	minioRepo := repos[domain.MinioRepoName].(domain.Store)
-
-	r.DELETE("/album/:id", parseAlbumIDHandler, func(c *gin.Context) {
-		reqCtx := c.Request.Context()
-		logger := logutil.GetLogger(c)
-
+func DeleteAlbum(r *gin.RouterGroup, albumService *album.Service) {
+	r.GET("/album/:id/delete", parseAlbumIDHandler, func(c *gin.Context) {
 		s, _ := c.Get("sessionData")
 		session := s.(entity.Session)
 
-		album, err := albumRepo.GetByID(reqCtx, int32(c.GetInt("id")))
+		ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
+		logger := logutil.GetLogger(ctx)
+
+		album, err := albumService.Query().First(ctx, int32(c.GetInt("id")))
 		if err != nil {
+			logger.WithError(err).WithField("album id", c.GetInt("id")).Error("failed to get album")
 			common.AbortNotFound(c, err, "update album")
 
 			return
@@ -568,7 +492,7 @@ func DeleteAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 
 		// only users with editPermission set for this album or one of user's group with the same permission
 		// can edit this album
-		apr := permissions.NewAlbumPermissionResolver()
+		apr := permissions.NewAlbumPermissionService()
 		hasPermission := apr.Policy(permissions.OwnerPolicy{}).
 			Policy(permissions.UserPermissionPolicy{Permission: entity.PermissionDeleteAlbum}).
 			Policy(permissions.GroupPermissionPolicy{Permission: entity.PermissionDeleteAlbum}).
@@ -585,24 +509,22 @@ func DeleteAlbum(r *gin.RouterGroup, repos domain.Repositories) {
 			return
 		}
 
-		err = minioRepo.DeleteBucket(reqCtx, album.Bucket)
-		if err != nil {
-			logger.WithFields(logrus.Fields{
-				"bucket":   album.Bucket,
-				"album id": album.ID,
-			}).WithError(err).Error("failed to remove album's bucket")
-
-			common.AbortInternalError(c, err, "internal error")
+		if err := albumService.Delete(ctx, album); err != nil {
+			logger.WithError(err).WithField("allbum id", album.ID).Error("failed to delete album")
+			common.AbortInternalError(c)
 
 			return
 		}
 
-		err = albumRepo.Delete(reqCtx, album.ID)
-		if err != nil {
-			common.AbortInternalError(c, common.ErrDeleteAlbum, fmt.Sprintf("album id: %d", album.ID))
-
-			return
+		alert := entity.Alert{
+			Message: fmt.Sprintf("Album %s deleted.", album.Name),
+			IsError: false,
 		}
+		session.AddAlert(alert)
+
+		ss := sessions.Default(c)
+		ss.Set(session.SessionID, session)
+		ss.Save()
 
 		c.Redirect(http.StatusFound, rootURL)
 	})

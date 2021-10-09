@@ -13,23 +13,15 @@ const (
 	ReverseOrder
 )
 
-type SortName int
+type SortType int
 
 const (
-	SortByName SortName = iota
+	SortByName SortType = iota
 	SortByID
 	SortByOwner
 	SortByDate
 	SortByLocation
 )
-
-type NoSorter struct{}
-
-func (n NoSorter) Sort(albums []entity.Album) {}
-
-type Sorter interface {
-	Sort(albums []entity.Album)
-}
 
 type albumSorter struct {
 	album    []entity.Album
@@ -37,7 +29,7 @@ type albumSorter struct {
 }
 
 // NewAlbumSorterById returns a sorter by IDs.
-func NewSorter(name SortName, order SortOrder) *albumSorter {
+func newSorter(name SortType, order SortOrder) *albumSorter {
 	var lessFunc func(a1, a2 entity.Album) bool
 
 	switch name {

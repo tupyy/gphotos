@@ -4,19 +4,27 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/tupyy/gophoto/internal/api/album"
 	"github.com/tupyy/gophoto/internal/api/media"
-	"github.com/tupyy/gophoto/internal/domain"
+	albumService "github.com/tupyy/gophoto/internal/services/album"
+	mediaService "github.com/tupyy/gophoto/internal/services/media"
+	"github.com/tupyy/gophoto/internal/services/users"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
 
-func RegisterApi(privateGroup *gin.RouterGroup, publicGroup *gin.RouterGroup, repos domain.Repositories) {
+func RegisterApi(privateGroup *gin.RouterGroup,
+	publicGroup *gin.RouterGroup,
+	as *albumService.Service,
+	ms *mediaService.Service,
+	us *users.Service) {
 
 	// register album api
-	album.GetAlbums(privateGroup, repos)
+	album.GetAlbums(privateGroup, as, us)
 	logutil.GetDefaultLogger().Info("api album registered")
 
+	// TODO fix upload media to work with media service
 	// register media upload api
-	media.UploadMedia(privateGroup, repos)
-	logutil.GetDefaultLogger().Info("api media registered")
+	// media.UploadMedia(privateGroup, albumService)
+	// logutil.GetDefaultLogger().Info("api media registered")
 
-    media.DownloadMedia(privateGroup, repos)
+	media.DownloadMedia(privateGroup, as, ms)
+	media.GetAlbumMedia(privateGroup, as, ms)
 }

@@ -1,15 +1,15 @@
 package logutil
 
 import (
+	"context"
 	"runtime"
 	"strings"
 
-	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )
 
-func GetLogger(c *gin.Context) *logrus.Entry {
-	logger := newLogger(c)
+func GetLogger(ctx context.Context) *logrus.Entry {
+	logger := newLogger(ctx)
 
 	methodName := getMethodName()
 
@@ -24,15 +24,11 @@ func GetDefaultLogger() *logrus.Entry {
 	return logrus.WithField("method", getMethodName())
 }
 
-func newLogger(c *gin.Context) *logrus.Entry {
+func newLogger(ctx context.Context) *logrus.Entry {
 	fields := logrus.Fields{}
 
-	if c.GetString("username") != "" {
-		fields["user"] = c.GetString("username")
-	}
-
-	if c.GetString("sessionID") != "" {
-		fields["sessionID"] = c.GetString("sessionID")
+	if ctx.Value("username") != "" {
+		fields["user"] = ctx.Value("username")
 	}
 
 	return logrus.WithFields(fields)
