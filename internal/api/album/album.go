@@ -13,12 +13,12 @@ import (
 	"github.com/tupyy/gophoto/internal/domain/entity"
 	"github.com/tupyy/gophoto/internal/dto"
 	"github.com/tupyy/gophoto/internal/services/album"
-	"github.com/tupyy/gophoto/internal/services/keycloak"
+	"github.com/tupyy/gophoto/internal/services/users"
 	"github.com/tupyy/gophoto/utils/encryption"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
 
-func GetAlbums(r *gin.RouterGroup, albumService *album.Service, keycloakService *keycloak.Service) {
+func GetAlbums(r *gin.RouterGroup, albumService *album.Service, usersService *users.Service) {
 	r.GET("/api/albums", func(c *gin.Context) {
 		s, _ := c.Get("sessionData")
 		session := s.(entity.Session)
@@ -27,7 +27,7 @@ func GetAlbums(r *gin.RouterGroup, albumService *album.Service, keycloakService 
 		logger := logutil.GetLogger(c)
 
 		// fetch users from keycloak
-		users, err := keycloakService.Query().AllUsers(ctx)
+		users, err := usersService.Query().AllUsers(ctx)
 		if err != nil {
 			logger.WithError(err).Error("failed to get users")
 			common.AbortInternalErrorWithJson(c)

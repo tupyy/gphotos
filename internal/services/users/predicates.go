@@ -1,4 +1,4 @@
-package keycloak
+package users
 
 import (
 	"github.com/tupyy/gophoto/internal/domain/entity"

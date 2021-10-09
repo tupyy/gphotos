@@ -36,8 +36,8 @@ import (
 	"github.com/tupyy/gophoto/internal/domain/postgres/user"
 	"github.com/tupyy/gophoto/internal/handlers"
 	albumService "github.com/tupyy/gophoto/internal/services/album"
-	keycloakService "github.com/tupyy/gophoto/internal/services/keycloak"
 	"github.com/tupyy/gophoto/internal/services/media"
+	usersService "github.com/tupyy/gophoto/internal/services/users"
 	"github.com/tupyy/gophoto/utils/logutil"
 	"github.com/tupyy/gophoto/utils/minioclient"
 	"github.com/tupyy/gophoto/utils/pgclient"
@@ -61,6 +61,7 @@ var serveCmd = &cobra.Command{
 
 		// register sessionData
 		gob.Register(entity.Session{})
+		gob.Register(entity.Alert{})
 
 		// initialize postgres client
 		client, err := pgclient.NewClient(conf.GetPostgresConf())
@@ -84,7 +85,7 @@ var serveCmd = &cobra.Command{
 
 		// create services
 		albumService := albumService.New(repos)
-		keycloakService := keycloakService.New(repos)
+		usersService := usersService.New(repos)
 		mediaService := media.New(repos)
 		logutil.GetDefaultLogger().Info("services created")
 
@@ -96,9 +97,9 @@ var serveCmd = &cobra.Command{
 
 		handlers.Logout(r.PrivateGroup, keycloakAuthenticator)
 
-		handlers.Register(r.PrivateGroup, r.PublicGroup, albumService, keycloakService)
+		handlers.Register(r.PrivateGroup, r.PublicGroup, albumService, usersService)
 
-		api.RegisterApi(r.PrivateGroup, r.PublicGroup, albumService, mediaService, keycloakService)
+		api.RegisterApi(r.PrivateGroup, r.PublicGroup, albumService, mediaService, usersService)
 
 		// run server
 		r.Run()

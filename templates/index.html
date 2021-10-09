@@ -25,6 +25,18 @@
         <!--         </div> -->
         <!--     </div> -->
         <!-- </div> -->
+        {{ if .alerts }}
+            {{ range $k,$a := .alerts }}
+                {{ if $a.IsError }}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {{ else }}
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ end }}
+                    {{$a.Message}}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {{ end }}
+        {{end}}
         <div class="container filter-container-mobile">
             <button class="btn btn-outline-primary btn-sm" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasFilter">
                 Filters

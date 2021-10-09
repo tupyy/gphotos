@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/csrf"
 	"github.com/sirupsen/logrus"
@@ -17,8 +18,8 @@ import (
 	"github.com/tupyy/gophoto/internal/dto"
 	"github.com/tupyy/gophoto/internal/form"
 	"github.com/tupyy/gophoto/internal/services/album"
-	"github.com/tupyy/gophoto/internal/services/keycloak"
 	"github.com/tupyy/gophoto/internal/services/permissions"
+	"github.com/tupyy/gophoto/internal/services/users"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
 
@@ -28,7 +29,7 @@ const (
 
 // TODO fix the error management. it totally crap.
 // GET /album/:id
-func GetAlbum(r *gin.RouterGroup, albumService *album.Service, keycloakService *keycloak.Service) {
+func GetAlbum(r *gin.RouterGroup, albumService *album.Service, usersService *users.Service) {
 
 	r.GET("/album/:id", parseAlbumIDHandler, func(c *gin.Context) {
 		s, _ := c.Get("sessionData")
@@ -65,10 +66,10 @@ func GetAlbum(r *gin.RouterGroup, albumService *album.Service, keycloakService *
 			return
 		}
 
-		users, err := keycloakService.Query().
-			Where(keycloak.NotUsername(session.User.Username)).
-			Where(keycloak.CanShare(true)).
-			Where(keycloak.Roles([]entity.Role{entity.RoleEditor, entity.RoleUser})).
+		users, err := usersService.Query().
+			Where(users.NotUsername(session.User.Username)).
+			Where(users.CanShare(true)).
+			Where(users.Roles([]entity.Role{entity.RoleEditor, entity.RoleUser})).
 			AllUsers(ctx)
 		if err != nil {
 			logger.WithError(err).Error("failed to get users")
@@ -78,7 +79,7 @@ func GetAlbum(r *gin.RouterGroup, albumService *album.Service, keycloakService *
 		}
 
 		// if not owner get the owner from keycloak
-		owner, err := keycloakService.Query().FirstUser(ctx, album.OwnerID)
+		owner, err := usersService.Query().FirstUser(ctx, album.OwnerID)
 		if err != nil {
 			logger.WithError(err).WithField("album id", album.ID).Error("failed to fetch owner from keycloak")
 			common.AbortInternalError(c)
@@ -132,7 +133,7 @@ func GetAlbum(r *gin.RouterGroup, albumService *album.Service, keycloakService *
 			"owner":             fmt.Sprintf("%s %s", owner.FirstName, owner.LastName),
 			"user_permissions":  userPermissions,
 			"group_permissions": album.GroupPermissions,
-			"delete_link":       fmt.Sprintf("/album/%s", albumDTO.ID),
+			"delete_link":       fmt.Sprintf("/album/%s/delete", albumDTO.ID),
 			"edit_link":         fmt.Sprintf("/album/%s/edit", albumDTO.ID),
 			"read_permission":   permissions[entity.PermissionReadAlbum],
 			"write_permission":  permissions[entity.PermissionWriteAlbum],
@@ -144,7 +145,7 @@ func GetAlbum(r *gin.RouterGroup, albumService *album.Service, keycloakService *
 }
 
 // GET /album
-func GetCreateAlbumForm(r *gin.RouterGroup, keycloakService *keycloak.Service) {
+func GetCreateAlbumForm(r *gin.RouterGroup, usersService *users.Service) {
 	r.GET("/album", func(c *gin.Context) {
 		s, _ := c.Get("sessionData")
 		session := s.(entity.Session)
@@ -160,10 +161,10 @@ func GetCreateAlbumForm(r *gin.RouterGroup, keycloakService *keycloak.Service) {
 			return
 		}
 
-		users, err := keycloakService.Query().
-			Where(keycloak.NotUsername(session.User.Username)).
-			Where(keycloak.CanShare(true)).
-			Where(keycloak.Roles([]entity.Role{entity.RoleEditor, entity.RoleUser})).
+		users, err := usersService.Query().
+			Where(users.NotUsername(session.User.Username)).
+			Where(users.CanShare(true)).
+			Where(users.Roles([]entity.Role{entity.RoleEditor, entity.RoleUser})).
 			AllUsers(ctx)
 		if err != nil {
 			logger.WithError(err).Error("failed to get users")
@@ -172,7 +173,7 @@ func GetCreateAlbumForm(r *gin.RouterGroup, keycloakService *keycloak.Service) {
 			return
 		}
 
-		groups, err := keycloakService.Query().AllGroups(ctx)
+		groups, err := usersService.Query().AllGroups(ctx)
 		if err != nil {
 			logger.WithError(err).Error("failed to get groups")
 			common.AbortInternalError(c)
@@ -271,12 +272,26 @@ func CreateAlbum(r *gin.RouterGroup, albumService *album.Service) {
 			"id":    albumID,
 		}).Info("album entity created")
 
+		alert := entity.Alert{
+			Message: fmt.Sprintf("Album %s created.", album.Name),
+			IsError: false,
+		}
+		session.AddAlert(alert)
+		session.AddAlert(entity.Alert{
+			Message: "test",
+			IsError: true,
+		})
+
+		ss := sessions.Default(c)
+		ss.Set(session.SessionID, session)
+		ss.Save()
+
 		c.Redirect(http.StatusFound, rootURL)
 	})
 }
 
 // GET /album/:id/edit
-func GetUpdateAlbumForm(r *gin.RouterGroup, albumService *album.Service, keycloakService *keycloak.Service) {
+func GetUpdateAlbumForm(r *gin.RouterGroup, albumService *album.Service, usersService *users.Service) {
 	r.GET("/album/:id/edit", parseAlbumIDHandler, func(c *gin.Context) {
 		s, _ := c.Get("sessionData")
 		session := s.(entity.Session)
@@ -304,10 +319,10 @@ func GetUpdateAlbumForm(r *gin.RouterGroup, albumService *album.Service, keycloa
 		if album.OwnerID == session.User.ID || session.User.Role == entity.RoleAdmin {
 			logger.Info("edit permission granted. user is the owner")
 
-			users, err := keycloakService.Query().
-				Where(keycloak.NotUsername(session.User.Username)).
-				Where(keycloak.CanShare(true)).
-				Where(keycloak.Roles([]entity.Role{entity.RoleEditor, entity.RoleUser})).
+			users, err := usersService.Query().
+				Where(users.NotUsername(session.User.Username)).
+				Where(users.CanShare(true)).
+				Where(users.Roles([]entity.Role{entity.RoleEditor, entity.RoleUser})).
 				AllUsers(ctx)
 			if err != nil {
 				logger.WithError(err).Error("failed to get users")
@@ -316,7 +331,7 @@ func GetUpdateAlbumForm(r *gin.RouterGroup, albumService *album.Service, keycloa
 				return
 			}
 
-			groups, err := keycloakService.Query().AllGroups(ctx)
+			groups, err := usersService.Query().AllGroups(ctx)
 			if err != nil {
 				logger.WithError(err).Error("failed to get groups")
 				common.AbortInternalError(c)
@@ -460,7 +475,7 @@ func UpdateAlbum(r *gin.RouterGroup, albumService *album.Service) {
 
 // DELETE /album/:id
 func DeleteAlbum(r *gin.RouterGroup, albumService *album.Service) {
-	r.DELETE("/album/:id", parseAlbumIDHandler, func(c *gin.Context) {
+	r.GET("/album/:id/delete", parseAlbumIDHandler, func(c *gin.Context) {
 		s, _ := c.Get("sessionData")
 		session := s.(entity.Session)
 
@@ -500,6 +515,16 @@ func DeleteAlbum(r *gin.RouterGroup, albumService *album.Service) {
 
 			return
 		}
+
+		alert := entity.Alert{
+			Message: fmt.Sprintf("Album %s deleted.", album.Name),
+			IsError: false,
+		}
+		session.AddAlert(alert)
+
+		ss := sessions.Default(c)
+		ss.Set(session.SessionID, session)
+		ss.Save()
 
 		c.Redirect(http.StatusFound, rootURL)
 	})

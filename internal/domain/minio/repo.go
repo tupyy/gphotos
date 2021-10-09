@@ -72,8 +72,6 @@ func (m *MinioRepo) DeleteBucket(ctx context.Context, bucket string) error {
 			default:
 			}
 		}
-
-		close(objectsCh)
 	}()
 
 	opts := minio.RemoveObjectsOptions{

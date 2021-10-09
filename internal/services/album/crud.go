@@ -29,15 +29,15 @@ func (s *Service) Create(ctx context.Context, newAlbum entity.Album) (int32, err
 
 	// generate bucket name
 	bucketID := strings.ReplaceAll(uuid.New().String(), "-", "")
+	n := strings.ReplaceAll(newAlbum.Name, " ", "-")
+	newAlbum.Bucket = fmt.Sprintf("%s-%s", n, bucketID[:8])
 
 	// create the bucket
-	if err := minioRepo.CreateBucket(ctx, bucketID); err != nil {
+	if err := minioRepo.CreateBucket(ctx, newAlbum.Bucket); err != nil {
 		logger.WithError(err).Error("failed to create bucket")
 
 		return 0, fmt.Errorf("[%w] failed to create album '%s'", err, newAlbum.Name)
 	}
-
-	newAlbum.Bucket = bucketID
 
 	albumID, err := albumRepo.Create(ctx, newAlbum)
 	if err != nil {

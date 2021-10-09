@@ -9,12 +9,13 @@
         {{ end }}
 
         {{ template "js" }}
+        <script src="/static/js/album/delete.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.2.1/lightgallery.umd.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.2.1/plugins/zoom/lg-zoom.umd.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.2.1/plugins/thumbnail/lg-thumbnail.umd.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/js/jquery.justifiedGallery.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
         <script src="/static/js/album/gallery.js"></script>
-        <script src="/static/js/album/delete.js"></script>
         {{ if .write_permission }}
             {{ template "upload" }}
         {{ end }}
@@ -222,9 +223,28 @@
                                 </div>
                             </div>
                             <div class="col-3">
-                                <a onclick="deleteAlbum()">
-                                    <button class="btn btn-danger">Delete this album</button>
-                                </a>
+                                <input type="hidden" value="{{.delete_link}}"></input>
+                                <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">Delete this album</button>
+                                <!-- delete modal -->
+                                <div class="modal fade" id="deleteModal">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Delete album</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>Are you really want to delete this album?</p>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                <a href="{{.delete_link}}">
+                                                <button type="button" class="btn btn-danger" data-bs-dismiss="modal" id="deleteAlbumBtn">Delete</button>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                            </div>
                         </div>
                     {{ end }}
