@@ -1,0 +1,108 @@
+.offcanvas .custom-col {
+    margin-left: 0px;
+    margin-right: 0px;
+}
+
+.offcanvas  {
+    background-color: #2e343a;
+    border: 1px solid silver;
+    border-radius: 5px;
+    padding: 0;
+}
+
+.offcanvas .form-check {
+    margin-left: 0;
+}
+
+.offcanvas  .form-check-input {
+    background-color: #2e343a;
+    border-color: silver;
+}
+
+.offcanvas .form-check-input:checked {
+    background-color: #2e343a;
+    color: silver;
+}
+
+.offcanvas select:focus, .form-check-input:focus {
+    box-shadow: 0 0 0 0;
+    border-width: 1px;
+    border-color: silver;
+}
+
+
+.offcanvas .title {
+    font-size: 1rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.offcanvas .row-filter {
+    margin: 10px 5px 10px 5px;
+}
+
+.offcanvas .row-filter:last-child {
+    margin: 10px 0px 30px 0px;
+}
+
+.offcanvas .row-filter .input-group {
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.offcanvas .row-filter input, .form-select {
+    background-color: #202327;
+    color: silver;
+    border-color: silver;
+    border-radius: 5px;
+}
+
+.offcanvas .row-filter .form-check input {
+    border-radius: 2px;
+}
+
+.offcanvas .row-filter input, .form-select option {
+    background-color: #202327;
+    color: silver;
+}
+
+.offcanvas .row-filter .col-pill {
+    display: flex;
+    justify-content: center;
+    margin-top: 5px;
+}
+
+.offcanvas .row-filter .col-pill .bg-secondary {
+    background-color: #202327 !important;
+    color: silver;
+}
+
+.offcanvas .row-filter span {
+    display: flex;
+    align-items: center;
+}
+
+.offcanvas .row-filter span button {
+    margin-left: 5px;
+}
+
+.offcanvas .row-filter .input-group {
+    padding: 0;
+}
+
+.offcanvas .row-filter-users {
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.offcanvas #datepicker-mobil {
+    display: block;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.offcanvas #datepicker-mobil div:nth-child(2) {
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+

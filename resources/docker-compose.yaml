@@ -34,7 +34,7 @@ services:
       DB_PORT: 5432
       DB_DATABASE: keycloak
       DB_USER: ${KEYCLOAK_DB_USER}
-      DB_PASSWORD: azerty
+      DB_PASSWORD: ${KEYCLOAK_DB_PWD} 
   minio:
     image: minio/minio:latest
     container_name: minio

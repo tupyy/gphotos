@@ -74,6 +74,10 @@
     margin-bottom: 10px;
 }
 
+.alert {
+    margin-left: 10px;
+    margin-right: 10px;
+}
 
 
 @media screen and (max-width: 576px) {
@@ -148,5 +152,9 @@
     
     .btn.btn-outline-primary.btn-sm:focus {
         box-shadow: 0 0 0;
+    }
+
+    .offcanvas {    
+        background: #2e343a;
     }
 }

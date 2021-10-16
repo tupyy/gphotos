@@ -276,13 +276,9 @@ func CreateAlbum(r *gin.RouterGroup, albumService *album.Service) {
 			Message: fmt.Sprintf("Album %s created.", album.Name),
 			IsError: false,
 		}
-		session.AddAlert(alert)
-		session.AddAlert(entity.Alert{
-			Message: "test",
-			IsError: true,
-		})
 
 		ss := sessions.Default(c)
+		session.AddAlert(alert)
 		ss.Set(session.SessionID, session)
 		ss.Save()
 

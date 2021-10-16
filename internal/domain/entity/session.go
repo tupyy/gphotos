@@ -51,5 +51,7 @@ func (s *Session) AddAlert(a Alert) {
 }
 
 func (s *Session) ClearAlerts() {
-	s.Alerts = make(map[string]Alert)
+	for k := range s.Alerts {
+		delete(s.Alerts, k)
+	}
 }
