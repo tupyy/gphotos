@@ -3,6 +3,10 @@
     margin-right: 0px;
 }
 
+.container-filter-btn {
+    display: none;
+}
+
 .main-container .col-filter {
     background-color: #2e343a;
     border: 1px solid silver;
@@ -106,7 +110,31 @@
     padding-right: 5px;
 }
 
-@media (max-width: 576px) {
+@media (max-width: 812px) {
+    .container-filter-btn {
+        display: flex;
+        justify-content: center;
+        margin-top: 15px;
+    }
+    
+    .container-filter-btn .btn.btn-outline-primary.btn-sm {
+        color: deepskyblue;
+        background-color: transparent;
+        border-color: deepskyblue;
+        width: 80px;
+        border-radius: 20px;
+    }
+    
+    .container-filter-btn .btn.btn-outline-primary.btn-sm:hover {
+        color: black;
+        background-color: deepskyblue;
+        border-color: silver;
+    }
+    
+    .container-filter-btn .btn.btn-outline-primary.btn-sm:focus {
+        box-shadow: 0 0 0;
+    }
+
     .main-container .col-filter {
         visibility: hidden;
         position: fixed;
