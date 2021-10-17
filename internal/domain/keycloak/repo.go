@@ -38,17 +38,16 @@ func New(ctx context.Context, c conf.KeycloakConfig) (*KeycloakRepo, error) {
 }
 
 func (k *KeycloakRepo) GetUsers(ctx context.Context, filters userFilters.Filters) ([]entity.User, error) {
+	if err := k.connect(); err != nil {
+		return []entity.User{}, fmt.Errorf("[%w] failed to connec to keycloak", err)
+	}
+
 	keycloakUsers, err := k.client.GetUsers(ctx, k.token.AccessToken, k.realm, keycloak.GetUsersParams{Enabled: ptrBool(true)})
 	if err != nil {
-		err := k.tryReconnect()
-		if err != nil {
-			logutil.GetDefaultLogger().WithError(err).Error("cannot fetch users from keycloak")
-			return []entity.User{}, errors.Wrap(err, "user repo")
-		}
+		return []entity.User{}, errors.Wrap(err, "user repo")
 	}
 
 	if len(keycloakUsers) == 0 {
-		logutil.GetDefaultLogger().Warn("no users found")
 		return []entity.User{}, nil
 	}
 
@@ -86,6 +85,10 @@ func (k *KeycloakRepo) GetUsers(ctx context.Context, filters userFilters.Filters
 }
 
 func (k *KeycloakRepo) GetUserByID(ctx context.Context, id string) (entity.User, error) {
+	if err := k.connect(); err != nil {
+		return entity.User{}, fmt.Errorf("[%w] failed to connect to keycloak", err)
+	}
+
 	keycloakUser, err := k.client.GetUserByID(ctx, k.token.AccessToken, k.realm, id)
 	if err != nil {
 		logutil.GetDefaultLogger().WithError(err).WithField("id", id).Error("cannot fetch user from keycloak")
@@ -103,6 +106,10 @@ func (k *KeycloakRepo) GetUserByID(ctx context.Context, id string) (entity.User,
 }
 
 func (k *KeycloakRepo) GetGroups(ctx context.Context) ([]entity.Group, error) {
+	if err := k.connect(); err != nil {
+		return []entity.Group{}, fmt.Errorf("[%w] failed to connect to keycloak", err)
+	}
+
 	kgroups, err := k.client.GetGroups(ctx, k.token.AccessToken, k.realm, keycloak.GetGroupsParams{})
 	if err != nil {
 		return []entity.Group{}, err
@@ -116,7 +123,7 @@ func (k *KeycloakRepo) GetGroups(ctx context.Context) ([]entity.Group, error) {
 	return groups, nil
 }
 
-func (k *KeycloakRepo) tryReconnect() error {
+func (k *KeycloakRepo) connect() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
