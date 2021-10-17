@@ -241,6 +241,16 @@ const bindToEvents = () => {
         doReq();
     });
 
+    $('.main-container .col-filter .btn-close').on('click', () => {
+       $('#filter-container').css('visibility','hidden'); 
+        $('.main-container .col-filter .btn-close').css('visibility', 'hidden');
+    });
+
+    $('#btn-show-filter').on('click', () => {
+        $('#filter-container').css('visibility', 'visible');
+        $('.main-container .col-filter .btn-close').css('visibility', 'visible');
+    });
+
 }
 
 const bindToCardOwner = () => {

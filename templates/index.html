@@ -39,15 +39,18 @@
             {{ end }}
         {{end}}
         <div class="container filter-container-mobile">
-            <button class="btn btn-outline-primary btn-sm" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasFilter">
+            <button class="btn btn-outline-primary btn-sm" type="button" id="btn-show-filter">
                 Filters
             </button>
         </div>
         <div class="container-xl main-container">
             <div class="row gx-lg-5">
-                <div class="col-2 col-sm-3 col-md-2 custom-col col-filter">
+                <div class="col-2 col-sm-3 col-md-2 custom-col col-filter" id="filter-container">
                     <div class="row row-filter">
+                        <div class="col title">
                         <span class="title">Filters</span>
+                        <button type="button" class="btn-close btn-close-white" aria-label="Close" id="btn-close-filter"></button>
+                        </div>
                     </div>
                     {{ if .can_share }}
                         <div class="row row-filter">
@@ -95,62 +98,6 @@
                             </div>
                         </div>
                     {{ end }}
-                </div>
-                <div class="offcanvas offcanvas-start" id="offcanvasFilter">
-                    <div class="offcanvas-header">
-                        <h5 class="offcanvas-title" id="offcanvasExampleLabel">Filters</h5>
-                        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-                    </div>
-                    <div class="offcanvas-body">
-                        <div class="container main-container-mobile">
-                            {{ if .can_share }}
-                                <div class="row row-filter">
-                                    <span class="title">Album type</span>
-                                    <div class="container">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" value="" id="personalAlbumCheckMobil" checked>
-                                            <label class="form-check-label" for="personalAlbumCheckMobil">
-                                              Personal
-                                            </label>
-                                        </div>
-                                        <div class="form-check">
-                                          <input class="form-check-input" type="checkbox" value="" id="sharedAlbumCheckMobil" checked>
-                                          <label class="form-check-label" for="sharedAlbumCheckMobil">
-                                            Shared
-                                          </label>
-                                        </div>
-                                    </div>
-                                </div>
-                            {{ end }}
-                            <div class="row row-filter">
-                                <span class="title">Date</span>
-                                <div class="input-daterange input-group" id="datepicker-mobil">
-                                    <div class="row">
-                                        <input type="text" class="input-sm form-control" id="startDate" name="start" />
-                                    </div>
-                                    <div class="row">
-                                        <span class="input-group-addon">to</span>
-                                    </div>
-                                    <div class="row">
-                                        <input type="text" class="input-sm form-control" id="endDate" name="end" />
-                                    </div>
-                                </div>
-                            </div>
-                            {{ if .users }}
-                                <div class="row row-filter">
-                                    <span class="title">Shared by others</span>
-                                    <div class="container" id="ownerFilter">
-                                        {{ range .users }}
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="{{.ID}}" id="{{.ID}}">
-                                                <label class="form-check-label" for="{{.ID}}">{{.Name}}</label>
-                                            </div>
-                                        {{ end }}
-                                    </div>
-                                </div>
-                            {{ end }}
-                        </div>
-                    </div>
                 </div>
                 <div class="col-sm-9 col-md-9 col-lg-10 col-12 custom-col albums-col">
                     <div class="row justify-content-between sort-row">

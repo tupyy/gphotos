@@ -8,6 +8,8 @@
   box-sizing: border-box;
   padding: 0;
   border: 0;
+  padding-left: 2px;
+  padding-right: 2px;
 }
 
 .container-album-card.card:hover {

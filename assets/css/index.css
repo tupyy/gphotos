@@ -96,10 +96,6 @@
         min-height: 300px;
     }
 
-    .main-container .col-filter {
-        display: none;
-    }
-
     .main-container .albums-col {
         padding-left: 0;
         padding-right: 0;
@@ -152,9 +148,5 @@
     
     .btn.btn-outline-primary.btn-sm:focus {
         box-shadow: 0 0 0;
-    }
-
-    .offcanvas {    
-        background: #2e343a;
     }
 }
