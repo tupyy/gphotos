@@ -49,10 +49,11 @@ type keyCloakAuthenticator struct {
 }
 
 func NewKeyCloakAuthenticator(c conf.KeycloakConfig, authCallback string) Authenticator {
-
 	// initialize oidc provier
 	oidcProvider := newOidcProvider(c, authCallback)
 	keycloakClient := gocloak.NewClient(c.BaseURL)
+
+	logutil.GetDefaultLogger().WithField("auth callback", authCallback).Info("set auth callback")
 
 	return &keyCloakAuthenticator{oidcProvider: oidcProvider, client: keycloakClient, conf: c}
 }
