@@ -19,6 +19,7 @@ type Album struct {
 	Date        string  `json:"date"`
 	Description string  `json:"description"`
 	Location    string  `json:"location"`
+	Thumbnail   string  `json:"thumbnail"`
 	Photos      []Media `json:"photos"`
 	Videos      []Media `json:"videos"`
 }
@@ -110,6 +111,7 @@ func NewAlbumDTO(a entity.Album, owner entity.User) (Album, error) {
 		Owner:       ownerName,
 		Photos:      encryptedPhotos,
 		Videos:      encryptedVideos,
+		Thumbnail:   "/static/img/image_not_available.png",
 	}, nil
 }
 

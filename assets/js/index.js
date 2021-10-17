@@ -103,7 +103,7 @@ let renderAlbum = (album) => {
                     </div> 
                 </div>
                 <a href="/album/` + album.id + `">
-                    <img src="/static/img/eiffeltoren.jpg" class="card-img-top"/>
+                    <img src="` + album.thumbnail + `" class="card-img-top"/>
                 </a>
                 <div class="album">
                     <div class="card-body">
