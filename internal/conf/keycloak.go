@@ -12,7 +12,7 @@ const (
 	keycloakClientID     = "KEYCLOAK_CLIENT_ID"
 	keycloakClientSecret = "KEYCLOAK_CLIENT_SECRET"
 	keycloakBaseURL      = "KEYCLOAK_AUTH_URL"
-	keycloakBackendURL =  "KEYCLOAK_BACKEND_URL"
+	keycloakAdminURL     = "KEYCLOAK_ADMIN_URL"
 	keycloakRealm        = "KEYCLOAK_REALM"
 	keycloakAdmin        = "KEYCLOAK_ADMIN_USERNAME"
 	keycloakAdminPwd     = "KEYCLOAK_ADMIN_PWD"
@@ -22,6 +22,7 @@ type KeycloakConfig struct {
 	ClientID      string
 	ClientSecret  string
 	BaseURL       string
+	AdminURL      string
 	Realm         string
 	AdminUsername string
 	AdminPwd      string
@@ -33,6 +34,7 @@ func GetKeycloakConfig() KeycloakConfig {
 		ClientSecret:  viper.GetString(keycloakClientSecret),
 		BaseURL:       viper.GetString(keycloakBaseURL),
 		Realm:         viper.GetString(keycloakRealm),
+		AdminURL:      viper.GetString(keycloakAdminURL),
 		AdminUsername: viper.GetString(keycloakAdmin),
 		AdminPwd:      viper.GetString(keycloakAdminPwd),
 	}

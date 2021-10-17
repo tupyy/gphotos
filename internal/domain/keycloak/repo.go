@@ -26,7 +26,7 @@ type KeycloakRepo struct {
 }
 
 func New(ctx context.Context, c conf.KeycloakConfig) (*KeycloakRepo, error) {
-	client := gocloak.NewClient(c.BaseURL)
+	client := gocloak.NewClient(c.AdminURL)
 	token, err := client.LoginClient(ctx, c.AdminUsername, c.AdminPwd, masterRealm)
 	if err != nil {
 		return nil, err
