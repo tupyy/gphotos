@@ -1,0 +1,70 @@
+version: "3"
+services:
+  caddy:
+    image: caddy:2.4.5-alpine
+    container_name: caddy
+    networks:
+      - gphotos
+    ports:
+      - 8080:80
+      - 8443:443
+    volumes:
+      - ${CADDYFILE}:/etc/caddy/Caddyfile
+      - caddy_data:/data
+  postgres:
+    image: ${IMAGE_NAME}:${IMAGE_TAG}
+    container_name: postgresql
+    networks:
+      - gphotos
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: ${POSTGRES_ROOT_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_ROOT_PWD}
+      POSTGRES_DB: postgres
+      VERBOSE: 1
+    volumes:
+      - ${PG_VOLUME}:/var/lib/postgresql/data
+  keycloak:
+    image: jboss/keycloak:15.0.0
+    container_name: keycloak
+    depends_on:
+      - postgres
+    networks:
+      - gphotos
+    ports:
+      - ${KEYCLOAK_PORT}:8080
+    volumes:
+      - ${KEYCLOAK_REALM_FILE}:/tmp/gophoto-realm.json
+    environment:
+      KEYCLOAK_USER: ${KEYCLOAK_USER}
+      KEYCLOAK_PASSWORD: ${KEYCLOAK_PWD}
+      KEYCLOAK_IMPORT: /tmp/gophoto-realm.json
+      DB_VENDOR: "postgres"
+      DB_ADDR: postgresql
+      DB_PORT: 5432
+      DB_DATABASE: keycloak
+      DB_USER: ${KEYCLOAK_DB_USER}
+      DB_PASSWORD: ${KEYCLOAK_DB_PWD} 
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    command: server /data --console-address ":9001"
+    networks:
+      - gphotos
+    ports:
+      - ${MINIO_SERVER_PORT}:9000
+      - ${MINIO_CONSOLE_PORT}:9001
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PWD}
+    volumes:
+      - ${MINIO_DATA}:/data
+
+networks:
+  gphotos:
+
+volumes:
+  caddy_data:
+
+

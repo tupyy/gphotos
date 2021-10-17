@@ -87,7 +87,7 @@ build.local: build.prepare
 
 #help build.docker: build a docker image
 build.docker:
-	DOCKER_BUILDKIT=1 docker build --ssh default --build-arg build_args="$(BUILD_ARGS)" --build-arg REGISTRY_HOSTNAME=$(REPO_CI_PULL) -t $(IMAGE_NAME):$(IMAGE_TAG) -f Dockerfile .
+	DOCKER_BUILDKIT=1 docker build --build-arg build_args="$(BUILD_ARGS)" -t $(IMAGE_NAME):$(IMAGE_TAG) -f Dockerfile .
 
 #help build.get.imagename: Allows to get the name of the service (for the CI)
 build.get.imagename:
@@ -144,7 +144,7 @@ check.get.tools.image:
 
 #help run.docker: run the application on a container
 run.docker:
-	$(DOCKER_CMD) run -d --rm -v $(CURDIR)/resources/:/etc/$(NAME)/ --name $(NAME) $(IMAGE_NAME):$(IMAGE_TAG) --config /etc/$(NAME)/.$(NAME).yaml
+	$(DOCKER_CMD) run -d --rm --network resources_gphotos -v $(CURDIR)/resources/:/etc/$(NAME)/ --name $(NAME) docker.io/library/$(IMAGE_NAME):$(IMAGE_TAG) serve --config /etc/$(NAME)/.$(NAME)-prod.yaml
 	$(DOCKER_CMD) logs -f $(NAME) | $(COLORIZE)
 
 #help run.docker.stop: stop the container of the application

@@ -1,0 +1,5 @@
+cosminphotos.ddns.net
+
+reverse_proxy /auth/* keycloak:8080
+reverse_proxy / gophoto:8080
+

@@ -11,7 +11,8 @@ const (
 	// params for keycloak
 	keycloakClientID     = "KEYCLOAK_CLIENT_ID"
 	keycloakClientSecret = "KEYCLOAK_CLIENT_SECRET"
-	keycloakBaseURL      = "KEYCLOAK_URL"
+	keycloakBaseURL      = "KEYCLOAK_AUTH_URL"
+	keycloakBackendURL =  "KEYCLOAK_BACKEND_URL"
 	keycloakRealm        = "KEYCLOAK_REALM"
 	keycloakAdmin        = "KEYCLOAK_ADMIN_USERNAME"
 	keycloakAdminPwd     = "KEYCLOAK_ADMIN_PWD"

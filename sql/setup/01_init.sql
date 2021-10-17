@@ -15,10 +15,12 @@ REVOKE CREATE ON SCHEMA public FROM PUBLIC;
 
 -- Create core device management role
 
+DROP ROLE IF EXISTS keycloak_readonly;
 CREATE ROLE keycloak_readwrite;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO keycloak_readwrite;
 
 -- Create users
+DROP USER IF EXISTS keycloak;
 CREATE USER keycloak WITH PASSWORD :keycloak_pwd;
 GRANT CONNECT ON DATABASE keycloak TO keycloak;
 GRANT keycloak_readwrite TO keycloak;
@@ -28,15 +30,19 @@ GRANT keycloak_readwrite TO keycloak;
 \connect gophoto
 
 -- Create core device management role
+DROP ROLE IF EXISTS core_readonly;
 
 CREATE ROLE core_readonly;
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO core_readonly;
+
+DROP ROLE IF EXISTS core_readwrite;
 
 CREATE ROLE core_readwrite;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO core_readwrite;
 
 -- Create users
+DROP USER IF EXISTS gophoto;
+
 CREATE USER gophoto WITH PASSWORD :gophoto_pwd;
 GRANT CONNECT ON DATABASE gophoto TO gophoto;
 GRANT core_readwrite TO gophoto;
-

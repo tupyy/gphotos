@@ -1,3 +1,5 @@
+BEGIN;
+
 CREATE TYPE role as ENUM('admin','editor','user');
 
 DROP TABLE IF EXISTS "album";
@@ -65,3 +67,4 @@ CREATE TABLE albums_tags (
     )
 );
 
+COMMIT;

@@ -17,14 +17,11 @@ RUN GOOS=linux GOARCH=amd64 make build.local BUILD_ARGS="${build_args}"
 ################
 #   Run step   #
 ################
-FROM gcr.io/distroless/static-debian10
+FROM gcr.io/distroless/base
 
 COPY --from=build /app/target/run /usr/bin/run
 
 # API port
 EXPOSE 8080
 
-# Prometheus port
-EXPOSE 7777
-
-ENTRYPOINT ["/usr/bin/run", "--port", "8080"]
+ENTRYPOINT ["/usr/bin/run", "serve"]

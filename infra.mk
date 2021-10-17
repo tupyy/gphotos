@@ -15,6 +15,7 @@ else ifeq ($(ENV),prod)
 	ENV_SET=1
 endif
 
+DOCKER_COMPOSE_COMMAND=docker-compose
 #help deploy.check: check required ENV variable
 run.check:
 	@if [ "$(ENV_SET)" = "" ]; then echo "$(COLOR_RED)ERROR: ENV is mandatory, could be 'dev' or 'prod'$(RESET_COLOR)"; exit 1; fi
@@ -23,14 +24,15 @@ run.check:
 run.infra: 
 	@if [ "$(ENV)" == "dev" ]; then\
 		echo "$(COLOR_YELLOW)Run for dev$(RESET_COLOR)"; \
-		docker-compose -f $(CURDIR)/resources/docker-compose.yaml --env-file $(CURDIR)/resources/dev.env up -d; \
-	else \
-		echo "run infra for prod...unavailable";\
+		$(DOCKER_COMPOSE_COMMAND) -f $(CURDIR)/resources/docker-compose.yaml --env-file $(CURDIR)/resources/dev.env up -d; \
+	elif [ "$(ENV)" == "prod" ]; then\
+		echo "$(COLOR_YELLOW)Run for prod$(RESET_COLOR)"; \
+		$(DOCKER_COMPOSE_COMMAND) -f $(CURDIR)/resources/docker-compose-prod.yaml --env-file $(CURDIR)/resources/prod.env up -d; \
 	fi
 
 #help run.infra.stop: shutdown infra 
 run.infra.stop: 
-	docker-compose -f $(CURDIR)/resources/docker-compose.yaml --env-file $(CURDIR)/resources/dev.env down
+	$(DOCKER_COMPOSE_COMMAND) -f $(CURDIR)/resources/docker-compose.yaml --env-file $(CURDIR)/resources/dev.env down
 
 ##################################
 #

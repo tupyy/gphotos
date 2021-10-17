@@ -1,7 +1,11 @@
 vendor/
 sql/.pgpass
 keycloak/.pass
-keycloak/gophoto-realm.json
+keycloak/gophoto-realm-prod.json
+resources/.gophoto-prod.yaml
+resources/prod.yaml
 target/
 tools/
 .vimspector.json
+resources/keycloak/gophoto-realm-prod.json
+resources/prod.env
