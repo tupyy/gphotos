@@ -76,7 +76,6 @@ services:
       STATICS_FOLDER: ${STATICS_FOLDER}
     volumes:
       - ${RESOURCES_FOLDER}:/etc/server
-      - ${STATICS_FOLDER}:/static
     command:
       - serve 
       - --config 

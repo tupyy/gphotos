@@ -20,6 +20,7 @@ RUN GOOS=linux GOARCH=amd64 make build.local BUILD_ARGS="${build_args}"
 FROM gcr.io/distroless/base
 
 COPY --from=build /app/target/run /usr/bin/run
+COPY --from=build /app/templates /templates
 
 # API port
 EXPOSE 8080
