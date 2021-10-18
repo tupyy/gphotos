@@ -3,6 +3,7 @@ services:
   caddy:
     image: caddy:2.4.0-alpine
     container_name: caddy
+    restart: always
     networks:
       - gphotos
     ports:
@@ -15,6 +16,7 @@ services:
   postgres:
     image: postgres:${POSTGRES_IMAGE_TAG}
     container_name: postgresql
+    restart: always
     networks:
       - gphotos
     ports:
@@ -29,6 +31,7 @@ services:
   keycloak:
     image: jboss/keycloak:15.0.0
     container_name: keycloak
+    restart: always
     depends_on:
       - postgres
     networks:
@@ -50,6 +53,7 @@ services:
   minio:
     image: minio/minio:latest
     container_name: minio
+    restart: always
     command: server /data --console-address ":9001"
     networks:
       - gphotos
@@ -64,6 +68,7 @@ services:
   server:
     image: ${IMAGE_NAME}:${IMAGE_TAG}
     container_name: server
+    restart: always
     depends_on:
       - postgres
       - keycloak
