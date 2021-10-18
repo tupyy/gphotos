@@ -1,7 +1,7 @@
 version: "3"
 services:
   caddy:
-    image: caddy:2.4.5-alpine
+    image: caddy:2.4.0-alpine
     container_name: caddy
     networks:
       - gphotos
@@ -13,7 +13,7 @@ services:
       - caddy_data:/data
       - ${STATICS}:/static
   postgres:
-    image: ${IMAGE_NAME}:${IMAGE_TAG}
+    image: postgres:${POSTGRES_IMAGE_TAG}
     container_name: postgresql
     networks:
       - gphotos
@@ -61,6 +61,26 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PWD}
     volumes:
       - ${MINIO_DATA}:/data
+  server:
+    image: ${IMAGE_NAME}:${IMAGE_TAG}
+    container_name: server
+    depends_on:
+      - postgres
+      - keycloak
+      - minio
+      - caddy
+    networks:
+      - gphotos
+    environment:
+      RESOURCES_FOLDER: ${RESOURCES_FOLDER}
+      STATICS_FOLDER: ${STATICS_FOLDER}
+    volumes:
+      - ${RESOURCES_FOLDER}:/etc/server
+      - ${STATICS_FOLDER}:/static
+    command:
+      - serve 
+      - --config 
+      - /etc/server/.gophoto-prod.yaml  
 
 networks:
   gphotos:

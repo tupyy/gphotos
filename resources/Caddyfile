@@ -1,7 +1,17 @@
-cosminphotos.ddns.net
+cosminphotos.ddns.net { 
 
+log {
+    output stdout
+    level DEBUG
+}
+root * /static
+file_server
+
+reverse_proxy /auth/callback/* server:8080
 reverse_proxy /auth/* keycloak:8080
-reverse_proxy / gophoto:8080
+reverse_proxy server:8080 
+}
+
 
 file_server /static/*
 

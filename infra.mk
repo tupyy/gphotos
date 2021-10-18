@@ -27,12 +27,12 @@ run.infra:
 		$(DOCKER_COMPOSE_COMMAND) -f $(CURDIR)/resources/docker-compose.yaml --env-file $(CURDIR)/resources/dev.env up -d; \
 	elif [ "$(ENV)" == "prod" ]; then\
 		echo "$(COLOR_YELLOW)Run for prod$(RESET_COLOR)"; \
-		$(DOCKER_COMPOSE_COMMAND) -f $(CURDIR)/resources/docker-compose-prod.yaml --env-file $(CURDIR)/resources/prod.env up -d; \
+		IMAGE_NAME=$(IMAGE_NAME) IMAGE_TAG=$(IMAGE_TAG) RESOURCES_FOLDER=$(CURDIR)/resources STATICS_FOLDER=$(CURDIR)/assets $(DOCKER_COMPOSE_COMMAND) -f $(CURDIR)/resources/docker-compose-prod.yaml --env-file $(CURDIR)/resources/prod.env up -d; \
 	fi
 
 #help run.infra.stop: shutdown infra 
 run.infra.stop: 
-	$(DOCKER_COMPOSE_COMMAND) -f $(CURDIR)/resources/docker-compose.yaml --env-file $(CURDIR)/resources/dev.env down
+	$(DOCKER_COMPOSE_COMMAND) -f $(CURDIR)/resources/docker-compose.yaml --env-file $(CURDIR)/resources/dev.env down --remove-orphans
 
 ##################################
 #
