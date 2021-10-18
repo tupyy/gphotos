@@ -13,5 +13,3 @@ reverse_proxy server:8080
 }
 
 
-file_server /static/*
-
