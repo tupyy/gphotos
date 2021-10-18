@@ -11,6 +11,7 @@ services:
     volumes:
       - ${CADDYFILE}:/etc/caddy/Caddyfile
       - caddy_data:/data
+      - ${STATICS}:/static
   postgres:
     image: ${IMAGE_NAME}:${IMAGE_TAG}
     container_name: postgresql

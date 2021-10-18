@@ -110,7 +110,7 @@
     padding-right: 5px;
 }
 
-@media (max-width: 812px) {
+@media all and (max-width: 812px) {
     .container-filter-btn {
         display: flex;
         justify-content: center;

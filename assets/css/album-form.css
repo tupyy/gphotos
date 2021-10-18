@@ -147,7 +147,7 @@
 
 
 
-@media (max-width: 576px) {
+@media all and (max-width: 576px) {
   .form-container {
     margin: auto;
     max-width: 100%;
