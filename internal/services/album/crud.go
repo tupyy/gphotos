@@ -29,19 +29,19 @@ func (s *Service) Create(ctx context.Context, newAlbum entity.Album) (int32, err
 
 	// generate bucket name
 	bucketID := strings.ReplaceAll(uuid.New().String(), "-", "")
-	n := strings.ReplaceAll(newAlbum.Name, " ", "-")
+	n := strings.ReplaceAll(strings.ToLower(newAlbum.Name), " ", "-")
 	newAlbum.Bucket = fmt.Sprintf("%s-%s", n, bucketID[:8])
 
 	// create the bucket
 	if err := minioRepo.CreateBucket(ctx, newAlbum.Bucket); err != nil {
 		logger.WithError(err).Error("failed to create bucket")
 
-		return 0, fmt.Errorf("[%w] failed to create album '%s'", err, newAlbum.Name)
+		return 0, fmt.Errorf("failed to create album '%s': %v", newAlbum.Name, err)
 	}
 
 	albumID, err := albumRepo.Create(ctx, newAlbum)
 	if err != nil {
-		return 0, fmt.Errorf("[%w] failed to create album '%s'", err, newAlbum.Name)
+		return 0, fmt.Errorf("failed to create album '%s': %v", newAlbum.Name, err)
 	}
 
 	return albumID, nil
@@ -56,7 +56,7 @@ func (s *Service) Update(ctx context.Context, album entity.Album) (entity.Album,
 	if err != nil {
 		logger.WithError(err).WithField("album id", album.ID).Error("failed to update album")
 
-		return album, fmt.Errorf("[%w] failed to update album '%d'", err, album.ID)
+		return album, fmt.Errorf("failed to update album '%d': %v", album.ID, err)
 	}
 
 	return album, nil
@@ -75,7 +75,7 @@ func (s *Service) Delete(ctx context.Context, album entity.Album) error {
 			"album id": album.ID,
 		}).WithError(err).Error("failed to remove album's bucket")
 
-		return fmt.Errorf("[%w] failed to remove album's bucket '%s'", err, album.Bucket)
+		return fmt.Errorf("failed to remove album's bucket '%s': %v", album.Bucket, err)
 	}
 
 	err = albumRepo.Delete(ctx, album.ID)
@@ -85,7 +85,7 @@ func (s *Service) Delete(ctx context.Context, album entity.Album) error {
 			"album id": album.ID,
 		}).WithError(err).Error("failed to remove album")
 
-		return fmt.Errorf("[%w] failed to remove album '%d'", err, album.ID)
+		return fmt.Errorf("failed to remove album '%d': %v", album.ID, err)
 	}
 
 	return nil

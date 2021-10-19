@@ -89,7 +89,7 @@ func (q *Query) All(ctx context.Context, user entity.User) ([]entity.Album, erro
 		if err != nil {
 			logger.WithError(err).Error("error fetching personal albums")
 
-			return []entity.Album{}, fmt.Errorf("[%w] failed to get personal albums", err)
+			return []entity.Album{}, fmt.Errorf("failed to get personal albums: %v", err)
 		}
 
 		for _, a := range pa {
@@ -104,7 +104,7 @@ func (q *Query) All(ctx context.Context, user entity.User) ([]entity.Album, erro
 			if err != nil {
 				logger.WithError(err).Error("error fetching all albums")
 
-				return []entity.Album{}, fmt.Errorf("[%w] failed to get all albums", err)
+				return []entity.Album{}, fmt.Errorf("failed to get all albums: %v", err)
 			}
 
 			for _, a := range sa {
@@ -115,7 +115,7 @@ func (q *Query) All(ctx context.Context, user entity.User) ([]entity.Album, erro
 			if err != nil {
 				logger.WithError(err).Error("error fetching shared albums")
 
-				return []entity.Album{}, fmt.Errorf("[%w] failed to get shared albums", err)
+				return []entity.Album{}, fmt.Errorf("failed to get shared albums: %v", err)
 			}
 
 			// get albums shared by the user's groups but filter out the ones owns by the user
@@ -127,7 +127,7 @@ func (q *Query) All(ctx context.Context, user entity.User) ([]entity.Album, erro
 						"groups": user.Groups,
 					}).Error("failed to get albums by group name")
 
-				return []entity.Album{}, fmt.Errorf("[%w] failed to get shared albums by group", err)
+				return []entity.Album{}, fmt.Errorf("failed to get shared albums by group: %v", err)
 			}
 
 			for i := 0; i < len(sharedAlbums)+len(groupSharedAlbum); i++ {
@@ -169,14 +169,14 @@ func (q *Query) First(ctx context.Context, id int32) (entity.Album, error) {
 	if err != nil {
 		logger.WithError(err).WithField("album id", id).Error("failed to get album")
 
-		return entity.Album{}, fmt.Errorf("[%w] failed to get album '%d'", err, id)
+		return entity.Album{}, fmt.Errorf("failed to get album '%d': %v", id, err)
 	}
 
 	medias, err := q.minioRepo.ListBucket(ctx, album.Bucket)
 	if err != nil {
 		logger.WithField("album id", album.ID).WithError(err).Error("failed to list media for album")
 
-		return entity.Album{}, fmt.Errorf("[%w] failed to list media for album id '%d'", err, id)
+		return entity.Album{}, fmt.Errorf("failed to list media for album id '%d': %v", id, err)
 	}
 
 	photos := make([]entity.Media, 0, len(medias))
