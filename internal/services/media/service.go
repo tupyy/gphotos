@@ -67,24 +67,24 @@ func (s *Service) SaveMedia(ctx context.Context, bucket, filename string, r io.R
 func processPhoto(ctx context.Context, repo domain.Store, bucket, filename string, r io.Reader, size int64) error {
 	err := repo.PutFile(ctx, conf.GetMinioTemporaryBucket(), filename, size, r)
 	if err != nil {
-		return fmt.Errorf("[%w] failed to copy file to temporary bucket", err)
+		return fmt.Errorf("failed to copy file to temporary bucket: %v", err)
 	}
 
 	// do image processing
 	var imgBuffer bytes.Buffer
 	var imgThumbnailBuffer bytes.Buffer
 	if err := image.Process(r, &imgBuffer, &imgThumbnailBuffer); err != nil {
-		return fmt.Errorf("[%w] failed to process image", err)
+		return fmt.Errorf("failed to process image: %v", err)
 	}
 
 	basename := strings.Split(filename, ".")[0]
 
 	if err := repo.PutFile(ctx, bucket, fmt.Sprintf("%s.jpg", basename), int64(imgBuffer.Len()), &imgBuffer); err != nil {
-		return fmt.Errorf("[%w] failed to copy processed image to bucket '%s'", err, bucket)
+		return fmt.Errorf("failed to copy processed image to bucket '%s': %v", bucket, err)
 	}
 
 	if err := repo.PutFile(ctx, bucket, fmt.Sprintf("%s_thumbnail.jpg", basename), int64(imgThumbnailBuffer.Len()), &imgThumbnailBuffer); err != nil {
-		return fmt.Errorf("[%w] failed to copy thumbnail image to bucket '%s'", err, bucket)
+		return fmt.Errorf("failed to copy thumbnail image to bucket '%s': %v", bucket, err)
 	}
 
 	return nil

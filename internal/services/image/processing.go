@@ -20,7 +20,7 @@ func Process(r io.Reader, imgWriter, thumbnailWriter io.Writer) error {
 
 	err = imaging.Encode(imgWriter, img, imaging.JPEG, imaging.JPEGQuality(80))
 	if err != nil {
-		return fmt.Errorf("[%w] failed to encode as jpg", err)
+		return fmt.Errorf("failed to encode as jpg: %v", err)
 	}
 
 	logutil.GetDefaultLogger().Debug("image encoded as jpg")
@@ -30,8 +30,10 @@ func Process(r io.Reader, imgWriter, thumbnailWriter io.Writer) error {
 
 	err = imaging.Encode(thumbnailWriter, thumbnail, imaging.JPEG, imaging.JPEGQuality(100))
 	if err != nil {
-		return fmt.Errorf("[%w] failed to encode the thumbnail", err)
+		return fmt.Errorf("failed to encode the thumbnail: %v", err)
 	}
+
+	logutil.GetDefaultLogger().Debug("thumbnail image created")
 
 	return nil
 }
