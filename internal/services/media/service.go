@@ -1,12 +1,23 @@
 package media
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
+	"strings"
 
+	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/domain"
 	"github.com/tupyy/gophoto/internal/domain/entity"
+	"github.com/tupyy/gophoto/internal/services/image"
+)
+
+type MediaType int
+
+const (
+	Photo MediaType = iota
+	Video
 )
 
 type Service struct {
@@ -37,4 +48,44 @@ func (s *Service) GetPhoto(ctx context.Context, bucket, filename string) (io.Rea
 	}
 
 	return r, nil
+}
+
+func (s *Service) SaveMedia(ctx context.Context, bucket, filename string, r io.Reader, size int64, mediaType MediaType) error {
+	minioRepo := s.repos[domain.MinioRepoName].(domain.Store)
+
+	switch mediaType {
+	case Photo:
+		return processPhoto(ctx, minioRepo, bucket, filename, r, size)
+	case Video:
+		return fmt.Errorf("not implementated")
+	default:
+		return fmt.Errorf("media type not supported")
+	}
+
+}
+
+func processPhoto(ctx context.Context, repo domain.Store, bucket, filename string, r io.Reader, size int64) error {
+	err := repo.PutFile(ctx, conf.GetMinioTemporaryBucket(), filename, size, r)
+	if err != nil {
+		return fmt.Errorf("[%w] failed to copy file to temporary bucket", err)
+	}
+
+	// do image processing
+	var imgBuffer bytes.Buffer
+	var imgThumbnailBuffer bytes.Buffer
+	if err := image.Process(r, &imgBuffer, &imgThumbnailBuffer); err != nil {
+		return fmt.Errorf("[%w] failed to process image", err)
+	}
+
+	basename := strings.Split(filename, ".")[0]
+
+	if err := repo.PutFile(ctx, bucket, fmt.Sprintf("%s.jpg", basename), int64(imgBuffer.Len()), &imgBuffer); err != nil {
+		return fmt.Errorf("[%w] failed to copy processed image to bucket '%s'", err, bucket)
+	}
+
+	if err := repo.PutFile(ctx, bucket, fmt.Sprintf("%s_thumbnail.jpg", basename), int64(imgThumbnailBuffer.Len()), &imgThumbnailBuffer); err != nil {
+		return fmt.Errorf("[%w] failed to copy thumbnail image to bucket '%s'", err, bucket)
+	}
+
+	return nil
 }

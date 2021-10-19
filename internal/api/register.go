@@ -20,11 +20,9 @@ func RegisterApi(privateGroup *gin.RouterGroup,
 	album.GetAlbums(privateGroup, as, us)
 	logutil.GetDefaultLogger().Info("api album registered")
 
-	// TODO fix upload media to work with media service
-	// register media upload api
-	// media.UploadMedia(privateGroup, albumService)
-	// logutil.GetDefaultLogger().Info("api media registered")
-
+	media.UploadMedia(privateGroup, as, ms)
 	media.DownloadMedia(privateGroup, as, ms)
 	media.GetAlbumMedia(privateGroup, as, ms)
+
+	logutil.GetDefaultLogger().Info("api media registered")
 }

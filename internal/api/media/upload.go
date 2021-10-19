@@ -1,22 +1,19 @@
 package media
 
 import (
-	"bytes"
 	"errors"
-	"fmt"
 	"html"
 	"net/http"
 	"regexp"
 	"strconv"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"github.com/tupyy/gophoto/internal/common"
 	"github.com/tupyy/gophoto/internal/conf"
-	"github.com/tupyy/gophoto/internal/domain"
 	"github.com/tupyy/gophoto/internal/domain/entity"
-	"github.com/tupyy/gophoto/internal/services/image"
+	"github.com/tupyy/gophoto/internal/services/album"
+	"github.com/tupyy/gophoto/internal/services/media"
 	"github.com/tupyy/gophoto/internal/services/permissions"
 	"github.com/tupyy/gophoto/utils/encryption"
 	"github.com/tupyy/gophoto/utils/logutil"
@@ -30,10 +27,7 @@ var (
 	filenameReg = regexp.MustCompile(`^[^±!@£$%&*+§¡€#¢§¶•ªº«\\/<>?:;|=,]*$`)
 )
 
-func UploadMedia(r *gin.RouterGroup, repos domain.Repositories) {
-	albumRepo := repos[domain.AlbumRepoName].(domain.Album)
-	minioRepo := repos[domain.MinioRepoName].(domain.Store)
-
+func UploadMedia(r *gin.RouterGroup, albumService *album.Service, mediaService *media.Service) {
 	r.POST("/api/albums/:id/album/upload", parseAlbumIDHandler, func(c *gin.Context) {
 		reqCtx := c.Request.Context()
 		logger := logutil.GetLogger(c)
@@ -41,7 +35,7 @@ func UploadMedia(r *gin.RouterGroup, repos domain.Repositories) {
 		s, _ := c.Get("sessionData")
 		session := s.(entity.Session)
 
-		album, err := albumRepo.GetByID(reqCtx, int32(c.GetInt("id")))
+		album, err := albumService.Query().First(reqCtx, int32(c.GetInt("id")))
 		if err != nil {
 			common.AbortNotFound(c, err, "update album")
 
@@ -94,43 +88,13 @@ func UploadMedia(r *gin.RouterGroup, repos domain.Repositories) {
 
 		sanitizedFilename := html.EscapeString(file.Filename)
 
-		err = minioRepo.PutFile(reqCtx, conf.GetMinioTemporaryBucket(), sanitizedFilename, file.Size, src)
-		if err != nil {
-			logger.WithField("filename", file.Filename).WithError(err).Error("failed to put file into the bucket")
-			common.AbortInternalError(c)
+		if err := mediaService.SaveMedia(reqCtx, album.Bucket, sanitizedFilename, src, file.Size, media.Photo); err != nil {
+			logger.WithError(err).Error("failed to upload media")
+
+			common.AbortInternalErrorWithJson(c)
 
 			return
 		}
-
-		// do image processing
-		var imgBuffer bytes.Buffer
-		var imgThumbnailBuffer bytes.Buffer
-		if err := image.Process(src, &imgBuffer, &imgThumbnailBuffer); err != nil {
-			logger.WithError(err).Error("failed to process image")
-			common.AbortInternalError(c)
-
-			return
-		}
-
-		logger.Info("image processing done")
-		// save images
-
-		basename := strings.Split(sanitizedFilename, ".")[0]
-
-		if err := minioRepo.PutFile(reqCtx, album.Bucket, fmt.Sprintf("%s.jpg", basename), int64(imgBuffer.Len()), &imgBuffer); err != nil {
-			logger.WithError(err).Errorf("failed to write image to bucket %s", album.Bucket)
-			common.AbortInternalError(c)
-
-			return
-		}
-
-		if err := minioRepo.PutFile(reqCtx, album.Bucket, fmt.Sprintf("%s_thumbnail.jpg", basename), int64(imgThumbnailBuffer.Len()), &imgThumbnailBuffer); err != nil {
-			logger.WithError(err).Errorf("failed to write thumbnail to bucket %s", album.Bucket)
-			common.AbortInternalError(c)
-
-			return
-		}
-
 	})
 }
 
