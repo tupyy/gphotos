@@ -4,11 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/sirupsen/logrus"
 	"github.com/tupyy/gophoto/internal/domain"
 	"github.com/tupyy/gophoto/internal/domain/entity"
 	"github.com/tupyy/gophoto/internal/domain/filters/album"
-	"github.com/tupyy/gophoto/utils/logutil"
+	"github.com/tupyy/gophoto/internal/services"
 )
 
 type Query struct {
@@ -79,17 +78,13 @@ func (q *Query) All(ctx context.Context, user entity.User) ([]entity.Album, erro
 		filters = append(filters, p())
 	}
 
-	logger := logutil.GetLogger(ctx)
-
 	albums := make(map[int32]entity.Album)
 
 	if q.personalAlbums {
 		// fetch personal albums
 		pa, err := q.albumRepo.GetByOwnerID(ctx, user.ID, filters)
 		if err != nil {
-			logger.WithError(err).Error("error fetching personal albums")
-
-			return []entity.Album{}, fmt.Errorf("failed to get personal albums: %v", err)
+			return []entity.Album{}, fmt.Errorf("%w personal album: %v", services.ErrGetAlbums, err)
 		}
 
 		for _, a := range pa {
@@ -102,9 +97,7 @@ func (q *Query) All(ctx context.Context, user entity.User) ([]entity.Album, erro
 		if user.Role == entity.RoleAdmin {
 			sa, err := q.albumRepo.Get(ctx, filters)
 			if err != nil {
-				logger.WithError(err).Error("error fetching all albums")
-
-				return []entity.Album{}, fmt.Errorf("failed to get all albums: %v", err)
+				return []entity.Album{}, fmt.Errorf("%w all albums: %v", services.ErrGetAlbums, err)
 			}
 
 			for _, a := range sa {
@@ -113,21 +106,13 @@ func (q *Query) All(ctx context.Context, user entity.User) ([]entity.Album, erro
 		} else if user.CanShare {
 			sharedAlbums, err := q.albumRepo.GetByUserID(ctx, user.ID, filters)
 			if err != nil {
-				logger.WithError(err).Error("error fetching shared albums")
-
-				return []entity.Album{}, fmt.Errorf("failed to get shared albums: %v", err)
+				return []entity.Album{}, fmt.Errorf("%w shared albums: %v", services.ErrGetAlbums, err)
 			}
 
 			// get albums shared by the user's groups but filter out the ones owns by the user
 			groupSharedAlbum, err := q.albumRepo.GetByGroups(ctx, groupsToList(user.Groups), filters)
 			if err != nil {
-				logger.
-					WithError(err).
-					WithFields(logrus.Fields{
-						"groups": user.Groups,
-					}).Error("failed to get albums by group name")
-
-				return []entity.Album{}, fmt.Errorf("failed to get shared albums by group: %v", err)
+				return []entity.Album{}, fmt.Errorf("%w shared albums by group: %v", services.ErrGetAlbums, err)
 			}
 
 			for i := 0; i < len(sharedAlbums)+len(groupSharedAlbum); i++ {
@@ -150,37 +135,32 @@ func (q *Query) All(ctx context.Context, user entity.User) ([]entity.Album, erro
 	}
 
 	// put all the albums into a list and return them
-	aa := make([]entity.Album, 0, len(albums))
+	ret := make([]entity.Album, 0, len(albums))
 	for _, v := range albums {
-		aa = append(aa, v)
+		ret = append(ret, v)
 	}
 
 	if q.sorter != nil {
-		q.sorter.Sort(aa)
+		q.sorter.Sort(ret)
 	}
 
-	return aa, nil
+	return ret, nil
 }
 
 func (q *Query) First(ctx context.Context, id int32) (entity.Album, error) {
-	logger := logutil.GetLogger(ctx)
-
 	album, err := q.albumRepo.GetByID(ctx, id)
 	if err != nil {
-		logger.WithError(err).WithField("album id", id).Error("failed to get album")
-
 		return entity.Album{}, fmt.Errorf("failed to get album '%d': %v", id, err)
 	}
 
 	medias, err := q.minioRepo.ListBucket(ctx, album.Bucket)
 	if err != nil {
-		logger.WithField("album id", album.ID).WithError(err).Error("failed to list media for album")
-
-		return entity.Album{}, fmt.Errorf("failed to list media for album id '%d': %v", id, err)
+		return entity.Album{}, fmt.Errorf("%w album id '%d': %v", services.ErrListBucket, id, err)
 	}
 
 	photos := make([]entity.Media, 0, len(medias))
 	videos := make([]entity.Media, 0, len(medias))
+
 	for _, m := range medias {
 		switch m.MediaType {
 		case entity.Photo:

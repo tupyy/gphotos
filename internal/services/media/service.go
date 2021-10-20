@@ -10,6 +10,7 @@ import (
 	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/domain"
 	"github.com/tupyy/gophoto/internal/domain/entity"
+	"github.com/tupyy/gophoto/internal/services"
 	"github.com/tupyy/gophoto/internal/services/image"
 )
 
@@ -33,7 +34,7 @@ func (s *Service) List(ctx context.Context, album entity.Album) ([]entity.Media,
 
 	media, err := minioRepo.ListBucket(ctx, album.Bucket)
 	if err != nil {
-		return []entity.Media{}, fmt.Errorf("%w failed to read bucket for album '%d'", err, album.ID)
+		return []entity.Media{}, fmt.Errorf("%w album '%d': %v", services.ErrListBucket, album.ID, err)
 	}
 
 	return media, nil
