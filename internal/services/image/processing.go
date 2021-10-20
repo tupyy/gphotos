@@ -15,7 +15,7 @@ import (
 func Process(r io.Reader, imgWriter, thumbnailWriter io.Writer) error {
 	img, err := imaging.Decode(r, imaging.AutoOrientation(true))
 	if err != nil {
-		return fmt.Errorf("%w failed to decode image", err)
+		return fmt.Errorf("failed to decode image: %v", err)
 	}
 
 	err = imaging.Encode(imgWriter, img, imaging.JPEG, imaging.JPEGQuality(80))
