@@ -144,8 +144,7 @@ check.get.tools.image:
 
 #help run.docker: run the application on a container
 run.docker:
-	$(DOCKER_CMD) run -d --rm --network resources_gphotos -v $(CURDIR)/resources/:/etc/$(NAME)/ --name $(NAME) docker.io/library/$(IMAGE_NAME):$(IMAGE_TAG) serve --config /etc/$(NAME)/.$(NAME)-prod.yaml
-	$(DOCKER_CMD) logs -f $(NAME) | $(COLORIZE)
+	$(DOCKER_CMD) run -d --rm --network resources_gphotos -v $(CURDIR)/resources/:/etc/$(NAME)/ -v $(CURDIR)/assets:/static --name $(NAME) docker.io/library/$(IMAGE_NAME):$(IMAGE_TAG) serve 
 
 #help run.docker.stop: stop the container of the application
 run.docker.stop:
