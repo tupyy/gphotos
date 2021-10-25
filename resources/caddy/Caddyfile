@@ -4,7 +4,7 @@ log {
     output stdout
     level DEBUG
 }
-root * /statics
+root * /static
 file_server
 
 reverse_proxy /auth/callback/* server:8080
