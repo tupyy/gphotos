@@ -1,7 +1,7 @@
 version: "3"
 services:
   caddy:
-    image: caddy:2.4.0-alpine
+    image: caddy:latest
     container_name: caddy
     restart: always
     networks:
@@ -10,9 +10,7 @@ services:
       - 8080:80
       - 8443:443
     volumes:
-      - ${CADDYFILE}:/etc/caddy/Caddyfile
       - caddy_data:/data
-      - ${STATICS}:/static
   postgres:
     image: postgres:${POSTGRES_IMAGE_TAG}
     container_name: postgresql
