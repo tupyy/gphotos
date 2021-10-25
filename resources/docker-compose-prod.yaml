@@ -27,7 +27,7 @@ services:
     volumes:
       - ${PG_VOLUME}:/var/lib/postgresql/data
   keycloak:
-    image: jboss/keycloak:15.0.0
+    image: gophoto-keycloak:15.0.0
     container_name: keycloak
     restart: always
     depends_on:
@@ -36,8 +36,6 @@ services:
       - gphotos
     ports:
       - ${KEYCLOAK_PORT}:8080
-    volumes:
-      - ${KEYCLOAK_REALM_FILE}:/tmp/gophoto-realm.json
     environment:
       KEYCLOAK_USER: ${KEYCLOAK_USER}
       KEYCLOAK_PASSWORD: ${KEYCLOAK_PWD}
