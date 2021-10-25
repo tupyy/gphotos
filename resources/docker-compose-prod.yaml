@@ -72,11 +72,6 @@ services:
       - caddy
     networks:
       - gphotos
-    environment:
-      RESOURCES_FOLDER: ${RESOURCES_FOLDER}
-      STATICS_FOLDER: ${STATICS_FOLDER}
-    volumes:
-      - ${RESOURCES_FOLDER}:/etc/server
     command:
       - serve 
       - --config 
