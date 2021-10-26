@@ -4,8 +4,11 @@ log {
     output stdout
     level DEBUG
 }
-root * /static
-file_server
+
+handle_path /static* {
+    root * /static
+    file_server
+}
 
 reverse_proxy /auth/callback/* server:8080
 reverse_proxy /auth/* keycloak:8080
