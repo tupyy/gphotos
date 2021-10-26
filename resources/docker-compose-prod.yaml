@@ -1,7 +1,7 @@
 version: "3"
 services:
   caddy:
-    image: caddy:${CADDY_VERSION}
+    image: caddy:${CADDY_CUSTOM_VERSION}
     container_name: caddy
     restart: always
     networks:
