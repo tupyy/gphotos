@@ -28,10 +28,13 @@ func NewRouter(store sessions.Store, authenticator auth.Authenticator) *PhotoRou
 	r.Use(sessions.Sessions("gophoto", store))
 
 	if gin.Mode() == "debug" {
+		logutil.GetDefaultLogger().Debug("loading statics")
 		r.Static("/static", conf.GetStaticsFolder())
 	}
 
 	// load templates
+	logutil.GetDefaultLogger().Debug("loading templates")
+
 	renderer, err := loadTemplates(conf.GetTemplateFolder())
 	if err != nil {
 		panic(err)
