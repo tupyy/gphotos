@@ -87,7 +87,7 @@ build.local: build.prepare
 
 #help build.docker: build a docker image
 build.docker:
-	DOCKER_BUILDKIT=1 docker build --build-arg build_args="$(BUILD_ARGS)" -t $(IMAGE_NAME):$(IMAGE_TAG) -f Dockerfile .
+	DOCKER_BUILDKIT=1 docker build --no-cache=true --build-arg build_args="$(BUILD_ARGS)" -t $(IMAGE_NAME):$(IMAGE_TAG) -f Dockerfile .
 
 #help build.get.imagename: Allows to get the name of the service (for the CI)
 build.get.imagename:
