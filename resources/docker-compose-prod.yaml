@@ -72,6 +72,8 @@ services:
       - caddy
     networks:
       - gphotos
+    environment:
+      GIN_MODE: release
     command:
       - serve 
       - --config 
