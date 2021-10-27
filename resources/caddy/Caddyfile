@@ -1,4 +1,8 @@
-cosminphotos.ddns.net { 
+{
+  auto_https disable_redirects
+}
+
+https://cosminphotos.ddns.net { 
 
 log {
     output stdout
