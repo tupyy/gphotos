@@ -1,7 +1,3 @@
-{
-  auto_https disable_redirects
-}
-
 https://cosminphotos.ddns.net { 
 
 log {

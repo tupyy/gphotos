@@ -6,3 +6,4 @@ target/
 tools/
 .vimspector.json
 resources/prod.env
+resources/key.bin
