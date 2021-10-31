@@ -5,6 +5,10 @@ log {
     level DEBUG
 }
 
+header_up X-Real-IP {remote}
+header_up X-Forwarded-For {remote}
+header_up X-Forwarded-Proto https
+
 handle_path /static* {
     root * /static
     file_server
