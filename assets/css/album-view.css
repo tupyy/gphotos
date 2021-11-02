@@ -88,12 +88,12 @@
         width: 70px;
     }
 
-    .container-photos col {
+    .container-photos .col {
         display: grid;
         grid-template-columns: 33% 33% 33%;
     }
 
-    .container-photos col a {
+    .container-photos .col a {
         justify-self: center;
         align-self: center;
         margin-bottom: 5px;
