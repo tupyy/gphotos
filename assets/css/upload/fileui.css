@@ -87,4 +87,9 @@
         justify-content: center;
         margin-top: 10px;
     }
+    
+    .container-upload .file-ui {
+        display: block;
+        margin-bottom: 10px;
+    }
 }

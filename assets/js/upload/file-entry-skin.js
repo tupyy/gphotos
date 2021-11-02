@@ -22,13 +22,17 @@ $(function () {
                 "style": "width: 0%"
             }).appendTo(this.progressDiv);
 
-            this.status = $('<span></span>', {
-                'class':'upload-status'
+            this.statusContainer = $('<div></div>', {
+                'class': 'status-container'
             }).appendTo(this.mainElement);
+
+            this.status = $('<span>Ready</span>', {
+                'class':'upload-status'
+            }).appendTo(this.statusContainer);
 
             this.deleteButton = $("<button>", {
                 "class": "ui-upload-button btn btn-outline-danger"
-            }).appendTo(this.mainElement)
+            }).appendTo(this.statusContainer)
                 .button();
 
             this.iconDelete = $("<i>", {
