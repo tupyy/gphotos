@@ -7,7 +7,8 @@ $(function () {
             id: undefined,
             progress: 0,
             uploaded: false,
-            xhr: undefined
+            xhr: undefined,
+            onFinishUploadCallback: undefined
         },
         _create: function () {
             this._super();
@@ -30,6 +31,9 @@ $(function () {
         setUrl: function (url) {
             this._initXHRData(url);
         },
+        setCallback: function(callback) {
+            this.options.onFinishedUpload = callback;
+        },
         _initXHRData: function (url) {
             const postData = new FormData();
             postData.append('file', this.options.file);
@@ -42,10 +46,18 @@ $(function () {
             this.options.xhr = new XMLHttpRequest();
             let xhr = this.options.xhr;
             let dfd = $.Deferred();
+            
+            // call callback when resolved
+            dfd.done(() => {
+                this.options.onFinishedUpload(this.options.id);
+            });
 
             if (this.options.uploaded) {
                 dfd.resolve();
             }
+
+            // set status
+            this.updateStatus("Uploading");
 
             const self = this;
             xhr.upload.addEventListener("progress", function (e) {
@@ -61,9 +73,11 @@ $(function () {
                     self.options.uploaded = true;
                     self.options.xhr = undefined;
                     if (xhr.status === 200 || xhr.status === 204) {
-                        dfd.resolve(self.options.id);
+                        self.uploadFinished();
+                        dfd.resolve();
                     } else {
                         dfd.fail(self.options.id);
+                        self.updateStatus("Failed");
                     }
                 }
             };

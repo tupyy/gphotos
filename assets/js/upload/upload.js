@@ -4,7 +4,7 @@ $(function () {
             // input file field
             fileInput: undefined,
             // Define a list of dictionaries having the id of the fileUI widget, fileUI widget and file object
-            filesUI: {},
+            filesUI: new Map(),
             // fileUi container
             fileUIContainer: undefined,
             // filter the new add files against already added files,
@@ -67,7 +67,10 @@ $(function () {
                 $.when(options.filter(newFiles)).then(function (newFiles) {
                         $.map(newFiles, function (file) {
                             let element = that._createUI(file);
-                            that.options.filesUI[element.fileui('option', 'id')] = element;
+
+                            element.fileui('setUrl',that._getUrl());
+                            element.fileui('setCallback', that._onFinishedUpload());
+                            that.options.filesUI.set(element.fileui('option', 'id'),element);
                         });
                     }
                 );
@@ -103,14 +106,28 @@ $(function () {
             });
         },
         _submit: function () {
-            let self = this;
-            $.each(self.options.filesUI, (_, obj) => {
-                obj.fileui('setUrl',self._getUrl());
-                obj.fileui('updateStatus','Uploading')
-                obj.fileui('send').then(function() {
-                    obj.fileui('uploadFinished');
-                })
-            });
+            if (this.options.filesUI.size > 0) {
+                const interator = this.options.filesUI.keys();
+
+                let obj = this.options.filesUI.get(interator.next().value);
+
+                obj.fileui('send', this._onFinishedUpload());
+            }
+        },
+        _onFinishedUpload: function() {
+            const options = this.options
+            
+            return (id) => {
+                options.filesUI.delete(id);
+                
+                if (options.filesUI.size > 0) {
+                    const interator = options.filesUI.keys();
+
+                    let obj = options.filesUI.get(interator.next().value);
+
+                    obj.fileui('send');
+                }
+            }
         },
         _abort: function () {
             if (this.jqXHR) {

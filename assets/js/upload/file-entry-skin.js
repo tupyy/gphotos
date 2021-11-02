@@ -54,7 +54,7 @@ $(function () {
                 
                 this.iconContainer = $('<div>', {
                     'class': 'upload-complete-container'
-                }).appendTo(this.mainElement);
+                }).appendTo(this.statusContainer);
 
                 this.iconComplete = $("<i>", {
                     "class": "ok-icon fas fa-check"

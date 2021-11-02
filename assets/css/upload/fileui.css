@@ -92,4 +92,13 @@
         display: block;
         margin-bottom: 10px;
     }
+
+    .container-upload .file-ui .status-container {
+        display: flex;
+        padding-top: 5px;
+    }
+
+    .container-upload .file-ui .status-container span {
+        margin-right: 5px;    
+    }
 }
