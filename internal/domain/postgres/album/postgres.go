@@ -112,6 +112,7 @@ func (a *AlbumPostgresRepo) Update(ctx context.Context, album entity.Album) erro
 		Description: album.Description,
 		Location:    album.Location,
 		OwnerID:     album.OwnerID,
+		Bucket:      album.Bucket,
 	}
 
 	tx = a.db.WithContext(ctx).Begin()

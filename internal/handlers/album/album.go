@@ -436,6 +436,7 @@ func UpdateAlbum(r *gin.RouterGroup, albumService *album.Service) {
 
 		album.Name = cleanForm.Name
 
+		// only the owner and an admin has the right to edit permissions
 		if session.User.ID == album.OwnerID || session.User.Role == entity.RoleAdmin {
 			// add new permissions if any
 			if len(cleanForm.UserPermissions) > 0 {
@@ -463,6 +464,17 @@ func UpdateAlbum(r *gin.RouterGroup, albumService *album.Service) {
 					album.GroupPermissions = pp
 				}
 			}
+		}
+
+		if _, err := albumService.Update(ctx, album); err != nil {
+			logger.WithError(err).WithFields(logrus.Fields{
+				"album id": int32(c.GetInt("id")),
+				"album":    fmt.Sprintf("%+v", album),
+			}).Error("update album")
+
+			common.AbortInternalError(c)
+
+			return
 		}
 
 		c.Redirect(http.StatusFound, rootURL)
