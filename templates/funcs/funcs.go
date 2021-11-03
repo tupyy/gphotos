@@ -4,7 +4,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tupyy/gophoto/internal/domain/entity"
+	"github.com/tupyy/gophoto/internal/entity"
 )
 
 func Day(t time.Time) int {

@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/tupyy/gophoto/internal/domain"
-	"github.com/tupyy/gophoto/internal/domain/entity"
 	"github.com/tupyy/gophoto/internal/domain/filters/user"
+	"github.com/tupyy/gophoto/internal/entity"
 )
 
 type Service struct {

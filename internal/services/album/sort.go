@@ -3,7 +3,7 @@ package album
 import (
 	"sort"
 
-	"github.com/tupyy/gophoto/internal/domain/entity"
+	"github.com/tupyy/gophoto/internal/entity"
 )
 
 type SortOrder int

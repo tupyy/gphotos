@@ -7,9 +7,9 @@ import (
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"github.com/tupyy/gophoto/internal/api/dto"
 	"github.com/tupyy/gophoto/internal/common"
-	"github.com/tupyy/gophoto/internal/domain/entity"
-	"github.com/tupyy/gophoto/internal/dto"
+	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/internal/services/users"
 	"github.com/tupyy/gophoto/utils/logutil"
 )

@@ -7,7 +7,7 @@ import (
 
 	gocache "github.com/patrickmn/go-cache"
 	"github.com/tupyy/gophoto/internal/domain"
-	"github.com/tupyy/gophoto/internal/domain/entity"
+	"github.com/tupyy/gophoto/internal/entity"
 )
 
 type minioRepoCache struct {

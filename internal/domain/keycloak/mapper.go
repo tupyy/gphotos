@@ -2,7 +2,7 @@ package keycloak
 
 import (
 	keycloak "github.com/Nerzal/gocloak/v8"
-	"github.com/tupyy/gophoto/internal/domain/entity"
+	"github.com/tupyy/gophoto/internal/entity"
 )
 
 func mapper(u keycloak.User) entity.User {

@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/minio/minio-go/v7"
-	"github.com/tupyy/gophoto/internal/domain/entity"
+	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
 

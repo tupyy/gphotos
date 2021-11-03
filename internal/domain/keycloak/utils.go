@@ -1,8 +1,8 @@
 package keycloak
 
 import (
-	"github.com/tupyy/gophoto/internal/domain/entity"
 	userFilters "github.com/tupyy/gophoto/internal/domain/filters/user"
+	"github.com/tupyy/gophoto/internal/entity"
 )
 
 func ptrBool(b bool) *bool {

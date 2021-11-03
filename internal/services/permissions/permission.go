@@ -1,7 +1,7 @@
 package permissions
 
 import (
-	"github.com/tupyy/gophoto/internal/domain/entity"
+	"github.com/tupyy/gophoto/internal/entity"
 )
 
 type StrategyType int

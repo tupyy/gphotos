@@ -7,9 +7,9 @@ import (
 
 	"github.com/sirupsen/logrus"
 	repo "github.com/tupyy/gophoto/internal/domain"
-	"github.com/tupyy/gophoto/internal/domain/entity"
 	albumFilters "github.com/tupyy/gophoto/internal/domain/filters/album"
-	"github.com/tupyy/gophoto/models"
+	"github.com/tupyy/gophoto/internal/domain/models"
+	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/utils/logutil"
 	"github.com/tupyy/gophoto/utils/pgclient"
 	"gorm.io/gorm"

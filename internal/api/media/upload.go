@@ -11,7 +11,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/tupyy/gophoto/internal/common"
 	"github.com/tupyy/gophoto/internal/conf"
-	"github.com/tupyy/gophoto/internal/domain/entity"
+	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/internal/services/album"
 	"github.com/tupyy/gophoto/internal/services/media"
 	"github.com/tupyy/gophoto/internal/services/permissions"

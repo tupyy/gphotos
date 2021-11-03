@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/tupyy/gophoto/internal/domain"
-	"github.com/tupyy/gophoto/internal/domain/entity"
 	"github.com/tupyy/gophoto/internal/domain/filters/album"
+	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/internal/services"
 )
 

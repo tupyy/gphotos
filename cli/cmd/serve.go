@@ -29,12 +29,11 @@ import (
 	"github.com/tupyy/gophoto/internal/auth"
 	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/domain"
-	"github.com/tupyy/gophoto/internal/domain/entity"
 	keycloakRepo "github.com/tupyy/gophoto/internal/domain/keycloak"
 	miniorepo "github.com/tupyy/gophoto/internal/domain/minio"
 	"github.com/tupyy/gophoto/internal/domain/postgres/album"
 	"github.com/tupyy/gophoto/internal/domain/postgres/user"
-	"github.com/tupyy/gophoto/internal/handlers"
+	"github.com/tupyy/gophoto/internal/entity"
 	albumService "github.com/tupyy/gophoto/internal/services/album"
 	"github.com/tupyy/gophoto/internal/services/media"
 	usersService "github.com/tupyy/gophoto/internal/services/users"
@@ -95,11 +94,9 @@ var serveCmd = &cobra.Command{
 		// create new router
 		r := router.NewRouter(store, keycloakAuthenticator)
 
-		handlers.Logout(r.PrivateGroup, keycloakAuthenticator)
+		api.Logout(r.PrivateGroup, keycloakAuthenticator)
 
-		handlers.Register(r.PrivateGroup, r.PublicGroup, albumService, usersService)
-
-		api.RegisterApi(r.PrivateGroup, r.PublicGroup, albumService, mediaService, usersService)
+		api.Register(r.PrivateGroup, r.PublicGroup, albumService, mediaService, usersService)
 
 		// run server
 		r.Run()

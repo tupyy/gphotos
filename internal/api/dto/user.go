@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/tupyy/gophoto/internal/conf"
-	"github.com/tupyy/gophoto/internal/domain/entity"
+	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/utils/encryption"
 	"github.com/tupyy/gophoto/utils/logutil"
 )

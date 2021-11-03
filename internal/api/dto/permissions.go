@@ -1,6 +1,6 @@
 package dto
 
-import "github.com/tupyy/gophoto/internal/domain/entity"
+import "github.com/tupyy/gophoto/internal/entity"
 
 type PermissionDTO struct {
 	UserPermissions  map[string][]string `json:"user_permissions"`

@@ -1,8 +1,8 @@
 package album
 
 import (
-	"github.com/tupyy/gophoto/internal/domain/entity"
-	"github.com/tupyy/gophoto/models"
+	"github.com/tupyy/gophoto/internal/domain/models"
+	"github.com/tupyy/gophoto/internal/entity"
 )
 
 func toModel(e entity.Album) models.Album {

@@ -1,9 +1,9 @@
 package users
 
 import (
-	"github.com/tupyy/gophoto/internal/domain/entity"
 	"github.com/tupyy/gophoto/internal/domain/filters/user"
 	userFilters "github.com/tupyy/gophoto/internal/domain/filters/user"
+	"github.com/tupyy/gophoto/internal/entity"
 )
 
 type Predicate func() userFilters.Filter

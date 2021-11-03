@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/tupyy/gophoto/internal/domain"
-	"github.com/tupyy/gophoto/internal/domain/entity"
+	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/internal/services"
 )
 

@@ -3,6 +3,7 @@ package api
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/tupyy/gophoto/internal/api/album"
+	"github.com/tupyy/gophoto/internal/api/index"
 	"github.com/tupyy/gophoto/internal/api/media"
 	albumService "github.com/tupyy/gophoto/internal/services/album"
 	mediaService "github.com/tupyy/gophoto/internal/services/media"
@@ -10,7 +11,7 @@ import (
 	"github.com/tupyy/gophoto/utils/logutil"
 )
 
-func RegisterApi(privateGroup *gin.RouterGroup,
+func Register(privateGroup *gin.RouterGroup,
 	publicGroup *gin.RouterGroup,
 	as *albumService.Service,
 	ms *mediaService.Service,
@@ -25,4 +26,17 @@ func RegisterApi(privateGroup *gin.RouterGroup,
 	media.GetAlbumMedia(privateGroup, as, ms)
 
 	logutil.GetDefaultLogger().Info("api media registered")
+
+	// register index controller
+	index.Index(privateGroup, us)
+	logutil.GetDefaultLogger().Info("index controller registered")
+
+	// album handlers
+	album.GetAlbum(privateGroup, as, us)
+	album.GetCreateAlbumForm(privateGroup, us)
+	album.GetUpdateAlbumForm(privateGroup, as, us)
+	album.CreateAlbum(privateGroup, as)
+	album.UpdateAlbum(privateGroup, as)
+	album.DeleteAlbum(privateGroup, as)
+	logutil.GetDefaultLogger().Info("album handlers registered")
 }

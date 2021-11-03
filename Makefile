@@ -180,7 +180,7 @@ tools.get:
 
 BASE_CONNSTR="postgresql://$(RESOURCE_ADMIN_USER):$(RESOURCE_ADMIN_PWD)@$(DB_HOST):$(DB_PORT)"
 GEN_CMD=$(TOOLS_DIR)/gen --sqltype=postgres \
-	--module=github.com/tupyy/gophoto \
+	--module=github.com/tupyy/gophoto/internal/domain \
 	--gorm --no-json --no-xml --overwrite --mapping tools/mappings.json
 
 .PHONY: generate.models

@@ -9,8 +9,8 @@ import (
 
 	gocache "github.com/patrickmn/go-cache"
 	"github.com/tupyy/gophoto/internal/domain"
-	"github.com/tupyy/gophoto/internal/domain/entity"
 	albumFilters "github.com/tupyy/gophoto/internal/domain/filters/album"
+	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
 

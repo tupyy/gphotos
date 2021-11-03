@@ -4,9 +4,9 @@ import (
 	"context"
 	"io"
 
-	"github.com/tupyy/gophoto/internal/domain/entity"
 	albumFilters "github.com/tupyy/gophoto/internal/domain/filters/album"
 	userFilters "github.com/tupyy/gophoto/internal/domain/filters/user"
+	"github.com/tupyy/gophoto/internal/entity"
 )
 
 type Repositories map[RepoName]interface{}
