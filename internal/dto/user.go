@@ -12,11 +12,12 @@ import (
 // User is a simplified version of user to be used in templates.
 // The username is encrypted.
 type User struct {
-	ID       string
-	Username string
-	Name     string
-	Role     string
-	CanShare bool
+	ID          string
+	EncryptedID string
+	Username    string
+	Name        string
+	Role        string
+	CanShare    bool
 }
 
 func NewUserDTO(u entity.User) (User, error) {
@@ -33,11 +34,12 @@ func NewUserDTO(u entity.User) (User, error) {
 	}
 
 	return User{
-		ID:       encryptedID,
-		Username: encryptedUsername,
-		Name:     fmt.Sprintf("%s %s", u.FirstName, u.LastName),
-		Role:     u.Role.String(),
-		CanShare: u.CanShare,
+		ID:          u.ID,
+		EncryptedID: encryptedID,
+		Username:    encryptedUsername,
+		Name:        fmt.Sprintf("%s %s", u.FirstName, u.LastName),
+		Role:        u.Role.String(),
+		CanShare:    u.CanShare,
 	}, nil
 }
 

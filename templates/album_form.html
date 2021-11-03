@@ -52,7 +52,7 @@
                             <label for="select-users">Users</label>
                             <select class="form-select" id="select-users">
                                 {{ range .users }}
-                                    <option value="{{ .ID }}">{{ .Name }}</option>
+                                    <option value="{{ .EncryptedID }}">{{ .Name }}</option>
                                 {{ end }}
                             </select>
                         </div>

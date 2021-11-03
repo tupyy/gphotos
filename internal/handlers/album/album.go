@@ -335,15 +335,37 @@ func GetUpdateAlbumForm(r *gin.RouterGroup, albumService *album.Service, usersSe
 				return
 			}
 
+			usersDTOs := dto.NewUserDTOs(users)
+
+			// get permissions
+			permissions := dto.NewPermissionDTO(album, usersDTOs)
+			userPermissions, err := json.Marshal(permissions.UserPermissions)
+			if err != nil {
+				logger.WithError(err).WithField("permissions", fmt.Sprintf("%+v", permissions)).Error("failed to marshal user permissions")
+				common.AbortInternalError(c)
+
+				return
+			}
+
+			groupPermissions, err := json.Marshal(permissions.GroupPermissions)
+			if err != nil {
+				logger.WithError(err).WithField("permissions", fmt.Sprintf("%+v", permissions)).Error("failed to marshal group permissions")
+				common.AbortInternalError(c)
+
+				return
+			}
+
 			c.HTML(http.StatusOK, "album_form.html", gin.H{
-				"update_link":    fmt.Sprintf("/album/%s", albumDTO.ID),
-				"album":          albumDTO,
-				"canShare":       session.User.CanShare,
-				"isOwner":        true,
-				"users":          dto.NewUserDTOs(users),
-				"groups":         groups,
-				"is_admin":       session.User.Role == entity.RoleAdmin,
-				csrf.TemplateTag: csrf.TemplateField(c.Request),
+				"update_link":        fmt.Sprintf("/album/%s", albumDTO.ID),
+				"album":              albumDTO,
+				"canShare":           session.User.CanShare,
+				"isOwner":            true,
+				"users":              usersDTOs,
+				"groups":             groups,
+				"users_permissions":  string(userPermissions),
+				"groups_permissions": string(groupPermissions),
+				"is_admin":           session.User.Role == entity.RoleAdmin,
+				csrf.TemplateTag:     csrf.TemplateField(c.Request),
 			})
 
 			return
