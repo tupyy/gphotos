@@ -2,7 +2,7 @@
     email @email@
 }
 
-@hostname@ { 
+https://@hostname@ { 
 
 log {
     output stdout
