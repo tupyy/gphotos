@@ -46,6 +46,7 @@ services:
       DB_DATABASE: keycloak
       DB_USER: ${KEYCLOAK_DB_USER}
       DB_PASSWORD: ${DB_PWD} 
+      PROXY_ADDRESS_FORWARDING: "true"
   minio:
     image: minio/minio:latest
     container_name: minio

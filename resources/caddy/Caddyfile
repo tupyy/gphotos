@@ -1,4 +1,8 @@
-https://cosminphotos.ddns.net { 
+{
+    email @email@
+}
+
+@hostname@ { 
 
 log {
     output stdout
@@ -14,9 +18,10 @@ handle_path /static* {
 reverse_proxy /auth/callback/* server:8080
 
 reverse_proxy /auth/* keycloak:8080 {
+    header_up Host @hostname@
     header_up X-Real-IP {remote}
     header_up X-Forwarded-For {remote}
-    header_up X-Forwarded-Proto https
+    header_up X-Forwarded-Proto {scheme}
 }
 
 reverse_proxy server:8080 
