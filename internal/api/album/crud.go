@@ -30,7 +30,6 @@ const (
 // TODO fix the error management. it totally crap.
 // GET /album/:id
 func GetAlbum(r *gin.RouterGroup, albumService *album.Service, usersService *users.Service) {
-
 	r.GET("/album/:id", parseAlbumIDHandler, func(c *gin.Context) {
 		s, _ := c.Get("sessionData")
 		session := s.(entity.Session)
@@ -557,5 +556,42 @@ func DeleteAlbum(r *gin.RouterGroup, albumService *album.Service) {
 		ss.Save()
 
 		c.Redirect(http.StatusFound, rootURL)
+	})
+}
+
+func Thumbnail(r *gin.RouterGroup, albumService *album.Service) {
+	r.POST("/api/albums/:id/album/thumbnail", parseAlbumIDHandler, func(c *gin.Context) {
+		s, _ := c.Get("sessionData")
+		session := s.(entity.Session)
+
+		ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
+		logger := logutil.GetLogger(ctx)
+
+		album, err := albumService.Query().First(ctx, int32(c.GetInt("id")))
+		if err != nil {
+			logger.WithError(err).WithField("album id", c.GetInt("id")).Error("failed to get album")
+			common.AbortNotFoundWithJson(c, err, "update album")
+
+			return
+		}
+
+		// only editors and admins have the right to create albums
+		apr := permissions.NewAlbumPermissionService()
+		hasPermission := apr.Policy(permissions.OwnerPolicy{}).
+			Policy(permissions.RolePolicy{Role: entity.RoleAdmin}).
+			Policy(permissions.UserPermissionPolicy{Permission: entity.PermissionEditAlbum}).
+			Policy(permissions.GroupPermissionPolicy{Permission: entity.PermissionEditAlbum}).
+			Strategy(permissions.AtLeastOneStrategy).
+			Resolve(album, session.User)
+
+		if !hasPermission {
+			common.AbortForbiddenWithJson(c, errors.New("user has no edit permission"), "user role forbids editing the album")
+
+			return
+		}
+
+		logger.Info("set thumbnail")
+
+		c.JSON(http.StatusOK, "ok")
 	})
 }

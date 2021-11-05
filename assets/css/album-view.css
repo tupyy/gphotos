@@ -75,12 +75,43 @@
     margin-top: 20px;
 }
 
+.container-photos #album-gallery {
+    display: contents;
+}
+
+.container-photos a {
+    position: relative;
+    display: block;
+    width: fit-content;
+    margin: 0 auto 10px auto;
+    height: 100%;
+}
+
 .container-photos img {
     width: 150px;
 }
 
+.container-photos a i {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    color: #02cd05;
+}
+
+.container-photos a i.hidden {
+    display: none;
+}
+
+.container-photos img.selectable:hover {
+    box-shadow: 0 2px 2px silver;
+}
+
 #deleteModal {
     color: black;
+}
+
+.tab-content .container-tab .row-edit-tools {
+    margin-bottom: 10px;
 }
 
 @media all and (max-width: 576px) {
