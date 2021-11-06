@@ -102,6 +102,11 @@ func NewAlbumDTO(a entity.Album, owner entity.User) (Album, error) {
 		"encrypted_id": encryptedID,
 	}).Trace("encrypt album id")
 
+	thumbnail := "/static/img/image_not_available.png"
+	if len(a.Thumbnail) > 0 {
+		thumbnail = fmt.Sprintf("/api/albums/%s/album/%s/media", encryptedID, a.Thumbnail)
+	}
+
 	return Album{
 		ID:          encryptedID,
 		Name:        a.Name,
@@ -111,7 +116,7 @@ func NewAlbumDTO(a entity.Album, owner entity.User) (Album, error) {
 		Owner:       ownerName,
 		Photos:      encryptedPhotos,
 		Videos:      encryptedVideos,
-		Thumbnail:   "/static/img/image_not_available.png",
+		Thumbnail:   thumbnail,
 	}, nil
 }
 

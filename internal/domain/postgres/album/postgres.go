@@ -105,7 +105,6 @@ func (a *AlbumPostgresRepo) Update(ctx context.Context, album entity.Album) erro
 		return fmt.Errorf("%w %v album_id=%d", repo.ErrAlbumNotFound, tx.Error, album.ID)
 	}
 
-	// update all fields except the owner
 	newAlbum := entity.Album{
 		Name:        album.Name,
 		CreatedAt:   album.CreatedAt,
@@ -113,6 +112,7 @@ func (a *AlbumPostgresRepo) Update(ctx context.Context, album entity.Album) erro
 		Location:    album.Location,
 		OwnerID:     album.OwnerID,
 		Bucket:      album.Bucket,
+		Thumbnail:   album.Thumbnail,
 	}
 
 	tx = a.db.WithContext(ctx).Begin()

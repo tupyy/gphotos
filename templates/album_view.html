@@ -10,7 +10,6 @@
         {{ end }}
 
         {{ template "js" }}
-        <script src="/static/js/album/delete.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.2.1/lightgallery.umd.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.2.1/plugins/zoom/lg-zoom.umd.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.2.1/plugins/thumbnail/lg-thumbnail.umd.js"></script>
@@ -49,11 +48,11 @@
                         {{ if .album.Photos }}
                             {{ if .edit_permission }}
                             <div class="row row-edit-tools">
-                                <div class="col col-sm-2">
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="flexSwitchCheckDefault">
-                                    <label class="form-check-label" for="flexSwitchCheckDefault">Select mode</label>
-                                </div>
+                                <div class="col-12 col-sm-2">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="flexSwitchCheckDefault">
+                                        <label class="form-check-label" for="flexSwitchCheckDefault">Select mode</label>
+                                    </div>
                                 </div>
                                 <div class="col col-sm-2">
                                     <button class="btn btn-outline-primary btn-sm" id="btn-set-thumbnail" disabled>Set thumbnail</button>

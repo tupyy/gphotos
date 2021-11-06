@@ -111,11 +111,14 @@ $(function () {
 
             let mySpinner = $.spinner('test');
 
+            img = e.data.currentSelectedImages[0];
+            const imgParts = img.getAttribute('src').split('/');
+
             axios({
                 method: 'post',
                 url: e.data.baseURL + '/' + parts[parts.length-1] + '/album/thumbnail',
                 data: {
-                    id: 'test',
+                    image: imgParts[imgParts.length-2],
                 }
             }).then(function(response) {
                 mySpinner.remove();
