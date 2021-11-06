@@ -1,12 +1,14 @@
 package album
 
 import (
+	"database/sql"
+
 	"github.com/tupyy/gophoto/internal/domain/models"
 	"github.com/tupyy/gophoto/internal/entity"
 )
 
 func toModel(e entity.Album) models.Album {
-	return models.Album{
+	m := models.Album{
 		Name:        e.Name,
 		CreatedAt:   e.CreatedAt,
 		OwnerID:     e.OwnerID,
@@ -14,6 +16,14 @@ func toModel(e entity.Album) models.Album {
 		Location:    &e.Location,
 		Bucket:      e.Bucket,
 	}
+
+	if len(e.Thumbnail) == 0 {
+		m.Thumbnail = sql.NullString{Valid: false}
+	} else {
+		m.Thumbnail = sql.NullString{String: e.Thumbnail, Valid: true}
+	}
+
+	return m
 }
 
 func fromModel(m models.Album) entity.Album {
@@ -31,6 +41,10 @@ func fromModel(m models.Album) entity.Album {
 
 	if m.Location != nil {
 		e.Location = *m.Location
+	}
+
+	if m.Thumbnail.Valid {
+		e.Thumbnail = m.Thumbnail.String
 	}
 
 	return e

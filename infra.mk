@@ -59,7 +59,7 @@ KEYCLOAK_DB_PWD=$(shell cat $(PGPASSFILE) | grep $(KEYCLOAK_DB_USER) | cut -d":"
 # Setup targets #
 #################
 
-.PHONY: postgres.setup.clean postgres.setup.init postgres.setup.tables
+.PHONY: postgres.setup.clean postgres.setup.init postgres.setup.tables postgres.setup.migrations
 
 #help postgres.setup: Setup postgres from scratch
 postgres.setup: postgres.setup.init postgres.setup.tables
@@ -82,5 +82,9 @@ postgres.setup.tables:
 		-f sql/setup/02_setup.sql
 	$(PSQL_COMMAND) --dbname=gophoto --user=$(RESOURCE_ADMIN_USER) \
 		-f sql/setup/03_views.sql
+
+postgres.setup.migrations:
+	$(PSQL_COMMAND) --dbname=gophoto --user=$(RESOURCE_ADMIN_USER) \
+		-f sql/setup/04_migrations.sql
 
 

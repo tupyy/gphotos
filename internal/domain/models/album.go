@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/guregu/null"
-	uuid "github.com/satori/go.uuid"
+	"github.com/satori/go.uuid"
 )
 
 var (
@@ -25,14 +25,15 @@ Table: album
 [ 1] name                                           TEXT                 null: false  primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
 [ 2] created_at                                     TIMESTAMP            null: false  primary: false  isArray: false  auto: false  col: TIMESTAMP       len: -1      default: [timezone('UTC']
 [ 3] owner_id                                       TEXT                 null: false  primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
-[ 4] description                                    TEXT                 null: true   primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
-[ 5] location                                       TEXT                 null: true   primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
-[ 6] bucket                                         TEXT                 null: false  primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
+[ 4] bucket                                         TEXT                 null: false  primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
+[ 5] description                                    TEXT                 null: true   primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
+[ 6] location                                       TEXT                 null: true   primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
+[ 7] thumbnail                                      VARCHAR(100)         null: true   primary: false  isArray: false  auto: false  col: VARCHAR         len: 100     default: []
 
 
 JSON Sample
 -------------------------------------
-{    "owner_id": "vTnuFyjwlADacqyYleXCifYAN",    "description": "tIeigkdsJTEORDNlzllXyRmMw",    "location": "SuZkszQPyotCLfGkaTqjDxJKB",    "bucket": "hRaPzfzBzuUHzzjcHGAXMWDqj",    "id": 99,    "name": "EsSbKHuygCLIXpLSgBKRAFZAC",    "created_at": "2245-07-13T13:23:51.455247397+02:00"}
+{    "description": "VVwFjkeGBbKvyCgzbYKOiCSdO",    "location": "HqipdySOyjJGhAXddMmojynpc",    "thumbnail": "uBgEDbmuYoPRHfmbYWNRpdvxL",    "id": 63,    "name": "FWhycuHcZaPgFbydTUWAimPUV",    "created_at": "2107-04-06T08:36:30.307147087+02:00",    "owner_id": "mIbIwHSPCgbEqbKoQNunBfLIu",    "bucket": "fbJmQrpTDcWMxwaQYZxvQCJAd"}
 
 
 
@@ -48,12 +49,14 @@ type Album struct {
 	CreatedAt time.Time `gorm:"column:created_at;type:TIMESTAMP;default:timezone('UTC';"`
 	//[ 3] owner_id                                       TEXT                 null: false  primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
 	OwnerID string `gorm:"column:owner_id;type:TEXT;"`
-	//[ 4] description                                    TEXT                 null: true   primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
-	Description *string `gorm:"column:description;type:TEXT;"`
-	//[ 5] location                                       TEXT                 null: true   primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
-	Location *string `gorm:"column:location;type:TEXT;"`
-	//[ 6] bucket                                         TEXT                 null: false  primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
+	//[ 4] bucket                                         TEXT                 null: false  primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
 	Bucket string `gorm:"column:bucket;type:TEXT;"`
+	//[ 5] description                                    TEXT                 null: true   primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
+	Description *string `gorm:"column:description;type:TEXT;"`
+	//[ 6] location                                       TEXT                 null: true   primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
+	Location *string `gorm:"column:location;type:TEXT;"`
+	//[ 7] thumbnail                                      VARCHAR(100)         null: true   primary: false  isArray: false  auto: false  col: VARCHAR         len: 100     default: []
+	Thumbnail sql.NullString `gorm:"column:thumbnail;type:VARCHAR;size:100;"`
 }
 
 var albumTableInfo = &TableInfo{
@@ -146,48 +149,6 @@ var albumTableInfo = &TableInfo{
 
 		&ColumnInfo{
 			Index:              4,
-			Name:               "description",
-			Comment:            ``,
-			Notes:              ``,
-			Nullable:           true,
-			DatabaseTypeName:   "TEXT",
-			DatabaseTypePretty: "TEXT",
-			IsPrimaryKey:       false,
-			IsAutoIncrement:    false,
-			IsArray:            false,
-			ColumnType:         "TEXT",
-			ColumnLength:       -1,
-			GoFieldName:        "Description",
-			GoFieldType:        "*string",
-			JSONFieldName:      "description",
-			ProtobufFieldName:  "description",
-			ProtobufType:       "",
-			ProtobufPos:        5,
-		},
-
-		&ColumnInfo{
-			Index:              5,
-			Name:               "location",
-			Comment:            ``,
-			Notes:              ``,
-			Nullable:           true,
-			DatabaseTypeName:   "TEXT",
-			DatabaseTypePretty: "TEXT",
-			IsPrimaryKey:       false,
-			IsAutoIncrement:    false,
-			IsArray:            false,
-			ColumnType:         "TEXT",
-			ColumnLength:       -1,
-			GoFieldName:        "Location",
-			GoFieldType:        "*string",
-			JSONFieldName:      "location",
-			ProtobufFieldName:  "location",
-			ProtobufType:       "",
-			ProtobufPos:        6,
-		},
-
-		&ColumnInfo{
-			Index:              6,
 			Name:               "bucket",
 			Comment:            ``,
 			Notes:              ``,
@@ -204,7 +165,70 @@ var albumTableInfo = &TableInfo{
 			JSONFieldName:      "bucket",
 			ProtobufFieldName:  "bucket",
 			ProtobufType:       "",
+			ProtobufPos:        5,
+		},
+
+		&ColumnInfo{
+			Index:              5,
+			Name:               "description",
+			Comment:            ``,
+			Notes:              ``,
+			Nullable:           true,
+			DatabaseTypeName:   "TEXT",
+			DatabaseTypePretty: "TEXT",
+			IsPrimaryKey:       false,
+			IsAutoIncrement:    false,
+			IsArray:            false,
+			ColumnType:         "TEXT",
+			ColumnLength:       -1,
+			GoFieldName:        "Description",
+			GoFieldType:        "*string",
+			JSONFieldName:      "description",
+			ProtobufFieldName:  "description",
+			ProtobufType:       "",
+			ProtobufPos:        6,
+		},
+
+		&ColumnInfo{
+			Index:              6,
+			Name:               "location",
+			Comment:            ``,
+			Notes:              ``,
+			Nullable:           true,
+			DatabaseTypeName:   "TEXT",
+			DatabaseTypePretty: "TEXT",
+			IsPrimaryKey:       false,
+			IsAutoIncrement:    false,
+			IsArray:            false,
+			ColumnType:         "TEXT",
+			ColumnLength:       -1,
+			GoFieldName:        "Location",
+			GoFieldType:        "*string",
+			JSONFieldName:      "location",
+			ProtobufFieldName:  "location",
+			ProtobufType:       "",
 			ProtobufPos:        7,
+		},
+
+		&ColumnInfo{
+			Index:              7,
+			Name:               "thumbnail",
+			Comment:            ``,
+			Notes:              ``,
+			Nullable:           true,
+			DatabaseTypeName:   "VARCHAR",
+			DatabaseTypePretty: "VARCHAR(100)",
+			IsPrimaryKey:       false,
+			IsAutoIncrement:    false,
+			IsArray:            false,
+			ColumnType:         "VARCHAR",
+			ColumnLength:       100,
+			GoFieldName:        "Thumbnail",
+			GoFieldType:        "sql.NullString",
+			JSONFieldName:      "thumbnail",
+			ProtobufFieldName:  "thumbnail",
+			ProtobufType:       "string",
+			ProtobufPos:        8,
 		},
 	},
 }

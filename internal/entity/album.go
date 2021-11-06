@@ -21,6 +21,8 @@ type Album struct {
 	Location string
 	// Bucket - name of bucket in the store
 	Bucket string
+	// Thumbnail - name of image set as cover for album on index page.
+	Thumbnail string
 	// UserPermissions - holds the list of permissions of other users for this album.
 	// The key is the user id.
 	UserPermissions Permissions
@@ -50,6 +52,7 @@ func (a Album) String() string {
 	fmt.Fprintf(&sb, "description = %s ", a.Description)
 	fmt.Fprintf(&sb, "location = %s ", a.Location)
 	fmt.Fprintf(&sb, "bucket = %s ", a.Bucket)
+	fmt.Fprintf(&sb, "thumbnail = %s ", a.Thumbnail)
 	fmt.Fprintf(&sb, "number of photos = %d ", len(a.Photos))
 	fmt.Fprintf(&sb, "number of videos = %d ", len(a.Videos))
 

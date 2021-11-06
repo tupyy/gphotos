@@ -1,6 +1,7 @@
 package album
 
 import (
+	"database/sql"
 	"fmt"
 	"time"
 
@@ -18,6 +19,7 @@ type albumJoinRow struct {
 	Description      *string              `gorm:"column:description;type:TEXT;"`
 	Location         *string              `gorm:"column:location;type:TEXT;"`
 	Bucket           string               `gorm:"column:bucket;type:TEXT;"`
+	Thumbnail        sql.NullString       `gorm:"column:thumbnail;type:VARCHAR;size:100;"`
 	UserPermissions  models.PermissionIDs `gorm:"column:user_permissions;type:_PERMISSION_ID;"`
 	GroupPermissions models.PermissionIDs `gorm:"column:group_permissions;type:_PERMISSION_ID;"`
 	UserID           string               `gorm:"column:user_id;type:TEXT;"`
@@ -41,6 +43,10 @@ func (ca albumJoinRow) ToEntity() (entity.Album, error) {
 
 	if ca.Location != nil {
 		album.Location = *ca.Location
+	}
+
+	if ca.Thumbnail.Valid {
+		album.Thumbnail = ca.Thumbnail.String
 	}
 
 	if len(ca.UserPermissions) > 0 {

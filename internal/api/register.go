@@ -38,5 +38,6 @@ func Register(privateGroup *gin.RouterGroup,
 	album.CreateAlbum(privateGroup, as)
 	album.UpdateAlbum(privateGroup, as)
 	album.DeleteAlbum(privateGroup, as)
+	album.Thumbnail(privateGroup, as)
 	logutil.GetDefaultLogger().Info("album handlers registered")
 }

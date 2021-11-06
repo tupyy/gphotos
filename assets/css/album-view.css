@@ -75,12 +75,60 @@
     margin-top: 20px;
 }
 
+.container-photos #album-gallery {
+    display: contents;
+}
+
+.container-photos a {
+    position: relative;
+    display: block;
+    width: fit-content;
+    margin: 0 auto 10px auto;
+    height: 100%;
+}
+
 .container-photos img {
     width: 150px;
 }
 
+.container-photos a i {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    color: deepskyblue;
+}
+
+.container-photos a i.hidden {
+    display: none;
+}
+
+.container-photos img.selectable:hover {
+    box-shadow: 0 2px 2px silver;
+}
+
 #deleteModal {
     color: black;
+}
+
+.tab-content .container-tab .row-edit-tools {
+    margin-bottom: 10px;
+}
+
+.tab-content .container-tab .row-edit-tools .btn {
+    width: 140px;
+    border-radius: 20px;
+}
+
+.tab-content .container-tab .row-edit-tools #btn-set-thumbnail  {
+    color: deepskyblue;
+    border-color: deepskyblue;
+}
+
+
+.tab-content .container-tab .row-edit-tools #btn-set-thumbnail:hover, #btn-set-thumbnail:active, #btn-set-thumbnail:focus, input:checked {
+    background-color: deepskyblue !important;
+    color: black !important;
+    border-color: deepskyblue !important;
 }
 
 @media all and (max-width: 576px) {
@@ -96,6 +144,10 @@
     .container-photos .col a {
         justify-self: center;
         align-self: center;
+        margin-bottom: 5px;
+    }
+
+    .tab-content .container-tab .row-edit-tools div:first-child {
         margin-bottom: 5px;
     }
 }

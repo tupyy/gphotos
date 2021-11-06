@@ -10,12 +10,13 @@
         {{ end }}
 
         {{ template "js" }}
-        <script src="/static/js/album/delete.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.2.1/lightgallery.umd.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.2.1/plugins/zoom/lg-zoom.umd.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.2.1/plugins/thumbnail/lg-thumbnail.umd.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/js/jquery.justifiedGallery.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+        <script src="/static/js/album/alert.js"></script>
+        <script src="/static/js/album/spinner.js"></script>
         <script src="/static/js/album/gallery.js"></script>
         {{ if .write_permission }}
             {{ template "upload" }}
@@ -44,13 +45,30 @@
                                 <span class="col-12 title no-permissions">You don't have read permission for this album.</span>
                             </div>
                     {{ else }}
-                        {{if .album.Photos}}
+                        {{ if .album.Photos }}
+                            {{ if .edit_permission }}
+                            <div class="row row-edit-tools">
+                                <div class="col-12 col-sm-2">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="flexSwitchCheckDefault">
+                                        <label class="form-check-label" for="flexSwitchCheckDefault">Select mode</label>
+                                    </div>
+                                </div>
+                                <div class="col col-sm-2">
+                                    <button class="btn btn-outline-primary btn-sm" id="btn-set-thumbnail" disabled>Set thumbnail</button>
+                                </div>
+                                <div class="col col-sm-2">
+                                    <button class="btn btn-outline-danger btn-sm" id="btn-delete-photos" disabled>Delete photos</button>
+                                </div>
+                            </div>
+                            {{ end }}
                             <div class="container container-sm container-photos">
                                 <div class="row justify-content-center">
                                     <div class="col col-md-10" id="album-gallery">
                                         {{ range .album.Photos }}
                                         <a href="/api/albums/{{$.album.ID}}/album/{{.Filename}}/media">
                                             <img src="/api/albums/{{$.album.ID}}/album/{{.Thumbnail}}/media"/>
+                                            <i class="fas fa-check-circle hidden"></i>
                                         </a>
                                         {{ end }}
                                     </div>
