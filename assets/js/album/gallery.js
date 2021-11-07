@@ -124,7 +124,7 @@ $(function () {
             }).then(function(response) {
                 mySpinner.remove();
             
-                $.alert('Thumbnail set', {
+                $.alert('Album cover set', {
                     closeTime: 2000,
                     autoClose: true,
                     position: ['top-left'],
