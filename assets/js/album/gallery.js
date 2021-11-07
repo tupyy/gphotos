@@ -112,7 +112,8 @@ $(function () {
             let mySpinner = $.spinner('test');
 
             img = e.data.currentSelectedImages[0];
-            const imgParts = img.getAttribute('src').split('/');
+            a = $(img).parent('a');
+            const imgParts = a[0].getAttribute('href').split('/');
 
             axios({
                 method: 'post',
