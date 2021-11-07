@@ -19,7 +19,7 @@
 
         tmpl: '<div class="alert alert-dismissable fade show ${State}">' +
                     '<p>${Content}</p>' +
-                    '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-hidden="true"></button>' +
+                    '<button type="button" class="btn-close close" data-bs-dismiss="alert" aria-hidden="true"></button>' +
                 '</div>',
 
         init: function (msg, options) {

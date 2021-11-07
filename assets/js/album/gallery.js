@@ -125,10 +125,10 @@ $(function () {
                 mySpinner.remove();
             
                 $.alert('Thumbnail set', {
-                    closeTime: 3000,
+                    closeTime: 2000,
                     autoClose: true,
                     position: ['top-left'],
-                    withTime: true,
+                    withTime: false,
                     type: 'success',
                     isOnly: false
                 });
