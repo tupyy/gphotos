@@ -15,9 +15,13 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.2.1/plugins/thumbnail/lg-thumbnail.umd.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/js/jquery.justifiedGallery.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-        <script src="/static/js/album/alert.js"></script>
-        <script src="/static/js/album/spinner.js"></script>
-        <script src="/static/js/album/gallery.js"></script>
+        {{ if .edit_permissions }}
+            <script src="/static/js/album/alert.js"></script>
+            <script src="/static/js/album/spinner.js"></script>
+            <script src="/static/js/album/gallery.js"></script>
+        {{ else }}
+            <script src="/static/js/album/gallery-without-edit.js"></script>
+        {{ end }}
         {{ if .write_permission }}
             {{ template "upload" }}
         {{ end }}
@@ -31,7 +35,7 @@
         <div class="menu-bar">
             <nav class="nav nav-pills flex-column flex-sm-row">
                 <button class="flex-sm-fill text-sm-center nav-link active" aria-current="page" data-bs-toggle="tab" data-bs-target="#photo" type="button">Photos</button>
-                <button class="flex-sm-fill text-sm-center nav-link" data-bs-toggle="tab" data-bs-target="#video" type="button">Videos</button>
+                <!-- <button class="flex-sm-fill text-sm-center nav-link" data-bs-toggle="tab" data-bs-target="#video" type="button">Videos</button> -->
                 <button class="flex-sm-fill text-sm-center nav-link" data-bs-toggle="tab" data-bs-target="#upload" type="button">Upload</button>
                 <button class="flex-sm-fill text-sm-center nav-link" data-bs-toggle="tab" data-bs-target="#about" type="button">About</button>
                 <button class="flex-sm-fill text-sm-center nav-link" data-bs-toggle="tab" data-bs-target="#settings" type="button">Settings</button>
@@ -85,26 +89,26 @@
                     {{ end }}
                 </div>
             </div>
-            <div class="tab-pane fade" id="video" role="tabpanel" aria-labelledby="video-tab">
-                <div class="container container-tab">
-                    {{ if not .read_permission }}
-                        <div class="row row-button">
-                            <span class="col-12 title no-permissions">You don't have read permission for this album.</span>
-                        </div>
-                    {{ else }}
-                        {{if .album.Videos}}
-                            <div>videos</div>
-                        {{ else }}
-                        <div class="container">
-                            <div class="row no-photos-row">
-                                <div class="col-12 title no-photos">Nothing to see here!!</div>
-                                <div class="col-12 no-photos">Please upload some videos</div>
-                            </div>
-                        </div>
-                        {{ end }}
-                    {{ end }}
-                </div>
-            </div>
+            <!-- <div class="tab-pane fade" id="video" role="tabpanel" aria-labelledby="video-tab"> -->
+            <!--     <div class="container container-tab"> -->
+            <!--         {{ if not .read_permission }} -->
+            <!--             <div class="row row-button"> -->
+            <!--                 <span class="col-12 title no-permissions">You don't have read permission for this album.</span> -->
+            <!--             </div> -->
+            <!--         {{ else }} -->
+            <!--             {{if .album.Videos}} -->
+            <!--                 <div>videos</div> -->
+            <!--             {{ else }} -->
+            <!--             <div class="container"> -->
+            <!--                 <div class="row no-photos-row"> -->
+            <!--                     <div class="col-12 title no-photos">Nothing to see here!!</div> -->
+            <!--                     <div class="col-12 no-photos">Please upload some videos</div> -->
+            <!--                 </div> -->
+            <!--             </div> -->
+            <!--             {{ end }} -->
+            <!--         {{ end }} -->
+            <!--     </div> -->
+            <!-- </div> -->
             <div class="tab-pane fade" id="upload" role="tabpanel" aria-labelledby="upload-tab">
                 <div class="container container-tab">
                     {{ if not .write_permission }}
