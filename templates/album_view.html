@@ -82,7 +82,7 @@
                             <div class="container">
                                 <div class="row no-photos-row">
                                     <div class="col-12 title no-photos">Nothing to see here!!</div>
-                                    <div class="col-12 no-photos">Please upload some photos</div>
+                                    <div class="col-12 subtitle no-photos">Please upload some photos</div>
                                 </div>
                             </div>
                         {{ end }}
@@ -135,47 +135,47 @@
                 </div>
             </div>
             <div class="tab-pane fade" id="about" role="tabpanel" aria-labelledby="about-tab">
-                <div class="container container-tab">
+                <div class="container container-tab container-about">
                     <div class="container container-details">
                         <div class="row row-title">
-                            <h4 class="container-title">Details</h4>
+                            <h4 class="title">Details</h4>
                         </div>
                         <div class="row">
                             <div class="col-lg-2 col title">Owner</div>
                             {{ if .is_owner }}
-                                <div class="col-lg-4 col">You</div>
+                                <div class="col-lg-4 subtitle col">You</div>
                             {{ else }}
-                                <div class="col-lg-4 col">{{.album.Owner}}</div>
+                                <div class="col-lg-4 subtitle col">{{.album.Owner}}</div>
                             {{ end }}
                         </div>
                         <div class="row">
                             <div class="col-lg-2 col title">Name</div>
-                            <div class="col-lg-4 col">{{.album.Name}}</div>
+                            <div class="col-lg-4 col subtitle">{{.album.Name}}</div>
                         </div>
                         <div class="row">
                             <div class="col-lg-2 col title">Created at</div>
-                            <div class="col-lg-4 col">{{.album.Date}}</div>
+                            <div class="col-lg-4 col subtitle">{{.album.Date}}</div>
                         </div>
                         <div class="row">
                             <div class="col-lg-2 col title">Description</div>
-                            <div class="col-lg-4 col">{{.album.Description}}</div>
+                            <div class="col-lg-4 col subtitle">{{.album.Description}}</div>
                         </div>
                         <div class="row">
                             <div class="col-lg-2 col title">Location</div>
-                            <div class="col-lg-4 col">{{.album.Location}}</div>
+                            <div class="col-lg-4 col subtitle">{{.album.Location}}</div>
                         </div>
                     </div>
                     {{ if or .is_owner .is_admin }}
                         <div class="container container-permissions">
                             <div class="row row-title">
-                                <span class="container-title">Users permissions</span>
+                                <span class="title">Users permissions</span>
                             </div>
                             {{ if .user_permissions }}
                                 <div class="row">
                                     {{ range $k,$v := .user_permissions }}
                                         <div class="row">
                                             <div class="col-lg-2 col title">{{ $k }}</div>
-                                            <div class="col-lg-4 col">
+                                            <div class="col-lg-4 col subtitle">
                                                 {{ range $v }}
                                                     <span class="badge bg-success">{{perm_name .}} </span>
                                                 {{ end }}
@@ -185,20 +185,20 @@
                                 </div>
                             {{ else }}
                                 <div class=row>
-                                    <span class="col title">No user permissions set.</span>
+                                    <span class="col subtitle">No user permissions set.</span>
                                 </div>
                             {{ end }}
                         </div>
                         <div class="container container-permissions">
                             <div class="row row-title">
-                                <span class="container-title">Group permissions</span>
+                                <span class="title">Group permissions</span>
                             </div>
                             {{ if .group_permissions }}
                                 <div class="row">
                                     {{ range $k,$v := .group_permissions }}
                                         <div class="row">
                                             <div class="col-lg-2 col title">{{ $k }}</div>
-                                            <div class="col-lg-4 col">
+                                            <div class="col-lg-4 col subtitle">
                                                 {{ range $v }}
                                                     <span class="badge bg-success">{{perm_name .}} </span>
                                                 {{ end }}
@@ -208,7 +208,7 @@
                                 </div>
                             {{ else }}
                                 <div class=row>
-                                    <span class="col title">No group permissions set.</span>
+                                    <span class="col subtitle">No group permissions set.</span>
                                 </div>
                             {{ end }}
                         </div>
@@ -216,7 +216,7 @@
                 </div>
             </div>
             <div class="tab-pane fade" id="settings" role="tabpanel" aria-labelledby="settings-tab">
-                <div class="container container-tab">
+                <div class="container container-tab container-settings">
                     {{ if and ( not .edit_permission ) ( not .delete_permission )}}
                         <div class="row row-button">
                             <span class="col-12 title no-permissions">You don't have neither edit or delete permissions for this album.</span>
@@ -227,7 +227,7 @@
                             <div class="col-6">
                                 <div class="row">
                                     <span class="col-12 title">Edit this album</span>
-                                    <span class="col-12">You can edit the details of this album</span>
+                                    <span class="col-12 subtitle">You can edit the details of this album</span>
                                 </div>
                             </div>
                             <div class="col-2">
@@ -242,12 +242,12 @@
                             <div class="col-6">
                                 <div class="row">
                                     <span class="col-12 title"> Delete this album</span>
-                                    <span class="col-12">Once you delete this album, everything is lost!!</span>
+                                    <span class="col-12 subtitle">Once you delete this album, everything is lost!!</span>
                                 </div>
                             </div>
                             <div class="col-3">
                                 <input type="hidden" value="{{.delete_link}}"></input>
-                                <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">Delete this album</button>
+                                <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">Delete album</button>
                                 <!-- delete modal -->
                                 <div class="modal fade" id="deleteModal">
                                     <div class="modal-dialog">

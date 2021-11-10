@@ -26,25 +26,6 @@
     left: 5px;
 }
 
-.container-upload .btn.btn-outline-primary {
-    color: silver;
-    border-radius: 20px;
-    margin-left: 20px;
-    width: 100px;
-}
-
-.container-upload .btn.btn-outline-primary:hover,.btn.btn-outline-primary:focus {
-    background: #238636;
-    color: white;
-    border: 1px solid #238636;
-}
-
-.container-upload .btn.btn-outline-danger {
-    border-radius: 20px;
-    margin-left: 20px;
-    width: 100px;
-}
-
 .container-upload .file-ui .progress {
     margin-top: 5px;
     padding-left: 0;
