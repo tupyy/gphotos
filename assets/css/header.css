@@ -23,3 +23,40 @@
     align-items: center;
     margin-right: 10px;
 }
+
+@media all and (max-width: 576px) {
+    .container-fluid a, button span, .nav-item {
+        font-size: 0.8rem;
+    }
+
+    .container-fluid .navbar-brand {
+        font-size: 1rem;
+    }
+
+    .navbar-nav .nav-item {
+        text-align: right;
+        margin: 0 0 3px auto;
+        padding-top: 2px;
+    }
+    
+    .navbar-nav .nav-item .navbar-nav-user {
+        margin: 0 0 3px auto;
+        padding-right: 2px;
+    }
+
+    .navbar-dark .navbar-nav a {
+        padding: 0;
+    }
+
+    #navbar {
+        margin-top: 3px;
+    }
+
+    #navbar > div {
+        margin-bottom: 2px;
+    }
+
+    .navbar .navbar-toggler:focus {
+        box-shadow: 0 0 0 .1rem;
+    }
+}
