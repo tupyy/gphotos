@@ -154,7 +154,7 @@
 
 @media all and (max-width: 576px) {
     .container-photos img {
-        width: 70px;
+        width: 100%;
     }
 
     .container-photos .col {
@@ -165,7 +165,7 @@
     .container-photos .col a {
         justify-self: center;
         align-self: center;
-        margin-bottom: 5px;
+        margin: 0;
     }
 
     .tab-content .container-tab .row-edit-tools div:first-child {
@@ -182,5 +182,10 @@
     
     .tab-content .container-about .container-title {
         font-size: 1rem;
+    }
+
+    .container-photos #album-gallery {
+        display: grid;
+        gap: 2px 2px;
     }
 }
