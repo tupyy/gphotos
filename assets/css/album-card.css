@@ -161,18 +161,54 @@
 .container-album-card .location-wrapper i {
     padding-right: 3px;
     color: #2f48a7;
-=======
+}
 
 .container-album-card .card-body {
     padding: 5px 0 2px 5px;
 }
 
 .container-album-card a {
-    color: black;
+    color: silver;
     text-decoration: none;
 }
 
 .container-album-card a:hover {
     text-underline-position: under;
     text-decoration: underline;
+}
+
+
+@media all and (max-width: 576px) {
+    .container-album-card .card-header .row-owner span:first-child {
+        font-size: 0.7rem;
+    }
+
+    .container-album-card .card-header .row-owner span:last-child {
+        display: none;
+    }
+
+    .container-album-card .card-header .row-date span {
+        font-size: 0.7rem;
+    }
+
+    .container-album-card a {
+        display: flex;
+        justify-content: center;
+    }
+
+    .container-album-card img {
+        height: 120px;
+    }
+
+    .main-container #albums .album-col {
+        padding-left: 3px;
+        padding-right: 3px;
+        margin-top: 5px;
+        margin-bottom: 5px;
+        width: unset;
+    }
+
+    .container-album-card h1 {
+        font-size: 0.9rem;
+    }
 }

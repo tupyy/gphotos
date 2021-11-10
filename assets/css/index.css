@@ -103,4 +103,15 @@
         justify-content: center;
     }
 
+    .main-container .sort-row span {
+        font-size: 0.8rem;
+    }
+    
+    .main-container .sort-row col-4 {
+        font-size: 0.8rem;
+    }
+
+    .main-container .col-filter .row-filter input, .form-select {
+        font-size: 0.75rem;
+    }
 }

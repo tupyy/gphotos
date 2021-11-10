@@ -83,7 +83,7 @@ let render = () => {
 
 let renderAlbum = (album) => {
     return `
-        <div class="album-col col-2" id="` + album.id + `">
+        <div class="album-col col-6" id="` + album.id + `">
             <div class="container-album-card card">
                 <div class="card-header">
                     <div class="row row-owner">
