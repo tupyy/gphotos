@@ -8,6 +8,7 @@ import (
 	"github.com/tupyy/gophoto/internal/domain/filters/album"
 	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/internal/services"
+	"github.com/tupyy/gophoto/internal/services/media"
 )
 
 type Query struct {
@@ -17,20 +18,21 @@ type Query struct {
 	personalAlbums bool
 	// get shared albums.
 	sharedAlbums bool
-	predicates   []Predicate
-	albumRepo    domain.Album
-	minioRepo    domain.Store
-	sorter       *albumSorter
+	// list of predicates for the query
+	predicates []Predicate
+	// album repo
+	albumRepo domain.Album
+	// media service
+	mediaService *media.Service
+	//album sorter
+	sorter *albumSorter
 }
 
 func (s *Service) Query() *Query {
-	albumRepo := s.repos[domain.AlbumRepoName].(domain.Album)
-	minioRepo := s.repos[domain.MinioRepoName].(domain.Store)
-
 	return &Query{
-		predicates: []Predicate{},
-		albumRepo:  albumRepo,
-		minioRepo:  minioRepo,
+		predicates:   []Predicate{},
+		albumRepo:    s.albumRepo,
+		mediaService: s.mediaService,
 	}
 }
 
@@ -153,7 +155,7 @@ func (q *Query) First(ctx context.Context, id int32) (entity.Album, error) {
 		return entity.Album{}, fmt.Errorf("failed to get album '%d': %v", id, err)
 	}
 
-	medias, err := q.minioRepo.ListBucket(ctx, album.Bucket)
+	medias, err := q.mediaService.ListBucket(ctx, album.Bucket)
 	if err != nil {
 		return entity.Album{}, fmt.Errorf("%w album id '%d': %v", services.ErrListBucket, id, err)
 	}

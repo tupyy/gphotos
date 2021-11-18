@@ -51,7 +51,7 @@ func GetAlbumMedia(r *gin.RouterGroup, albumService *album.Service, mediaService
 			return
 		}
 
-		media, err := mediaService.List(ctx, album)
+		media, err := mediaService.ListBucket(ctx, album.Bucket)
 		if err != nil {
 			logger.WithFields(logrus.Fields{
 				"album_id": album.ID,

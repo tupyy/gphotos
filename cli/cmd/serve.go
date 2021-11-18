@@ -83,9 +83,11 @@ var serveCmd = &cobra.Command{
 		logutil.GetDefaultLogger().Info("repositories created")
 
 		// create services
-		albumService := albumService.New(repos)
+		mediaService := media.New(repos[domain.MinioRepoName].(domain.Store))
+
+		albumRepo := repos[domain.AlbumRepoName].(domain.Album)
+		albumService := albumService.New(albumRepo, mediaService)
 		usersService := usersService.New(repos)
-		mediaService := media.New(repos)
 		logutil.GetDefaultLogger().Info("services created")
 
 		// create keycloak

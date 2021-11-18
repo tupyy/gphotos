@@ -22,7 +22,7 @@ func NewCacheRepo(r domain.Store, ttl time.Duration, cleanInterval time.Duration
 	}
 }
 
-func (r *minioRepoCache) GetFile(ctx context.Context, bucket, filename string) (io.Reader, error) {
+func (r *minioRepoCache) GetFile(ctx context.Context, bucket, filename string) (io.ReadSeeker, error) {
 	return r.repo.GetFile(ctx, bucket, filename)
 }
 

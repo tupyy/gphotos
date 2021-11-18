@@ -57,7 +57,7 @@ func (m *MinioRepo) DeleteBucket(ctx context.Context, bucket string) error {
 	go func() {
 		defer close(objectsCh)
 		// List all objects from a bucket-name with a matching prefix.
-		for object := range m.client.ListObjects(ctx, bucket, minio.ListObjectsOptions{}) {
+		for object := range m.client.ListObjects(ctx, bucket, minio.ListObjectsOptions{Recursive: true}) {
 			if object.Err != nil {
 				logutil.GetDefaultLogger().WithError(err).Errorf("failed to list bucket '%s'", bucket)
 
@@ -98,7 +98,7 @@ func (m *MinioRepo) DeleteBucket(ctx context.Context, bucket string) error {
 
 	err = m.client.RemoveBucket(ctx, bucket)
 	if err != nil {
-		return fmt.Errorf("%w failed to delete bucket %s on endpoint %s", err, bucket, m.client.EndpointURL())
+		return fmt.Errorf("failed to delete bucket %s on endpoint %s: %+v", bucket, m.client.EndpointURL(), err)
 	}
 
 	return nil
@@ -111,22 +111,22 @@ func (m *MinioRepo) PutFile(ctx context.Context, bucket, filename string, size i
 
 	exists, err := m.client.BucketExists(ctx, bucket)
 	if err != nil {
-		return fmt.Errorf("%w failed to upload file %s to bucket %s on endpoint %s", err, filename, bucket, m.client.EndpointURL())
+		return fmt.Errorf("failed to upload file %s to bucket %s on endpoint %s: %+v", filename, bucket, m.client.EndpointURL(), err)
 	}
 
 	if !exists {
-		return fmt.Errorf("%w failed to upload file %s to bucket %s on endpoint %s. bucket does not exists", err, filename, bucket, m.client.EndpointURL())
+		return fmt.Errorf("failed to upload file %s to bucket %s on endpoint %s: %+v", filename, bucket, m.client.EndpointURL(), err)
 	}
 
 	_, err = m.client.PutObject(ctx, bucket, filename, r, size, minio.PutObjectOptions{ContentType: "application/octet-stream"})
 	if err != nil {
-		return fmt.Errorf("%w failed to upload file %s to bucket %s on endpoint %s", err, filename, bucket, m.client.EndpointURL())
+		return fmt.Errorf("failed to upload file %s to bucket %s on endpoint %s: %+v", filename, bucket, m.client.EndpointURL(), err)
 	}
 
 	return nil
 }
 
-func (m *MinioRepo) GetFile(ctx context.Context, bucket, filename string) (io.Reader, error) {
+func (m *MinioRepo) GetFile(ctx context.Context, bucket, filename string) (io.ReadSeeker, error) {
 	if len(bucket) == 0 || len(filename) == 0 {
 		return nil, errors.New("failed to get file. bucket or filename missing.")
 	}
@@ -187,7 +187,7 @@ func (m *MinioRepo) ListBucket(ctx context.Context, bucket string) ([]entity.Med
 	}
 
 	objectCh := m.client.ListObjects(ctx, bucket, minio.ListObjectsOptions{
-		Recursive: false,
+		Recursive: true,
 	})
 
 	mediaMap := make(map[string]entity.Media)
@@ -232,19 +232,17 @@ func toEntity(o minio.ObjectInfo, bucket string) entity.Media {
 }
 
 func filename(objFilename string) string {
-	thmbIdx := strings.Index(objFilename, "thumbnail")
-	if thmbIdx > 0 {
-		return objFilename[:thmbIdx-1]
+	hasFolder := strings.HasPrefix(objFilename, "thumbnail") || strings.HasPrefix(objFilename, "photos")
+
+	filename := objFilename
+	if hasFolder {
+		parts := strings.Split(objFilename, "/")
+		filename = parts[1]
 	}
 
-	if strings.Index(objFilename, ".") > 0 {
-		parts := strings.Split(objFilename, ".")
-		return parts[0]
-	}
-
-	return objFilename
+	return filename
 }
 
 func isThumbnail(o minio.ObjectInfo) bool {
-	return strings.Index(o.Key, "thumbnail") > 0
+	return strings.HasPrefix(o.Key, "thumbnail")
 }
