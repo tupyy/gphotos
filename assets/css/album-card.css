@@ -195,6 +195,7 @@
 
     .container-album-card img {
         height: 120px;
+        width: 160px;
     }
 
     .main-container #albums .album-col {
