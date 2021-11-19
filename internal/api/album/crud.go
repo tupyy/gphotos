@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-contrib/sessions"
@@ -15,11 +16,13 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/tupyy/gophoto/internal/api/dto"
 	"github.com/tupyy/gophoto/internal/common"
+	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/internal/form"
 	"github.com/tupyy/gophoto/internal/services/album"
 	"github.com/tupyy/gophoto/internal/services/permissions"
 	"github.com/tupyy/gophoto/internal/services/users"
+	"github.com/tupyy/gophoto/utils/encryption"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
 
@@ -598,7 +601,24 @@ func Thumbnail(r *gin.RouterGroup, albumService *album.Service) {
 			return
 		}
 
-		album.Thumbnail = thumbnailForm.Image
+		gen := encryption.NewGenerator(conf.GetEncryptionKey())
+
+		decryptedImageName, err := gen.DecryptData(thumbnailForm.Image)
+		if err != nil {
+			logger.WithError(err).WithField("album", album.String()).Error("failed to set thumbnail")
+
+			common.AbortInternalErrorWithJson(c)
+
+			return
+		}
+
+		parts := strings.Split(decryptedImageName, "/")
+		thumbnailImageName := fmt.Sprintf("thumbnail/%s", parts[1])
+
+		logger.WithField("thumbnail", thumbnailImageName).Debug("set thumbnail")
+
+		encryptedThumbnailImageName, _ := gen.EncryptData(thumbnailImageName)
+		album.Thumbnail = encryptedThumbnailImageName
 
 		if _, err := albumService.Update(ctx, album); err != nil {
 			logger.WithError(err).WithField("album", album.String()).Error("failed to set thumbnail")

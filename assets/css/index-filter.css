@@ -160,5 +160,9 @@
         display: flex;
         justify-content: space-between;
     }
+    .main-container .sort-row .select-row .form-select {
+        padding: 4px 36px 4px 4px;
+        font-size: 0.8rem;
+    }
 }
 
