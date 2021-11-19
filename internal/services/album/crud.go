@@ -12,6 +12,8 @@ import (
 	"github.com/tupyy/gophoto/internal/services/media"
 )
 
+const forbittenChar = "_$"
+
 type Service struct {
 	albumRepo    domain.Album
 	mediaService *media.Service
@@ -25,6 +27,11 @@ func (s *Service) Create(ctx context.Context, newAlbum entity.Album) (int32, err
 	// generate bucket name
 	bucketID := strings.ReplaceAll(uuid.New().String(), "-", "")
 	n := strings.ReplaceAll(strings.ToLower(newAlbum.Name), " ", "-")
+
+	for _, s := range forbittenChar {
+		n = strings.ReplaceAll(n, string(s), "-")
+	}
+
 	newAlbum.Bucket = fmt.Sprintf("%s-%s", n, bucketID[:8])
 
 	// create the bucket
