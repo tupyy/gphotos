@@ -46,6 +46,10 @@
     margin: auto;
 }
 
+.main-container .sort-row {
+    font-size: 0.9rem;
+}
+
 .main-container .sort-row span {
     text-align: right;
     line-height: 35px;
@@ -53,6 +57,10 @@
 
 .main-container .sort-row .select-row {
     padding-right: 0;
+}
+
+.main-container .sort-row .select-row .form-select{
+    font-size: 0.9rem;
 }
 
 .main-container .count-albums {

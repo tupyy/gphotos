@@ -23,7 +23,7 @@
 .container-album-card h1 {
     text-transform: capitalize;
     text-align: center;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     font-weight: 400;
 }
 
@@ -54,7 +54,6 @@
 
 .container-album-card a:hover {
     color: deepskyblue;
-    font-weight: bold;
 }
 
 .container-album-card .date {
@@ -86,7 +85,7 @@
     justify-content: space-between;
     grid-auto-flow: column;
     font-weight: bold;
-    font-size: 0.9rem;
+    font-size: 0.83rem;
 }
 
 .container-album-card .card-header .row-owner span:first-child {
@@ -104,7 +103,7 @@
 }
 
 .container-album-card .card-header .row-owner span:last-child i {
-    padding-right: 2px;
+    padding-right: 0;
 }
 
 .container-album-card .card-header .row-date span i {
@@ -118,7 +117,7 @@
 }
 
 .container-album-card .card-header .row-date span {
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     font-style: italic;
     padding-left: 0;
 }
@@ -171,12 +170,6 @@
     color: silver;
     text-decoration: none;
 }
-
-.container-album-card a:hover {
-    text-underline-position: under;
-    text-decoration: underline;
-}
-
 
 @media all and (max-width: 576px) {
     .container-album-card .card-header .row-owner span:first-child {
