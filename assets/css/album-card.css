@@ -175,11 +175,7 @@
 }
 
 @media all and (max-width: 576px) {
-    .container-album-card .card-header .row-owner span:first-child {
-        font-size: 0.7rem;
-    }
-
-    .container-album-card .card-header .row-owner span:last-child {
+    .container-album-card .card-header .row-owner {
         display: none;
     }
 
