@@ -57,7 +57,21 @@ func GetAlbums(r *gin.RouterGroup, albumService *album.Service, usersService *us
 			q.Sort(album.SortByDate, album.ReverseOrder)
 		}
 
-		albums, err := q.All(ctx, session.User)
+		var offset int
+		if len(c.Query("offset")) > 0 {
+			if o, err := strconv.Atoi(c.Query("offset")); err == nil {
+				offset = o
+			}
+		}
+
+		var limit int
+		if len(c.Query("limit")) > 0 {
+			if l, err := strconv.Atoi(c.Query("limit")); err == nil {
+				limit = l
+			}
+		}
+
+		albums, count, err := q.Offset(offset).Limit(limit).All(ctx, session.User)
 		if err != nil {
 			logger.WithError(err).Error("failed to get albums")
 
@@ -68,6 +82,7 @@ func GetAlbums(r *gin.RouterGroup, albumService *album.Service, usersService *us
 			"user_role": session.User.Role.String(),
 			"username":  fmt.Sprintf("%s %s", session.User.FirstName, session.User.LastName),
 			"albums":    dto.NewAlbumDTOs(albums, users),
+			"count":     count,
 		})
 
 		return

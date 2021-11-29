@@ -1,7 +1,13 @@
 const albumsElementID = "#albums";
 const baseURL = "/api/albums"
 
-let store = {}
+const defaultPageSize = 20;
+
+let store = {
+    offset: 0,
+    limit: defaultPageSize,
+    countAlbums: 0,
+}
 
 let filterSort = {
     personalAlbums: true,
@@ -33,6 +39,12 @@ let filterSort = {
             reqUrl = reqUrl + '&sort=' + this.sort;
         }
 
+        // add offset
+        reqUrl = reqUrl + '&offset=' + store.offset;
+
+        // add limit
+        reqUrl = reqUrl + '&limit=' + store.limit;
+
         return encodeURI(reqUrl);
     },
 }
@@ -58,6 +70,7 @@ const doReq = () => {
             store.data = response.data;
             store.albums = response.data.albums;
             store.username = response.data.username;
+            store.totalAlbums = response.data.count;
 
             render();
 
@@ -79,6 +92,7 @@ let render = () => {
     });
     
     $("#count_albums").html(store.albums.length);
+    $("#pagination").html(renderPagination(store.limit,store.offset, store.totalAlbums));
 }
 
 let renderAlbum = (album) => {
@@ -117,6 +131,54 @@ let renderAlbum = (album) => {
     `
 }
 
+const renderPagination = (pageSize, offset, total) => {
+    numberPages = Math.floor(total / pageSize);
+    if (total % pageSize > 0) {
+        numberPages++;
+    }
+
+    currentPage = Math.floor(offset / pageSize) + 1;
+    let prevDisabled = '';
+    if (currentPage == 1) {
+        prevDisabled = 'disabled';
+    }
+
+    let nextDisabled = '';
+    if (currentPage == numberPages) {
+        nextDisabled = 'disabled';
+    }
+
+    head =  `
+        <nav aria-label="Page navigation">
+          <ul class="pagination">
+            <li class="page-item ` + prevDisabled + `">
+              <a class="page-link `+prevDisabled+`" href="javascript:doPagination(false)" aria-label="Previous">
+                <span aria-hidden="true">&laquo;</span>
+                <span class="sr-only">Previous</span>
+              </a>
+            </li>`
+    footer = `
+            <li class="page-item ` + nextDisabled + `">
+              <a class="page-link ` + nextDisabled + `" href="javascript:doPagination(true)" aria-label="Next">
+                <span aria-hidden="true">&raquo;</span>
+                <span class="sr-only">Next</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+    `
+    let body = '';
+    for (let i = 1; i <= numberPages; i++) {
+        if (currentPage == i) {
+            body += '<li class="page-item active"><a class="page-link active" href="javascript:gotoPage('+i+')">' + i + '</a></li>'
+        } else {
+            body += '<li class="page-item"><a class="page-link" href="javascript:gotoPage('+i+')">' + i + '</a></li>'
+        }
+    }
+
+    return head + body + footer
+}
+
 const renderFilter = () => {
         $("#personalAlbumCheck").prop('checked', filterSort.personalAlbums);
         $("#sharedAlbumCheck").prop('checked', filterSort.sharedAlbums);
@@ -136,6 +198,10 @@ const renderFilter = () => {
 
 const clearAlbums = () => {
     $(albumsElementID).empty();
+}
+
+const clearPagination = () => {
+    $('#pagination').empty();
 }
 
 const showSpinner = (parentElement, show) => {
@@ -176,6 +242,38 @@ const removeOwner = (ownerID) => {
             return false;
         }
     })
+}
+
+const doPagination = (increase) => {
+    if (increase) {
+        store.offset += store.limit;
+    } else {
+        store.offset -= store.limit;
+    }
+
+    store.albums = [];
+
+    doReq();
+
+    clearAlbums();
+    clearPagination();
+    render();
+}
+
+const gotoPage = (page) => {
+    if (page <= 0) {
+        return;
+    }
+
+    // backend is base 0
+    store.offset = defaultPageSize * (page-1);
+    store.albums = [];
+
+    doReq();
+
+    clearAlbums();
+    clearPagination();
+    render();
 }
 
 const bindToEvents = () => {
@@ -250,7 +348,6 @@ const bindToEvents = () => {
         $('#filter-container').css('visibility', 'visible');
         $('.main-container .col-filter .btn-close').css('visibility', 'visible');
     });
-
 }
 
 const bindToCardOwner = () => {

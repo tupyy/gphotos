@@ -84,6 +84,25 @@
 }
 
 
+.main-container .row-page nav {
+    display: flex;
+    justify-content: center;
+}
+
+.main-container .row-page .page-link {
+    background: transparent;
+    border-color: transparent;
+    color: silver;
+}
+
+.main-container .row-page .page-link.active {
+    color: deepskyblue;
+}
+    
+.main-container .row-page .page-link.disabled {
+    color: grey;
+}
+
 @media all and (max-width: 576px) {
     .container-media .row {
         display: flex;
@@ -122,4 +141,5 @@
     .main-container .col-filter .row-filter input, .form-select {
         font-size: 0.75rem;
     }
+
 }
