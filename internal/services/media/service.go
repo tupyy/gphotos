@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"path"
+	"sort"
 	"strings"
 
 	"github.com/tupyy/gophoto/internal/domain"
@@ -64,7 +65,10 @@ func (s *Service) ListBucket(ctx context.Context, bucket string) ([]entity.Media
 		}
 	}
 
-	return media, nil
+	ms := newSorter(media)
+	sort.Sort(ms)
+
+	return ms.medias, nil
 }
 
 func (s *Service) GetPhoto(ctx context.Context, bucket, filename string) (io.ReadSeeker, error) {
