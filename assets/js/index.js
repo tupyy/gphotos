@@ -96,6 +96,20 @@ let render = () => {
 }
 
 let renderAlbum = (album) => {
+    let tags = ""
+    
+    if (typeof album.tags != 'undefined') {
+        for(const [k,v] of Object.entries(album.tags)) {
+            color = "black";
+            if (v !== "") {
+                color = v;
+            }
+            tags += `<span class="album-tag" style="background:` + color + `">
+                <i class="fas fa-tag"></i>`+k+
+                `</span>`;
+        };
+    }
+
     return `
         <div class="album-col col-6" id="` + album.id + `">
             <div class="container-album-card card">
@@ -114,11 +128,16 @@ let renderAlbum = (album) => {
                             <i class="far fa-calendar-alt"></i>
                             ` + album.date + `
                         </span>
-                    </div> 
+                    </div>  
                 </div>
-                <a href="/album/` + album.id + `">
-                    <img src="` + album.thumbnail + `" class="card-img-top"/>
-                </a>
+                <div class="album-image">
+                    <div class="row row-tags">
+                    ` + tags +`
+                    </div>
+                    <a href="/album/` + album.id + `">
+                        <img src="` + album.thumbnail + `" class="card-img-top"/>
+                    </a>
+                </div>
                 <div class="album">
                     <div class="card-body">
                         <h1 class="card-title title">

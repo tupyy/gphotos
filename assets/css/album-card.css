@@ -125,6 +125,31 @@
     padding-left: 0;
 }
 
+.container-album-card .album-image {
+    position: relative;
+}
+
+.container-album-card .album-image .row-tags {
+    display: grid;
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 2px 2px 0 0;
+}
+
+.container-album-card .album-image .row-tags span {
+    color: white;
+    font-size: 0.7rem;
+    padding: 3px;
+    text-align: right;
+    border-radius: 5px;
+    margin-bottom: 3px;
+}
+
+.container-album-card .album-image .row-tags span i {
+    padding-right: 3px;
+}
+
 .container-album-card .date {
     position: absolute;
     top: 0;
@@ -186,6 +211,10 @@
 
     .container-album-card .card-header .row-date span {
         font-size: 0.7rem;
+    }
+
+    .container-album-card .album-image .row-tags span {
+        font-size: 0.6rem;
     }
     
     .container-album-card .card-body {

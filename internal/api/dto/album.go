@@ -22,6 +22,8 @@ type Album struct {
 	Thumbnail   string  `json:"thumbnail"`
 	Photos      []Media `json:"photos"`
 	Videos      []Media `json:"videos"`
+	// Tags - map with tag name as key and color as value
+	Tags map[string]string `json:"tags"`
 }
 
 type Media struct {
@@ -97,6 +99,16 @@ func NewAlbumDTO(a entity.Album, owner entity.User) (Album, error) {
 		}
 	}
 
+	tags := make(map[string]string)
+	for _, t := range a.Tags {
+		color := ""
+		if t.Color != nil {
+			color = *t.Color
+		}
+
+		tags[t.Name] = color
+	}
+
 	logutil.GetDefaultLogger().WithFields(logrus.Fields{
 		"id":           a.ID,
 		"encrypted_id": encryptedID,
@@ -117,6 +129,7 @@ func NewAlbumDTO(a entity.Album, owner entity.User) (Album, error) {
 		Photos:      encryptedPhotos,
 		Videos:      encryptedVideos,
 		Thumbnail:   thumbnail,
+		Tags:        tags,
 	}, nil
 }
 
