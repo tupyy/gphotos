@@ -19,6 +19,8 @@ type albumJoinRow struct {
 	Description      *string              `gorm:"column:description;type:TEXT;"`
 	Location         *string              `gorm:"column:location;type:TEXT;"`
 	Bucket           string               `gorm:"column:bucket;type:TEXT;"`
+	TagName          *string              `gorm:"column:tag_name;type:TEXT;"`
+	TagColor         *string              `gorm:"column:tag_color;tape:TEXT"`
 	Thumbnail        sql.NullString       `gorm:"column:thumbnail;type:VARCHAR;size:100;"`
 	UserPermissions  models.PermissionIDs `gorm:"column:user_permissions;type:_PERMISSION_ID;"`
 	GroupPermissions models.PermissionIDs `gorm:"column:group_permissions;type:_PERMISSION_ID;"`
@@ -85,6 +87,16 @@ func (ca albumJoinRow) ToEntity() (entity.Album, error) {
 		album.GroupPermissions[ca.GroupName] = permissions
 	}
 
+	if ca.TagName != nil {
+		album.Tags = make([]entity.Tag, 0, 1)
+
+		if ca.TagColor != nil {
+			album.Tags = append(album.Tags, entity.Tag{Name: *ca.TagName, Color: ca.TagColor})
+		} else {
+			album.Tags = append(album.Tags, entity.Tag{Name: *ca.TagName})
+		}
+	}
+
 	return album, nil
 }
 
@@ -95,25 +107,38 @@ func (albums albumJoinRows) Merge() []entity.Album {
 	entitiesMap := make(map[int32]entity.Album)
 
 	for _, ca := range albums {
-		if e, err := ca.ToEntity(); err != nil {
+		e, err := ca.ToEntity()
+		if err != nil {
 			logutil.GetDefaultLogger().WithError(err).Warn("cannot create entity")
-		} else {
-			if ent, found := entitiesMap[e.ID]; found {
-				// merge permissions
-				if len(e.UserPermissions) > 0 {
-					for k, v := range e.UserPermissions {
-						ent.UserPermissions[k] = v
-					}
+
+			continue
+		}
+
+		if ent, found := entitiesMap[e.ID]; found {
+			// merge permissions
+			if len(e.UserPermissions) > 0 {
+				for k, v := range e.UserPermissions {
+					ent.UserPermissions[k] = v
+				}
+			}
+
+			if len(e.GroupPermissions) > 0 {
+				for k, v := range e.GroupPermissions {
+					ent.GroupPermissions[k] = v
+				}
+			}
+
+			// merge tags
+			if len(e.Tags) > 0 {
+				for _, t := range e.Tags {
+					ent.Tags = append(ent.Tags, t)
 				}
 
-				if len(e.GroupPermissions) > 0 {
-					for k, v := range e.GroupPermissions {
-						ent.GroupPermissions[k] = v
-					}
-				}
-			} else {
-				entitiesMap[e.ID] = e
+				delete(entitiesMap, ent.ID)
+				entitiesMap[ent.ID] = ent
 			}
+		} else {
+			entitiesMap[e.ID] = e
 		}
 	}
 
@@ -123,5 +148,4 @@ func (albums albumJoinRows) Merge() []entity.Album {
 	}
 
 	return entities
-
 }

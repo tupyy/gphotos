@@ -33,6 +33,8 @@ type Album struct {
 	Photos []Media
 	// Videos - list of videos
 	Videos []Media
+	// Tags - list of tags
+	Tags []Tag
 }
 
 func (a Album) Validate() error {
@@ -64,6 +66,9 @@ func (a Album) String() string {
 		fmt.Fprintf(&sb, "group = %s, permisions = %+v ", k, v)
 	}
 
-	return sb.String()
+	for _, t := range a.Tags {
+		fmt.Fprintf(&sb, "tag: %s ", t.String())
+	}
 
+	return sb.String()
 }
