@@ -21,14 +21,19 @@ DB Table Details
 
 
 Table: albums_tags
-[ 0] user_id                                        TEXT                 null: false  primary: true   isArray: false  auto: false  col: TEXT            len: -1      default: []
-[ 1] album_id                                       INT4                 null: false  primary: true   isArray: false  auto: false  col: INT4            len: -1      default: []
-[ 2] tag_id                                         INT4                 null: false  primary: true   isArray: false  auto: false  col: INT4            len: -1      default: []
+[ 0] album_id                                       INT4                 null: false  primary: false  isArray: false  auto: false  col: INT4            len: -1      default: []
+[ 1] tag_id                                         INT4                 null: false  primary: false  isArray: false  auto: false  col: INT4            len: -1      default: []
 
 
 JSON Sample
 -------------------------------------
-{    "album_id": 87,    "tag_id": 39,    "user_id": "dKFzLsYueBjcpsiRwxLsntzNu"}
+{    "album_id": 11,    "tag_id": 55}
+
+
+Comments
+-------------------------------------
+[ 0] Warning table: albums_tags does not have a primary key defined, setting col position 1 album_id as primary key
+
 
 
 
@@ -36,12 +41,10 @@ JSON Sample
 
 // AlbumsTags struct is a row record of the albums_tags table in the gophoto database
 type AlbumsTags struct {
-	//[ 0] user_id                                        TEXT                 null: false  primary: true   isArray: false  auto: false  col: TEXT            len: -1      default: []
-	UserID string `gorm:"primary_key;column:user_id;type:TEXT;"`
-	//[ 1] album_id                                       INT4                 null: false  primary: true   isArray: false  auto: false  col: INT4            len: -1      default: []
+	//[ 0] album_id                                       INT4                 null: false  primary: true   isArray: false  auto: false  col: INT4            len: -1      default: []
 	AlbumID int32 `gorm:"primary_key;column:album_id;type:INT4;"`
-	//[ 2] tag_id                                         INT4                 null: false  primary: true   isArray: false  auto: false  col: INT4            len: -1      default: []
-	TagID int32 `gorm:"primary_key;column:tag_id;type:INT4;"`
+	//[ 1] tag_id                                         INT4                 null: false  primary: false  isArray: false  auto: false  col: INT4            len: -1      default: []
+	TagID int32 `gorm:"column:tag_id;type:INT4;"`
 }
 
 var albums_tagsTableInfo = &TableInfo{
@@ -49,31 +52,11 @@ var albums_tagsTableInfo = &TableInfo{
 	Columns: []*ColumnInfo{
 
 		&ColumnInfo{
-			Index:              0,
-			Name:               "user_id",
-			Comment:            ``,
-			Notes:              ``,
-			Nullable:           false,
-			DatabaseTypeName:   "TEXT",
-			DatabaseTypePretty: "TEXT",
-			IsPrimaryKey:       true,
-			IsAutoIncrement:    false,
-			IsArray:            false,
-			ColumnType:         "TEXT",
-			ColumnLength:       -1,
-			GoFieldName:        "UserID",
-			GoFieldType:        "string",
-			JSONFieldName:      "user_id",
-			ProtobufFieldName:  "user_id",
-			ProtobufType:       "",
-			ProtobufPos:        1,
-		},
-
-		&ColumnInfo{
-			Index:              1,
-			Name:               "album_id",
-			Comment:            ``,
-			Notes:              ``,
+			Index:   0,
+			Name:    "album_id",
+			Comment: ``,
+			Notes: `Warning table: albums_tags does not have a primary key defined, setting col position 1 album_id as primary key
+`,
 			Nullable:           false,
 			DatabaseTypeName:   "INT4",
 			DatabaseTypePretty: "INT4",
@@ -87,18 +70,18 @@ var albums_tagsTableInfo = &TableInfo{
 			JSONFieldName:      "album_id",
 			ProtobufFieldName:  "album_id",
 			ProtobufType:       "",
-			ProtobufPos:        2,
+			ProtobufPos:        1,
 		},
 
 		&ColumnInfo{
-			Index:              2,
+			Index:              1,
 			Name:               "tag_id",
 			Comment:            ``,
 			Notes:              ``,
 			Nullable:           false,
 			DatabaseTypeName:   "INT4",
 			DatabaseTypePretty: "INT4",
-			IsPrimaryKey:       true,
+			IsPrimaryKey:       false,
 			IsAutoIncrement:    false,
 			IsArray:            false,
 			ColumnType:         "INT4",
@@ -108,7 +91,7 @@ var albums_tagsTableInfo = &TableInfo{
 			JSONFieldName:      "tag_id",
 			ProtobufFieldName:  "tag_id",
 			ProtobufType:       "",
-			ProtobufPos:        3,
+			ProtobufPos:        2,
 		},
 	},
 }
