@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/guregu/null"
-	uuid "github.com/satori/go.uuid"
+	"github.com/satori/go.uuid"
 )
 
 var (
@@ -24,11 +24,12 @@ Table: tag
 [ 0] id                                             INT4                 null: false  primary: true   isArray: false  auto: false  col: INT4            len: -1      default: []
 [ 1] name                                           TEXT                 null: false  primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
 [ 2] color                                          TEXT                 null: true   primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
+[ 3] user_id                                        TEXT                 null: false  primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
 
 
 JSON Sample
 -------------------------------------
-{    "id": 37,    "name": "MifvWeLyklWdPsfECuyxzknfP",    "color": "trRIimFnVHiyYhTZUDjHwSIbJ"}
+{    "color": "aZbHVaFScXgVCrKfTJNEPhmlL",    "user_id": "dRqpAyEGkQmVNpSuyWsDCudic",    "id": 5,    "name": "cBnJZaiaJaiDKBOTKBvVOenHD"}
 
 
 
@@ -42,6 +43,8 @@ type Tag struct {
 	Name string `gorm:"column:name;type:TEXT;"`
 	//[ 2] color                                          TEXT                 null: true   primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
 	Color *string `gorm:"column:color;type:TEXT;"`
+	//[ 3] user_id                                        TEXT                 null: false  primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
+	UserID string `gorm:"column:user_id;type:TEXT;"`
 }
 
 var tagTableInfo = &TableInfo{
@@ -109,6 +112,27 @@ var tagTableInfo = &TableInfo{
 			ProtobufFieldName:  "color",
 			ProtobufType:       "",
 			ProtobufPos:        3,
+		},
+
+		&ColumnInfo{
+			Index:              3,
+			Name:               "user_id",
+			Comment:            ``,
+			Notes:              ``,
+			Nullable:           false,
+			DatabaseTypeName:   "TEXT",
+			DatabaseTypePretty: "TEXT",
+			IsPrimaryKey:       false,
+			IsAutoIncrement:    false,
+			IsArray:            false,
+			ColumnType:         "TEXT",
+			ColumnLength:       -1,
+			GoFieldName:        "UserID",
+			GoFieldType:        "string",
+			JSONFieldName:      "user_id",
+			ProtobufFieldName:  "user_id",
+			ProtobufType:       "",
+			ProtobufPos:        4,
 		},
 	},
 }

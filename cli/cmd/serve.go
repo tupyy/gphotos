@@ -32,10 +32,12 @@ import (
 	keycloakRepo "github.com/tupyy/gophoto/internal/domain/keycloak"
 	miniorepo "github.com/tupyy/gophoto/internal/domain/minio"
 	"github.com/tupyy/gophoto/internal/domain/postgres/album"
+	"github.com/tupyy/gophoto/internal/domain/postgres/tag"
 	"github.com/tupyy/gophoto/internal/domain/postgres/user"
 	"github.com/tupyy/gophoto/internal/entity"
 	albumService "github.com/tupyy/gophoto/internal/services/album"
 	"github.com/tupyy/gophoto/internal/services/media"
+	tagService "github.com/tupyy/gophoto/internal/services/tag"
 	usersService "github.com/tupyy/gophoto/internal/services/users"
 	"github.com/tupyy/gophoto/utils/logutil"
 	"github.com/tupyy/gophoto/utils/minioclient"
@@ -86,8 +88,12 @@ var serveCmd = &cobra.Command{
 		mediaService := media.New(repos[domain.MinioRepoName].(domain.Store))
 
 		albumRepo := repos[domain.AlbumRepoName].(domain.Album)
+		tagRepo := repos[domain.TagRepoName].(domain.Tag)
+
 		albumService := albumService.New(albumRepo, mediaService)
 		usersService := usersService.New(repos)
+		tagService := tagService.New(tagRepo)
+
 		logutil.GetDefaultLogger().Info("services created")
 
 		// create keycloak
@@ -98,7 +104,10 @@ var serveCmd = &cobra.Command{
 
 		api.Logout(r.PrivateGroup, keycloakAuthenticator)
 
-		api.Register(r.PrivateGroup, r.PublicGroup, albumService, mediaService, usersService)
+		api.RegisterIndexHandler(r.PrivateGroup, usersService)
+		api.RegisterAlbumHandler(r.PrivateGroup, albumService, usersService)
+		api.RegisterMediaHandler(r.PrivateGroup, albumService, mediaService)
+		api.RegisterTagHandler(r.PrivateGroup, tagService)
 
 		// run server
 		r.Run()
@@ -134,6 +143,15 @@ func createRepos(client pgclient.Client, mclient *minio.Client) (domain.Reposito
 		return repos, err
 	}
 	repos[domain.AlbumRepoName] = albumRepo
+
+	// create tag repo
+	tagRepo, err := tag.NewPostgresRepo(client)
+	if err != nil {
+		logutil.GetDefaultLogger().WithError(err).Warn("failed to create tag repo")
+
+		return repos, err
+	}
+	repos[domain.TagRepoName] = tagRepo
 
 	// create user repo
 	userRepo, err := user.NewPostgresRepo(client)

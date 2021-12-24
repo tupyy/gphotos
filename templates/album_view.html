@@ -212,6 +212,27 @@
                                 </div>
                             {{ end }}
                         </div>
+                        <div class="container container-tags">
+                            <div class="row row-title">
+                                <span class="title">Tags</span>
+                                {{ if or ( .edit_permission ) ( .is_owner ) }}
+                                    <button type="button" id="groupPermissionButton" class="btn btn-outline-primary btn-sm"><i class="fas fa-plus"></i></button>
+                                {{ end }}
+                            </div>
+                            <div class="row row-tags">
+                                {{ range $k,$v := .album.Tags }}
+                                    <div class="col-lg-2 col">
+                                        <span class="tag" style="background:{{ $v }}">
+                                            <i class="fas fa-tag"></i>
+                                            {{ $k }}
+                                            {{ if or ( $.edit_permission) ($.is_owner) }}
+                                                <button type="button" class="btn-close btn-close-white" aria-label="Close"></button>
+                                            {{ end }}
+                                        </span>
+                                    </div>
+                                {{ end }}
+                            </div>
+                        </div>
                     {{ end }}
                 </div>
             </div>

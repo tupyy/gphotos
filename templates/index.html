@@ -22,14 +22,14 @@
         <header>
             {{ template "header" . }}
         </header>
-        <!-- <div class="container"> -->
-        <!--     <div class="row"> -->
-        <!--         <div class="search-group input-group md-3"> -->
-        <!--             <span class="input-group-text" id="search-icon"><i class="fas fa-search"></i></span> -->
-        <!--             <input type="text" class="form-control" placeholder="Name, description, location ..."> -->
-        <!--         </div> -->
-        <!--     </div> -->
-        <!-- </div> -->
+        <div class="container">
+            <div class="row">
+                <div class="search-group input-group md-3">
+                    <span class="input-group-text" id="search-icon"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control" placeholder="Name, description, location ...">
+                </div>
+            </div>
+        </div>
         {{ if .alerts }}
             {{ range $k,$a := .alerts }}
                 {{ if $a.IsError }}

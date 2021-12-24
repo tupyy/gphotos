@@ -52,9 +52,12 @@ CREATE INDEX group_name_idx ON album_group_permissions (group_name);
 
 CREATE TABLE tag (
     id SERIAL PRIMARY KEY,
-    name TEXT NOT NULL,
+    name TEXT NOT NULL UNIQUE,
+    user_id TEXT NOT NULL,
     color TEXT 
 );
+
+CREATE INDEX tag_user_id_idx ON tag (user_id);
 
 CREATE TABLE albums_tags (
     album_id SERIAL REFERENCES album(id),

@@ -18,6 +18,7 @@ const (
 	AlbumRepoName
 	UserRepoName
 	MinioRepoName
+	TagRepoName
 )
 
 type KeycloakRepo interface {
@@ -69,4 +70,17 @@ type Store interface {
 	CreateBucket(ctx context.Context, bucket string) error
 	// DeleteBucket removes bucket.
 	DeleteBucket(ctx context.Context, bucket string) error
+}
+
+type Tag interface {
+	// Create -- create the tag.
+	Create(ctx context.Context, tag entity.Tag) (int32, error)
+	// Update -- update the tag.
+	Update(ctx context.Context, tag entity.Tag) error
+	// Delete -- delete the tag. it does not cascade.
+	Delete(ctx context.Context, id int32) error
+	// GetByName -- fetch the tag by name and user id.
+	GetByName(ctx context.Context, userID, name string) (entity.Tag, error)
+	// AssociateTag -- associates a tag with an album.
+	Associate(ctx context.Context, albumID, tagID int32) error
 }
