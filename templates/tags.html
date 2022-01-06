@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta content="width=device-width, initial-scale=1" name="viewport" />
+        {{ template "base_css" }}
+        <link rel="stylesheet" href="/static/css/tags.css"/>
+        {{ template "js" }}
+        <script src="/static/js/jscolor.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+        <title>Tags</title>
+    </head>
+    <header>
+        {{ template "header" . }}
+    </header>
+    <body>
+        <div class="container">
+            <div class="title">
+                <span class="col">Tags</span>
+            </div>
+            {{ if .tags }}
+                {{ range .tags }}
+                    <div class="row-tag">
+                        <div class="tag">
+                            <i class="fas fa-tag" style="color: {{.Color}}"></i>
+                            <span>{{.Name}}</span>
+                        </div>
+                        <div class="button">
+                            <button type="button" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-pencil-alt"></i>
+                            </button>
+                        </div>
+                        <div class="button">
+                            <button type="button" class="btn btn-outline-danger btn-sm">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                {{end}}
+            {{ else }}
+                <span class="col">No tags</span>
+            {{ end }}
+        </div>
+        <div class="container container-buttons">
+            <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addTag">Add</button>
+            <button type="button" class="btn btn-outline-danger btn-sm">Close</button>
+        </div>
+        <div class="modal fade" tabindex="-1" role="dialog" id="addTag">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">Add tag</h5>
+                  <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <form id="addTagForm">
+                    <div class="modal-body">
+                            <div class="form-group">
+                                <label for="tagName" class="form-label">Name</label>
+                                <input type="text" class="form-control" id="tagName" placeholder="Enter tag name" required></input>
+                            </div>
+                            <div class="form-group">
+                                <label for="tagColor" class="form-label">Color</label>
+                                <input type="text" class="form-control" data-jscolor="{position: 'bottom'}" id="tagColor" required></input>
+                            </div>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="submit" class="btn btn-primary">Save</button>
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </body>
+    <script>
+        jscolor.presets.default = {    
+                    position: 'right',    
+                    palette: [        
+                        '#000000', '#7d7d7d', '#870014', '#ec1c23', '#ff7e26',        
+                        '#fef100', '#22b14b', '#00a1e7', '#3f47cc', '#a349a4',        
+                        '#ffffff', '#c3c3c3', '#b87957', '#feaec9', '#ffc80d',        
+                        '#eee3af', '#b5e61d', '#99d9ea', '#7092be', '#c8bfe7',    
+                    ],    //paletteCols: 12,    //hideOnPaletteClick: true,};
+                }
+    </script>
+</html>

@@ -79,8 +79,12 @@ type Tag interface {
 	Update(ctx context.Context, tag entity.Tag) error
 	// Delete -- delete the tag. it does not cascade.
 	Delete(ctx context.Context, id int32) error
+	// GetByUser -- fetch all user's tags
+	GetByUser(ctx context.Context, userID string) ([]entity.Tag, error)
 	// GetByName -- fetch the tag by name and user id.
 	GetByName(ctx context.Context, userID, name string) (entity.Tag, error)
 	// AssociateTag -- associates a tag with an album.
 	Associate(ctx context.Context, albumID, tagID int32) error
+	// Dissociate -- removes a tag from an album.
+	Dissociate(ctx context.Context, albumID, tagID int32) error
 }

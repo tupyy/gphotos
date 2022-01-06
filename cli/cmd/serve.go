@@ -107,7 +107,7 @@ var serveCmd = &cobra.Command{
 		api.RegisterIndexHandler(r.PrivateGroup, usersService)
 		api.RegisterAlbumHandler(r.PrivateGroup, albumService, usersService)
 		api.RegisterMediaHandler(r.PrivateGroup, albumService, mediaService)
-		api.RegisterTagHandler(r.PrivateGroup, tagService)
+		api.RegisterTagHandler(r.PrivateGroup, albumService, tagService)
 
 		// run server
 		r.Run()

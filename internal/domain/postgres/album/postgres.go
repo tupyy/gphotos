@@ -183,11 +183,11 @@ func (a *AlbumPostgresRepo) Get(ctx context.Context, filters albumFilters.Filter
 	var albums albumJoinRows
 
 	tagSubQuery := a.db.WithContext(ctx).Table("tag").
-		Select("albums_tags.album_id, name, color").
+		Select("id, albums_tags.album_id, name, color").
 		Joins("JOIN albums_tags ON (albums_tags.tag_id = tag.id)")
 
 	tx := a.db.WithContext(ctx).Table("album").Table("tag").
-		Select(`album.*, tags.name as tag_name,tags.color as tag_color, album_user_permissions.permissions as user_permissions, album_user_permissions.user_id as user_id,
+		Select(`album.*, tags.id as tag_id, tags.name as tag_name,tags.color as tag_color, album_user_permissions.permissions as user_permissions, album_user_permissions.user_id as user_id,
 				album_group_permissions.permissions as group_permissions, album_group_permissions.group_name as group_name`).
 		Joins("LEFT JOIN album_user_permissions ON (album.id = album_user_permissions.album_id)").
 		Joins("LEFT JOIN album_group_permissions ON (album.id = album_group_permissions.album_id)").
@@ -218,17 +218,18 @@ func (a *AlbumPostgresRepo) GetByID(ctx context.Context, id int32) (entity.Album
 	var albums albumJoinRows
 
 	tagSubQuery := a.db.WithContext(ctx).Table("tag").
-		Select("albums_tags.album_id, name, color").
+		Select("id, albums_tags.album_id, name, color").
 		Joins("JOIN albums_tags ON (albums_tags.tag_id = tag.id)")
 
 	tx := a.db.WithContext(ctx).Table("album").
-		Select(`album.*, tags.name as tag_name,tags.color as tag_color, album_user_permissions.permissions as user_permissions, album_user_permissions.user_id as user_id,
+		Select(`album.*, tags.id as tag_id, tags.name as tag_name,tags.color as tag_color, album_user_permissions.permissions as user_permissions, album_user_permissions.user_id as user_id,
 				album_group_permissions.permissions as group_permissions, album_group_permissions.group_name as group_name`).
 		Joins("LEFT JOIN album_user_permissions ON (album.id = album_user_permissions.album_id)").
 		Joins("LEFT JOIN album_group_permissions ON (album.id = album_group_permissions.album_id)").
 		Joins("LEFT JOIN (?) as tags ON (tags.album_id = album.id)", tagSubQuery).
 		Where("album.id = ?", id).
 		Find(&albums)
+
 	if tx.Error != nil {
 		return entity.Album{}, fmt.Errorf("%w internal error: %v", repo.ErrInternalError, tx.Error)
 	}
@@ -250,11 +251,11 @@ func (a *AlbumPostgresRepo) GetByOwnerID(ctx context.Context, ownerID string, fi
 	var albums albumJoinRows
 
 	tagSubQuery := a.db.WithContext(ctx).Table("tag").
-		Select("albums_tags.album_id, name, color").
+		Select("id, albums_tags.album_id, name, color").
 		Joins("JOIN albums_tags ON (albums_tags.tag_id = tag.id)")
 
 	tx := a.db.WithContext(ctx).Table("album").
-		Select(`album.*, tags.name as tag_name,tags.color as tag_color, album_user_permissions.permissions as user_permissions, album_user_permissions.user_id as user_id,
+		Select(`album.*, tags.id as tag_id, tags.name as tag_name,tags.color as tag_color, album_user_permissions.permissions as user_permissions, album_user_permissions.user_id as user_id,
 				album_group_permissions.permissions as group_permissions, album_group_permissions.group_name as group_name`).
 		Joins("LEFT JOIN album_user_permissions ON (album.id = album_user_permissions.album_id)").
 		Joins("LEFT JOIN album_group_permissions ON (album.id = album_group_permissions.album_id)").
@@ -287,11 +288,11 @@ func (a *AlbumPostgresRepo) GetByUserID(ctx context.Context, userID string, filt
 	var albums albumJoinRows
 
 	tagSubQuery := a.db.WithContext(ctx).Table("tag").
-		Select("albums_tags.album_id, name, color").
+		Select("id, albums_tags.album_id, name, color").
 		Joins("JOIN albums_tags ON (albums_tags.tag_id = tag.id)")
 
 	tx := a.db.WithContext(ctx).Table("album").
-		Select(`album.*, tags.name as tag_name,tags.color as tag_color, album_user_permissions.permissions as user_permissions, album_user_permissions.user_id as user_id,
+		Select(`album.*, tags.id as tag_id, tags.name as tag_name,tags.color as tag_color, album_user_permissions.permissions as user_permissions, album_user_permissions.user_id as user_id,
 				album_group_permissions.permissions as group_permissions, album_group_permissions.group_name as group_name`).
 		Joins("LEFT JOIN album_user_permissions ON (album.id = album_user_permissions.album_id)").
 		Joins("LEFT JOIN album_group_permissions ON (album.id = album_group_permissions.album_id)").
@@ -324,11 +325,11 @@ func (a *AlbumPostgresRepo) GetByGroupName(ctx context.Context, groupName string
 	var albums albumJoinRows
 
 	tagSubQuery := a.db.WithContext(ctx).Table("tag").
-		Select("albums_tags.album_id, name, color").
+		Select("id, albums_tags.album_id, name, color").
 		Joins("JOIN albums_tags ON (albums_tags.tag_id = tag.id)")
 
 	tx := a.db.WithContext(ctx).Table("album").
-		Select(`album.*, tags.name as tag_name,tags.color as tag_color, album_user_permissions.permissions as user_permissions, album_user_permissions.user_id as user_id,
+		Select(`album.*, tags.id as tag_id, tags.name as tag_name,tags.color as tag_color, album_user_permissions.permissions as user_permissions, album_user_permissions.user_id as user_id,
 				album_group_permissions.permissions as group_permissions, album_group_permissions.group_name as group_name`).
 		Joins("LEFT JOIN album_user_permissions ON (album.id = album_user_permissions.album_id)").
 		Joins("LEFT JOIN album_group_permissions ON (album.id = album_group_permissions.album_id)").

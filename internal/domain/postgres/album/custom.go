@@ -19,6 +19,7 @@ type albumJoinRow struct {
 	Description      *string              `gorm:"column:description;type:TEXT;"`
 	Location         *string              `gorm:"column:location;type:TEXT;"`
 	Bucket           string               `gorm:"column:bucket;type:TEXT;"`
+	TagID            int32                `gorm:"column:tag_id;type:INT4"`
 	TagName          *string              `gorm:"column:tag_name;type:TEXT;"`
 	TagColor         *string              `gorm:"column:tag_color;tape:TEXT"`
 	Thumbnail        sql.NullString       `gorm:"column:thumbnail;type:VARCHAR;size:100;"`
@@ -91,9 +92,9 @@ func (ca albumJoinRow) ToEntity() (entity.Album, error) {
 		album.Tags = make([]entity.Tag, 0, 1)
 
 		if ca.TagColor != nil {
-			album.Tags = append(album.Tags, entity.Tag{Name: *ca.TagName, Color: ca.TagColor})
+			album.Tags = append(album.Tags, entity.Tag{ID: ca.TagID, Name: *ca.TagName, Color: ca.TagColor})
 		} else {
-			album.Tags = append(album.Tags, entity.Tag{Name: *ca.TagName})
+			album.Tags = append(album.Tags, entity.Tag{ID: ca.TagID, Name: *ca.TagName})
 		}
 	}
 

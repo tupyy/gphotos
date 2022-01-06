@@ -144,6 +144,8 @@
     text-align: right;
     border-radius: 10px;
     margin-bottom: 3px;
+    width: fit-content;
+    justify-self: end;
 }
 
 .container-album-card .album-image .row-tags span i {

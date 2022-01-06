@@ -133,6 +133,7 @@ func generateFilters(c *gin.Context) []album.Predicate {
 	predicates := make([]album.Predicate, 0, 3)
 
 	logger := logutil.GetLogger(c)
+	gen := encryption.NewGenerator(conf.GetEncryptionKey())
 
 	if c.Query("start_date") != "" {
 		if startDate, err := time.Parse("02/01/2006", c.Query("start_date")); err != nil {
@@ -154,7 +155,6 @@ func generateFilters(c *gin.Context) []album.Predicate {
 
 	owners := c.QueryArray("owner")
 	if len(owners) > 0 {
-		gen := encryption.NewGenerator(conf.GetEncryptionKey())
 
 		ownerIDs := make([]string, 0, len(owners))
 		for _, o := range owners {
@@ -170,6 +170,18 @@ func generateFilters(c *gin.Context) []album.Predicate {
 		}
 
 		f := album.Owner(ownerIDs)
+		predicates = append(predicates, f)
+	}
+
+	tagParameter := c.QueryArray("tag")
+	if len(tagParameter) > 0 {
+		tags := make([]string, 0, len(tagParameter))
+
+		for _, tag := range tagParameter {
+			tags = append(tags, tag)
+		}
+
+		f := album.Tags(tags)
 		predicates = append(predicates, f)
 	}
 

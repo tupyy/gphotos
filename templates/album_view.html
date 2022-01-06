@@ -19,6 +19,7 @@
             <script src="/static/js/album/alert.js"></script>
             <script src="/static/js/album/spinner.js"></script>
             <script src="/static/js/album/gallery.js"></script>
+            <script src="/static/js/album/tags.js"></script>
         {{ else }}
             <script src="/static/js/album/gallery-without-edit.js"></script>
         {{ end }}
@@ -216,15 +217,20 @@
                             <div class="row row-title">
                                 <span class="title">Tags</span>
                                 {{ if or ( .edit_permission ) ( .is_owner ) }}
-                                    <button type="button" id="groupPermissionButton" class="btn btn-outline-primary btn-sm"><i class="fas fa-plus"></i></button>
+                                    <div class="tag-buttons">
+                                        <button type="button" class="btn btn-outline-primary btn-sm"><i class="fas fa-plus"></i></button>
+                                        <a type="button" href="/tags" class="btn btn-outline-primary btn-sm"><i class="fas fa-cog"></i></a>
+                                    </div>
                                 {{ end }}
                             </div>
                             <div class="row row-tags">
                                 {{ range $k,$v := .album.Tags }}
                                     <div class="col-lg-2 col">
-                                        <span class="tag" style="background:{{ $v }}">
+                                        <span class="tag" style="background:{{ $v.Color }}">
+                                            <input type="hidden" id="tagID" value="{{$k}}"/>
+                                            <input type="hidden" id="albumID" value="{{$.album.ID}}"/>
                                             <i class="fas fa-tag"></i>
-                                            {{ $k }}
+                                            {{ $v.Name }}
                                             {{ if or ( $.edit_permission) ($.is_owner) }}
                                                 <button type="button" class="btn-close btn-close-white" aria-label="Close"></button>
                                             {{ end }}

@@ -5,9 +5,10 @@ import (
 	"github.com/tupyy/gophoto/internal/api/album"
 	"github.com/tupyy/gophoto/internal/api/index"
 	"github.com/tupyy/gophoto/internal/api/media"
+	"github.com/tupyy/gophoto/internal/api/tag"
 	albumService "github.com/tupyy/gophoto/internal/services/album"
 	mediaService "github.com/tupyy/gophoto/internal/services/media"
-	"github.com/tupyy/gophoto/internal/services/tag"
+	tagService "github.com/tupyy/gophoto/internal/services/tag"
 	"github.com/tupyy/gophoto/internal/services/users"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
@@ -43,4 +44,9 @@ func RegisterMediaHandler(privateGroup *gin.RouterGroup, as *albumService.Servic
 	logutil.GetDefaultLogger().Info("api media registered")
 }
 
-func RegisterTagHandler(privateGroup *gin.RouterGroup, t *tag.Service) {}
+func RegisterTagHandler(privateGroup *gin.RouterGroup, as *albumService.Service, t *tagService.Service) {
+	tag.Dissociate(privateGroup, as, t)
+	tag.Get(privateGroup, t)
+
+	logutil.GetDefaultLogger().Info("api tag registered")
+}

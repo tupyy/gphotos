@@ -15,6 +15,7 @@ import (
 	"github.com/gorilla/csrf"
 	"github.com/sirupsen/logrus"
 	"github.com/tupyy/gophoto/internal/api/dto"
+	"github.com/tupyy/gophoto/internal/api/utils"
 	"github.com/tupyy/gophoto/internal/common"
 	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/entity"
@@ -33,7 +34,7 @@ const (
 // TODO fix the error management. it totally crap.
 // GET /album/:id
 func GetAlbum(r *gin.RouterGroup, albumService *album.Service, usersService *users.Service) {
-	r.GET("/album/:id", parseAlbumIDHandler, func(c *gin.Context) {
+	r.GET("/album/:id", utils.ParseAlbumIDHandler, func(c *gin.Context) {
 		s, _ := c.Get("sessionData")
 		session := s.(entity.Session)
 
@@ -290,7 +291,7 @@ func CreateAlbum(r *gin.RouterGroup, albumService *album.Service) {
 
 // GET /album/:id/edit
 func GetUpdateAlbumForm(r *gin.RouterGroup, albumService *album.Service, usersService *users.Service) {
-	r.GET("/album/:id/edit", parseAlbumIDHandler, func(c *gin.Context) {
+	r.GET("/album/:id/edit", utils.ParseAlbumIDHandler, func(c *gin.Context) {
 		s, _ := c.Get("sessionData")
 		session := s.(entity.Session)
 
@@ -403,7 +404,7 @@ func GetUpdateAlbumForm(r *gin.RouterGroup, albumService *album.Service, usersSe
 
 // PUT /album/:id/
 func UpdateAlbum(r *gin.RouterGroup, albumService *album.Service) {
-	r.POST("/album/:id/", parseAlbumIDHandler, func(c *gin.Context) {
+	r.POST("/album/:id/", utils.ParseAlbumIDHandler, func(c *gin.Context) {
 		s, _ := c.Get("sessionData")
 		session := s.(entity.Session)
 
@@ -507,7 +508,7 @@ func UpdateAlbum(r *gin.RouterGroup, albumService *album.Service) {
 
 // DELETE /album/:id
 func DeleteAlbum(r *gin.RouterGroup, albumService *album.Service) {
-	r.GET("/album/:id/delete", parseAlbumIDHandler, func(c *gin.Context) {
+	r.GET("/album/:id/delete", utils.ParseAlbumIDHandler, func(c *gin.Context) {
 		s, _ := c.Get("sessionData")
 		session := s.(entity.Session)
 
@@ -563,7 +564,7 @@ func DeleteAlbum(r *gin.RouterGroup, albumService *album.Service) {
 }
 
 func Thumbnail(r *gin.RouterGroup, albumService *album.Service) {
-	r.POST("/api/albums/:id/album/thumbnail", parseAlbumIDHandler, func(c *gin.Context) {
+	r.POST("/api/albums/:id/album/thumbnail", utils.ParseAlbumIDHandler, func(c *gin.Context) {
 		s, _ := c.Get("sessionData")
 		session := s.(entity.Session)
 

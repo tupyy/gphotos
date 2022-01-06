@@ -26,7 +26,8 @@
             <div class="row">
                 <div class="search-group input-group md-3">
                     <span class="input-group-text" id="search-icon"><i class="fas fa-search"></i></span>
-                    <input type="text" class="form-control" placeholder="Name, description, location ...">
+                    <input type="text" class="form-control" id="searchBar" placeholder="Tags" autocomplete="off">
+                    <button class="input-group-text hidden"><i class="far fa-times-circle"></i></button>
                 </div>
             </div>
         </div>
@@ -89,7 +90,6 @@
                             </div>
                         </div>
                     </div>
-                    {{ if .users }}
                         <div class="row row-filter">
                             <span class="title">Shared by others</span>
                             <div class="container" id="ownerFilter">
@@ -101,7 +101,6 @@
                                 {{ end }}
                             </div>
                         </div>
-                    {{ end }}
                 </div>
                 <div class="col-sm-9 col-md-12 col-lg-10 col-12 custom-col albums-col">
                     <div class="row justify-content-between sort-row">

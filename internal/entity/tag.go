@@ -10,6 +10,8 @@ type Tag struct {
 	Name string
 	// Color - color of the tag (optional)
 	Color *string
+	// Albums -- list of associated albums
+	Albums []int32
 }
 
 func (t Tag) String() string {

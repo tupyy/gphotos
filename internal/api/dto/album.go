@@ -3,7 +3,6 @@ package dto
 import (
 	"fmt"
 
-	"github.com/sirupsen/logrus"
 	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/utils/encryption"
@@ -23,7 +22,7 @@ type Album struct {
 	Photos      []Media `json:"photos"`
 	Videos      []Media `json:"videos"`
 	// Tags - map with tag name as key and color as value
-	Tags map[string]string `json:"tags"`
+	Tags []Tag `json:"tags"`
 }
 
 type Media struct {
@@ -99,20 +98,17 @@ func NewAlbumDTO(a entity.Album, owner entity.User) (Album, error) {
 		}
 	}
 
-	tags := make(map[string]string)
+	tags := make([]Tag, 0, len(a.Tags))
 	for _, t := range a.Tags {
-		color := ""
-		if t.Color != nil {
-			color = *t.Color
+		dto, err := NewTagDTO(t)
+		if err != nil {
+			logutil.GetDefaultLogger().WithField("tag", t.String()).WithError(err).Error("create tag dto")
+
+			continue
 		}
 
-		tags[t.Name] = color
+		tags = append(tags, dto)
 	}
-
-	logutil.GetDefaultLogger().WithFields(logrus.Fields{
-		"id":           a.ID,
-		"encrypted_id": encryptedID,
-	}).Trace("encrypt album id")
 
 	thumbnail := "/static/img/image_not_available.png"
 	if len(a.Thumbnail) > 0 {

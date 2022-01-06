@@ -1,0 +1,127 @@
+.container {
+    margin: 20px auto 20px 20px;
+    max-width: 400px;
+}
+
+.container .row-tag {
+    display: grid;
+    margin-bottom: 5px;
+    grid-template-columns: auto 2rem 2rem;
+    column-gap: 5px;
+}
+
+.container .title {
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+}
+
+.container .row-tag .tag {
+    align-self: center;
+}
+
+
+.container .row-tag .button {
+    padding: 0;
+}
+
+.container .row-tag .button .btn {
+    border-radius: 20px;
+}
+
+.container .row-tag .btn.btn-outline-primary {
+    color: deepskyblue;
+    border-color: deepskyblue !important;
+}
+
+.container .row-tag .btn-outline-primary:hover, ii.btn-outline-primary:focus {
+    background-color: deepskyblue !important;
+    color: white !important;
+    border-color: deepskyblue !important;
+}
+
+.container-buttons {
+    display: flex;
+    justify-content: right;
+    margin-top: 30px;
+}
+
+.container-buttons .btn {
+    width: 100px;
+    border-radius: 20px;
+}
+
+.container-buttons .btn:first-child {
+    margin-right: 20px;
+}
+
+.container-buttons .btn.btn-outline-primary {
+    color: deepskyblue;
+    background-color: transparent;
+    border-color: deepskyblue;
+}
+
+.container-buttons .btn.btn-outline-primary.btn-sm:hover {
+    color: black;
+    background-color: deepskyblue;
+    border-color: silver;
+}
+
+.container-buttons .btn.btn-outline-primary.btn-sm:focus {
+    box-shadow: 0 0 0;
+}
+
+.modal {
+    color: black;
+}
+
+.modal .modal-content {
+    background: #2a2f34;
+    color: silver;
+    border-color: silver;
+}
+
+.modal .modal-content input {
+    border-color: silver;
+    background: #202327;
+    color: silver;
+}
+
+.modal .modal-content input:focus {
+    box-shadow: 0 0 0 .1rem silver;
+    outline: 0;
+}
+
+.modal .modal-body .form-group:last-child {
+    margin-top: 15px;
+}
+
+.modal .modal-header .close {
+    background: transparent;
+    border: none;
+    color: silver;
+}
+
+.modal .modal-footer .btn-primary {
+    background: #2ea54f;
+    border-color: #2ea54f; 
+    color: white;
+}
+
+@media all and (max-width: 576px) {
+    .container {
+        max-width: unset;
+        margin: 20px auto 20px auto;
+    }
+
+    .container .title {
+       font-size: 0.9rem; 
+    }
+
+    .container .row-tag {
+        font-size: 0.8rem;
+    }
+    
+    .container .row-tag .btn{
+        font-size: 0.8rem;    
+    }
+}

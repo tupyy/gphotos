@@ -9,6 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	"github.com/tupyy/gophoto/internal/api/utils"
 	"github.com/tupyy/gophoto/internal/common"
 	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/internal/services/album"
@@ -18,7 +19,7 @@ import (
 )
 
 func GetAlbumMedia(r *gin.RouterGroup, albumService *album.Service, mediaService *media.Service) {
-	r.GET("/api/albums/:id/album/media", parseAlbumIDHandler, func(c *gin.Context) {
+	r.GET("/api/albums/:id/album/media", utils.ParseAlbumIDHandler, func(c *gin.Context) {
 		s, _ := c.Get("sessionData")
 		session := s.(entity.Session)
 
@@ -68,7 +69,7 @@ func GetAlbumMedia(r *gin.RouterGroup, albumService *album.Service, mediaService
 }
 
 func DownloadMedia(r *gin.RouterGroup, albumService *album.Service, mediaService *media.Service) {
-	r.GET("/api/albums/:id/album/:media/media", parseAlbumIDHandler, parseMediaFilenameHandler, func(c *gin.Context) {
+	r.GET("/api/albums/:id/album/:media/media", utils.ParseAlbumIDHandler, parseMediaFilenameHandler, func(c *gin.Context) {
 		s, _ := c.Get("sessionData")
 		session := s.(entity.Session)
 

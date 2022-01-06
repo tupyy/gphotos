@@ -27,3 +27,15 @@ func PermissionName(p entity.Permission) string {
 func Date(t time.Time) string {
 	return t.Format(time.RFC1123Z)
 }
+
+func TagName(tag []string) string {
+	return tag[0]
+}
+
+func TagColor(tag []string) string {
+	if len(tag) == 2 && tag[1] != "" {
+		return tag[1]
+	}
+
+	return "black"
+}
