@@ -3,7 +3,8 @@
     <head>
         <meta content="width=device-width, initial-scale=1" name="viewport" />
         {{ template "base_css" }}
-        <link rel="stylesheet" href="/static/css/album-view.css"/>
+        <link rel="stylesheet" href="/static/css/album/album-view.css"/>
+        <link rel="stylesheet" href="/static/css/album/modal.css"/>
         <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.2.1/css/lightgallery-bundle.min.css" />
         {{ if .write_permission }}
             <link rel="stylesheet" href="/static/css/upload/fileui.css"/>
@@ -15,7 +16,7 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.2.1/plugins/thumbnail/lg-thumbnail.umd.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/js/jquery.justifiedGallery.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-        {{ if or .edit_permissions .is_owner }}
+        {{ if or .edit_permission .is_owner }}
             <script src="/static/js/album/alert.js"></script>
             <script src="/static/js/album/spinner.js"></script>
             <script src="/static/js/album/gallery.js"></script>
@@ -51,7 +52,7 @@
                             </div>
                     {{ else }}
                         {{ if .album.Photos }}
-                            {{ if or .edit_permissions .is_owner }}
+                            {{ if or .edit_permission .is_owner }}
                             <div class="row row-edit-tools">
                                 <div class="col-12 col-sm-2">
                                     <div class="form-check form-switch">
@@ -213,33 +214,40 @@
                                 </div>
                             {{ end }}
                         </div>
+                    {{ end }}
                         <div class="container container-tags">
                             <div class="row row-title">
                                 <span class="title">Tags</span>
-                                {{ if or ( .edit_permission ) ( .is_owner ) }}
+                                {{ if or .edit_permission .is_owner }}
                                     <div class="tag-buttons">
-                                        <button type="button" class="btn btn-outline-primary btn-sm"><i class="fas fa-plus"></i></button>
+                                        <button type="button" class="btn btn-outline-primary btn-sm btn-associate"><i class="fas fa-plus"></i></button>
                                         <a type="button" href="/tags" class="btn btn-outline-primary btn-sm"><i class="fas fa-cog"></i></a>
                                     </div>
                                 {{ end }}
                             </div>
                             <div class="row row-tags">
-                                {{ range $k,$v := .album.Tags }}
-                                    <div class="col-lg-2 col">
-                                        <span class="tag" style="background:{{ $v.Color }}">
-                                            <input type="hidden" id="tagID" value="{{$k}}"/>
-                                            <input type="hidden" id="albumID" value="{{$.album.ID}}"/>
-                                            <i class="fas fa-tag"></i>
-                                            {{ $v.Name }}
-                                            {{ if or ( $.edit_permission) ($.is_owner) }}
-                                                <button type="button" class="btn-close btn-close-white" aria-label="Close"></button>
-                                            {{ end }}
-                                        </span>
+                            </div>
+                            <div class="modal fade" tabindex="-1" role="dialog" id="addTag">
+                                <div class="modal-dialog" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Add tag</h5>
+                                            <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                                                <span aria-hidden="true">&times;</span>
+                                            </button>
+                                        </div>
+                                        <form id="addTagForm">
+                                            <div class="modal-body">
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="submit" id="submitButton" class="btn btn-primary">Save</button>
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            </div>
+                                        </form>
                                     </div>
-                                {{ end }}
+                                </div>
                             </div>
                         </div>
-                    {{ end }}
                 </div>
             </div>
             <div class="tab-pane fade" id="settings" role="tabpanel" aria-labelledby="settings-tab">
@@ -301,6 +309,5 @@
                 </div>
             </div>
         </div>
-    </div>
     </body>
 </html>

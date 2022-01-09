@@ -3,7 +3,6 @@ package tag
 import (
 	"context"
 
-	"github.com/lib/pq"
 	"github.com/tupyy/gophoto/internal/domain/models"
 	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/utils/pgclient"
@@ -44,6 +43,7 @@ func (t *TagRepo) Create(ctx context.Context, tag entity.Tag) (int32, error) {
 
 func (t *TagRepo) Update(ctx context.Context, tag entity.Tag) error {
 	tagModel := models.Tag{
+		ID:     tag.ID,
 		UserID: tag.UserID,
 		Name:   tag.Name,
 		Color:  tag.Color,
@@ -62,15 +62,14 @@ func (t *TagRepo) Delete(ctx context.Context, id int32) error {
 
 func (t *TagRepo) GetByUser(ctx context.Context, userID string) ([]entity.Tag, error) {
 	pgModels := []struct {
-		ID       int32         `gorm:"primary_key;column:id;type:INT4;"`
-		Name     string        `gorm:"column:name;type:TEXT;"`
-		Color    *string       `gorm:"column:color;type:TEXT;"`
-		UserID   string        `gorm:"column:user_id;type:TEXT;"`
-		AlbumIDs pq.Int64Array `gorm:"column:album_ids;type:integer[];"`
+		ID     int32   `gorm:"primary_key;column:id;type:INT4;"`
+		Name   string  `gorm:"column:name;type:TEXT;"`
+		Color  *string `gorm:"column:color;type:TEXT;"`
+		UserID string  `gorm:"column:user_id;type:TEXT;"`
 	}{}
 
 	tx := t.db.WithContext(ctx).Table("tag").
-		Select("id, name, user_id, color, array_agg(at.album_id) album_ids").
+		Select("id, name, user_id, color").
 		Joins("LEFT JOIN albums_tags as at ON at.tag_id = tag.id").
 		Group("id").
 		Where("user_id = ?", userID).Find(&pgModels)
@@ -101,15 +100,14 @@ func (t *TagRepo) GetByUser(ctx context.Context, userID string) ([]entity.Tag, e
 
 func (t *TagRepo) GetByName(ctx context.Context, userID, name string) (entity.Tag, error) {
 	pgModel := struct {
-		ID       int32   `gorm:"primary_key;column:id;type:INT4;"`
-		Name     string  `gorm:"column:name;type:TEXT;"`
-		Color    *string `gorm:"column:color;type:TEXT;"`
-		UserID   string  `gorm:"column:user_id;type:TEXT;"`
-		AlbumIDs []int32 `gorm:"column:album_ids;type:INT4;"`
+		ID     int32   `gorm:"primary_key;column:id;type:INT4;"`
+		Name   string  `gorm:"column:name;type:TEXT;"`
+		Color  *string `gorm:"column:color;type:TEXT;"`
+		UserID string  `gorm:"column:user_id;type:TEXT;"`
 	}{}
 
 	tx := t.db.WithContext(ctx).Table("tag").
-		Select("id, name, user_id, color, array_agg(at.album_id) album_ids").
+		Select("id, name, user_id, color").
 		Joins("LEFT JOIN albums_tags as at ON at.tag_id = tag.id").
 		Where("user_id = ?", userID).
 		Where("name = ?", name).
@@ -127,11 +125,78 @@ func (t *TagRepo) GetByName(ctx context.Context, userID, name string) (entity.Ta
 		UserID: pgModel.UserID,
 	}
 
-	if len(pgModel.AlbumIDs) > 0 {
-		copy(tag.Albums, pgModel.AlbumIDs)
-	}
+	// if len(pgModel.AlbumIDs) > 0 {
+	// 	copy(tag.Albums, pgModel.AlbumIDs)
+	// }
 
 	return tag, nil
+}
+
+func (t *TagRepo) GetByID(ctx context.Context, userID string, id int32) (entity.Tag, error) {
+	pgModel := struct {
+		ID     int32   `gorm:"primary_key;column:id;type:INT4;"`
+		Name   string  `gorm:"column:name;type:TEXT;"`
+		Color  *string `gorm:"column:color;type:TEXT;"`
+		UserID string  `gorm:"column:user_id;type:TEXT;"`
+	}{}
+
+	tx := t.db.WithContext(ctx).Table("tag").
+		Select("id, name, user_id, color").
+		Joins("LEFT JOIN albums_tags as at ON at.tag_id = tag.id").
+		Where("id = ?", id).
+		Where("user_id = ?", userID).
+		First(&pgModel)
+
+	if tx.Error != nil {
+		return entity.Tag{}, tx.Error
+	}
+
+	tag := entity.Tag{
+		ID:     pgModel.ID,
+		Name:   pgModel.Name,
+		Color:  pgModel.Color,
+		UserID: pgModel.UserID,
+	}
+
+	// if len(pgModel.AlbumIDs) > 0 {
+	// 	copy(tag.Albums, pgModel.AlbumIDs)
+	// }
+
+	return tag, nil
+}
+
+func (t *TagRepo) GetByAlbum(ctx context.Context, albumID int32) ([]entity.Tag, error) {
+	pgModels := []struct {
+		ID     int32   `gorm:"primary_key;column:id;type:INT4;"`
+		Name   string  `gorm:"column:name;type:TEXT;"`
+		Color  *string `gorm:"column:color;type:TEXT;"`
+		UserID string  `gorm:"column:user_id;type:TEXT;"`
+	}{}
+
+	tx := t.db.WithContext(ctx).Table("tag").
+		Select("id, name, user_id, color").
+		Joins("LEFT JOIN albums_tags as at ON at.tag_id = tag.id").
+		Where("album_id = ?", albumID).
+		Find(&pgModels)
+
+	if tx.Error != nil {
+		return []entity.Tag{}, tx.Error
+	}
+
+	tags := make([]entity.Tag, 0, len(pgModels))
+
+	for _, m := range pgModels {
+		tag := entity.Tag{
+			ID:     m.ID,
+			Name:   m.Name,
+			Color:  m.Color,
+			UserID: m.UserID,
+		}
+
+		tags = append(tags, tag)
+	}
+
+	return tags, nil
 }
 
 func (t *TagRepo) Associate(ctx context.Context, albumID, tagID int32) error {

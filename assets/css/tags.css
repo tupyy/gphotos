@@ -123,5 +123,15 @@
     
     .container .row-tag .btn{
         font-size: 0.8rem;    
+        padding-top: 0.2rem;
+        padding-bottom: 0.2rem;
+    }
+
+    .container-buttons .btn {
+        font-size: 0.8rem;    
+        padding-top: 0.2rem;
+        padding-bottom: 0.2rem;
+        width: 80px;
     }
 }
+

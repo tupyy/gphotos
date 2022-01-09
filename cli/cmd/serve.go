@@ -105,7 +105,7 @@ var serveCmd = &cobra.Command{
 		api.Logout(r.PrivateGroup, keycloakAuthenticator)
 
 		api.RegisterIndexHandler(r.PrivateGroup, usersService)
-		api.RegisterAlbumHandler(r.PrivateGroup, albumService, usersService)
+		api.RegisterAlbumHandler(r.PrivateGroup, albumService, usersService, tagService)
 		api.RegisterMediaHandler(r.PrivateGroup, albumService, mediaService)
 		api.RegisterTagHandler(r.PrivateGroup, albumService, tagService)
 

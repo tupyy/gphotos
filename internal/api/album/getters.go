@@ -8,11 +8,15 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 	"github.com/tupyy/gophoto/internal/api/dto"
+	"github.com/tupyy/gophoto/internal/api/utils"
 	"github.com/tupyy/gophoto/internal/common"
 	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/internal/services/album"
+	"github.com/tupyy/gophoto/internal/services/permissions"
+	"github.com/tupyy/gophoto/internal/services/tag"
 	"github.com/tupyy/gophoto/internal/services/users"
 	"github.com/tupyy/gophoto/utils/encryption"
 	"github.com/tupyy/gophoto/utils/logutil"
@@ -86,6 +90,72 @@ func GetAlbums(r *gin.RouterGroup, albumService *album.Service, usersService *us
 		})
 
 		return
+	})
+}
+
+func GetAlbumsTags(r *gin.RouterGroup, albumService *album.Service, tagService *tag.Service) {
+	r.GET("/api/albums/:id/tags", utils.ParseAlbumIDHandler, func(c *gin.Context) {
+		s, _ := c.Get("sessionData")
+		session := s.(entity.Session)
+
+		ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
+		logger := logutil.GetLogger(ctx)
+
+		album, err := albumService.Query().First(ctx, int32(c.GetInt("id")))
+		if err != nil {
+			logger.WithError(err).WithField("id", c.GetInt("id")).Error("album not found")
+			common.AbortNotFound(c, err, "failed to album")
+
+			return
+		}
+
+		// check permissions to this album
+		ats := permissions.NewAlbumPermissionService()
+		hasPermission := ats.Policy(permissions.OwnerPolicy{}).
+			Policy(permissions.RolePolicy{Role: entity.RoleAdmin}).
+			Policy(permissions.AnyUserPermissionPolicty{}).
+			Policy(permissions.AnyGroupPermissionPolicy{}).
+			Strategy(permissions.AtLeastOneStrategy).
+			Resolve(album, session.User)
+
+		if !hasPermission {
+			logger.WithFields(logrus.Fields{
+				"album_id": album.ID,
+				"user_id":  session.User.ID,
+			}).Error("user has no permissions to access this album")
+
+			common.AbortForbiddenWithJson(c, common.NewMissingPermissionError(entity.PermissionReadAlbum, album, session.User), "user has no permission for the album")
+
+			return
+		}
+
+		tags, err := tagService.GetByAlbum(ctx, album.ID)
+		if err != nil {
+			logger.WithError(err).WithFields(logrus.Fields{
+				"album_id": album.ID,
+				"user_id":  session.User.ID,
+			}).Error("fetch tags for album")
+
+			common.AbortInternalErrorWithJson(c)
+
+			return
+		}
+
+		dtos := make([]dto.Tag, 0, len(tags))
+		for _, tag := range tags {
+			dto, err := dto.NewTagDTO(tag)
+			if err != nil {
+				logger.WithError(err).WithField("tag", tag.String()).Warn("create tag dto")
+
+				continue
+			}
+
+			dtos = append(dtos, dto)
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"tags": dtos,
+		})
 	})
 }
 

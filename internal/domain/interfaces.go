@@ -83,6 +83,10 @@ type Tag interface {
 	GetByUser(ctx context.Context, userID string) ([]entity.Tag, error)
 	// GetByName -- fetch the tag by name and user id.
 	GetByName(ctx context.Context, userID, name string) (entity.Tag, error)
+	// GetByID -- fetch the tag by id
+	GetByID(ctx context.Context, userID string, id int32) (entity.Tag, error)
+	// GetByAlbum -- fetch all user's tag for the album
+	GetByAlbum(ctx context.Context, albumID int32) ([]entity.Tag, error)
 	// AssociateTag -- associates a tag with an album.
 	Associate(ctx context.Context, albumID, tagID int32) error
 	// Dissociate -- removes a tag from an album.

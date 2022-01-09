@@ -46,7 +46,6 @@ let queryParams = {
             reqUrl = reqUrl + '&sort=' + this.sort;
         }
 
-
         // add offset
         reqUrl = reqUrl + '&offset=' + store.offset;
 

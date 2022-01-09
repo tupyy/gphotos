@@ -19,14 +19,15 @@ func RegisterIndexHandler(privateGroup *gin.RouterGroup, us *users.Service) {
 	logutil.GetDefaultLogger().Info("index controller registered")
 }
 
-func RegisterAlbumHandler(privateGroup *gin.RouterGroup, as *albumService.Service, us *users.Service) {
+func RegisterAlbumHandler(privateGroup *gin.RouterGroup, as *albumService.Service, us *users.Service, t *tagService.Service) {
 
 	// register album api
 	album.GetAlbums(privateGroup, as, us)
+	album.GetAlbumsTags(privateGroup, as, t)
 	logutil.GetDefaultLogger().Info("api album registered")
 
 	// album handlers
-	album.GetAlbum(privateGroup, as, us)
+	album.GetAlbum(privateGroup, as, us, t)
 	album.GetCreateAlbumForm(privateGroup, us)
 	album.GetUpdateAlbumForm(privateGroup, as, us)
 	album.CreateAlbum(privateGroup, as)
@@ -45,8 +46,11 @@ func RegisterMediaHandler(privateGroup *gin.RouterGroup, as *albumService.Servic
 }
 
 func RegisterTagHandler(privateGroup *gin.RouterGroup, as *albumService.Service, t *tagService.Service) {
-	tag.Dissociate(privateGroup, as, t)
 	tag.Get(privateGroup, t)
+	tag.Crud(privateGroup, t)
+
+	tag.Dissociate(privateGroup, as, t)
+	tag.Associate(privateGroup, as, t)
 
 	logutil.GetDefaultLogger().Info("api tag registered")
 }

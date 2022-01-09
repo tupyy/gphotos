@@ -5,7 +5,9 @@
         {{ template "base_css" }}
         <link rel="stylesheet" href="/static/css/tags.css"/>
         {{ template "js" }}
+        <script src="/static/js/album/alert.js"></script>
         <script src="/static/js/jscolor.js"></script>
+        <script src="/static/js/tags/tags.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
         <title>Tags</title>
     </head>
@@ -20,12 +22,13 @@
             {{ if .tags }}
                 {{ range .tags }}
                     <div class="row-tag">
+                        <input type="hidden" value="{{.ID}}"/>
                         <div class="tag">
                             <i class="fas fa-tag" style="color: {{.Color}}"></i>
                             <span>{{.Name}}</span>
                         </div>
                         <div class="button">
-                            <button type="button" class="btn btn-outline-primary btn-sm">
+                            <button type="button" class="btn btn-outline-primary btn-sm btn-edit-tag">
                                 <i class="fas fa-pencil-alt"></i>
                             </button>
                         </div>
@@ -41,7 +44,7 @@
             {{ end }}
         </div>
         <div class="container container-buttons">
-            <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addTag">Add</button>
+            <button type="button" id="addTagButton" class="btn btn-outline-primary btn-sm">Add</button>
             <button type="button" class="btn btn-outline-danger btn-sm">Close</button>
         </div>
         <div class="modal fade" tabindex="-1" role="dialog" id="addTag">
@@ -53,11 +56,15 @@
                     <span aria-hidden="true">&times;</span>
                   </button>
                 </div>
-                <form id="addTagForm">
+                <form id="addTagForm" class="needs-validation">
                     <div class="modal-body">
-                            <div class="form-group">
+                            <input type="hidden" id="tagID" value=""/>
+                            <div class="form-group has-validation">
                                 <label for="tagName" class="form-label">Name</label>
-                                <input type="text" class="form-control" id="tagName" placeholder="Enter tag name" required></input>
+                                <input type="text" class="form-control" id="tagName" placeholder="Enter tag name" autocomplete="off" required></input>
+                                <div id="tagNameFeedback" class="invalid-feedback">
+                                    Please enter a name.
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label for="tagColor" class="form-label">Color</label>
@@ -65,22 +72,11 @@
                             </div>
                     </div>
                     <div class="modal-footer">
-                      <button type="submit" class="btn btn-primary">Save</button>
+                      <button type="submit" id="submitButton" class="btn btn-primary">Save</button>
                       <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     </div>
                 </form>
             </div>
         </div>
     </body>
-    <script>
-        jscolor.presets.default = {    
-                    position: 'right',    
-                    palette: [        
-                        '#000000', '#7d7d7d', '#870014', '#ec1c23', '#ff7e26',        
-                        '#fef100', '#22b14b', '#00a1e7', '#3f47cc', '#a349a4',        
-                        '#ffffff', '#c3c3c3', '#b87957', '#feaec9', '#ffc80d',        
-                        '#eee3af', '#b5e61d', '#99d9ea', '#7092be', '#c8bfe7',    
-                    ],    //paletteCols: 12,    //hideOnPaletteClick: true,};
-                }
-    </script>
 </html>

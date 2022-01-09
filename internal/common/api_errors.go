@@ -8,10 +8,14 @@ import (
 	"github.com/tupyy/gophoto/utils/logutil"
 )
 
+type jsonError struct {
+	Message string `json:"message"`
+}
+
 func AbortWithJson(c *gin.Context, status int, err error, msg string) {
 
 	logutil.GetLogger(c).WithError(err).Errorf("abort %s with code %d: %s", c.FullPath(), status, msg)
-	c.AbortWithStatusJSON(status, err)
+	c.AbortWithStatusJSON(status, jsonError{msg})
 }
 
 func AbortBadRequestWithJson(c *gin.Context, err error, msg string) {
@@ -19,7 +23,7 @@ func AbortBadRequestWithJson(c *gin.Context, err error, msg string) {
 }
 
 func AbortInternalErrorWithJson(c *gin.Context) {
-	AbortWithJson(c, http.StatusInternalServerError, errors.New("internal error"), "")
+	AbortWithJson(c, http.StatusInternalServerError, errors.New("internal error"), "internal error")
 }
 
 func AbortForbiddenWithJson(c *gin.Context, err error, msg string) {

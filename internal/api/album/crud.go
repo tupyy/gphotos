@@ -22,6 +22,7 @@ import (
 	"github.com/tupyy/gophoto/internal/form"
 	"github.com/tupyy/gophoto/internal/services/album"
 	"github.com/tupyy/gophoto/internal/services/permissions"
+	"github.com/tupyy/gophoto/internal/services/tag"
 	"github.com/tupyy/gophoto/internal/services/users"
 	"github.com/tupyy/gophoto/utils/encryption"
 	"github.com/tupyy/gophoto/utils/logutil"
@@ -33,7 +34,7 @@ const (
 
 // TODO fix the error management. it totally crap.
 // GET /album/:id
-func GetAlbum(r *gin.RouterGroup, albumService *album.Service, usersService *users.Service) {
+func GetAlbum(r *gin.RouterGroup, albumService *album.Service, usersService *users.Service, tagService *tag.Service) {
 	r.GET("/album/:id", utils.ParseAlbumIDHandler, func(c *gin.Context) {
 		s, _ := c.Get("sessionData")
 		session := s.(entity.Session)
@@ -81,7 +82,7 @@ func GetAlbum(r *gin.RouterGroup, albumService *album.Service, usersService *use
 			return
 		}
 
-		// if not owner get the owner from keycloak
+		// if the user is not owner then get the owner info from keycloak
 		owner, err := usersService.Query().FirstUser(ctx, album.OwnerID)
 		if err != nil {
 			logger.WithError(err).WithField("album id", album.ID).Error("failed to fetch owner from keycloak")
@@ -130,6 +131,35 @@ func GetAlbum(r *gin.RouterGroup, albumService *album.Service, usersService *use
 			return
 		}
 
+		// if the user has edit permissions (i.e it's the owner or has this permissions set) get the tags
+		var tags []dto.Tag
+
+		if _, found := permissions[entity.PermissionEditAlbum]; found {
+			entities, err := tagService.Get(ctx, session.User.ID)
+			if err != nil {
+				logger.WithError(err).WithFields(logrus.Fields{
+					"album_id": album.ID,
+					"user_id":  session.User.ID,
+				}).Error("get tags")
+
+				common.AbortInternalError(c)
+
+				return
+			}
+
+			tags = make([]dto.Tag, 0, len(entities))
+			for _, e := range entities {
+				tag, err := dto.NewTagDTO(e)
+				if err != nil {
+					logger.WithError(err).Warn("create tag dto")
+
+					continue
+				}
+
+				tags = append(tags, tag)
+			}
+		}
+
 		c.HTML(http.StatusOK, "album_view.html", gin.H{
 			"album":             albumDTO,
 			"is_owner":          session.User.ID == album.OwnerID,
@@ -143,6 +173,7 @@ func GetAlbum(r *gin.RouterGroup, albumService *album.Service, usersService *use
 			"edit_permission":   permissions[entity.PermissionEditAlbum],
 			"delete_permission": permissions[entity.PermissionDeleteAlbum],
 			"is_admin":          session.User.Role == entity.RoleAdmin,
+			"tags":              tags,
 		})
 	})
 }

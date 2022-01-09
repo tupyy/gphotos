@@ -121,9 +121,16 @@
     box-shadow: 0 0 0;
 }
 
+.tab-content .container-tags .tag-container {
+    width: fit-content;
+    padding-left: 4px;
+    padding-right: 4px;
+}
+
 .tab-content .container-tags .tag {
     padding: 6px 9px 6px 9px;
     border-radius: 20px;
+    color: white;
 }
 
 .tab-content .container-tags .tag button {
@@ -200,13 +207,13 @@
     border-color: deepskyblue !important;
 }
 
-.tab-content .container-tab .btn {
+.tab-content .container-tab .row-tabs .btn {
     width: 140px;
     border-radius: 20px;
     line-height: 21px;
 }
 
-.tab-content .container-tab .btn:first-child {
+.tab-content .container-tab .row-tabs .btn:first-child {
     margin-right: 10px;
 }
 
@@ -264,5 +271,10 @@
 
     #upload-form .col-md-3 {
         margin-bottom: 10px;
+    }
+
+    .tab-content .container-tags .tag,
+    .tab-content .container-tags .tag button {
+        font-size: 0.8rem;
     }
 }
