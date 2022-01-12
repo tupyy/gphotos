@@ -36,7 +36,7 @@ func (q *Query) Where(p Predicate) *Query {
 	return q
 }
 
-func (q *Query) AllUsers(ctx context.Context) ([]entity.User, error) {
+func (q *Query) All(ctx context.Context) ([]entity.User, error) {
 	filters := make([]user.Filter, 0, len(q.predicates))
 	for _, p := range q.predicates {
 		filters = append(filters, p())
@@ -86,7 +86,7 @@ func (q *Query) AllRelatedUsers(ctx context.Context, u entity.User) ([]entity.Us
 	return relatedUsers, err
 }
 
-func (q *Query) FirstUser(ctx context.Context, id string) (entity.User, error) {
+func (q *Query) First(ctx context.Context, id string) (entity.User, error) {
 	user, err := q.keycloakRepo.GetUserByID(ctx, id)
 	if err != nil {
 		return entity.User{}, err

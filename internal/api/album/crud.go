@@ -74,7 +74,7 @@ func GetAlbum(r *gin.RouterGroup, albumService *album.Service, usersService *use
 			Where(users.NotUsername(session.User.Username)).
 			Where(users.CanShare(true)).
 			Where(users.Roles([]entity.Role{entity.RoleEditor, entity.RoleUser})).
-			AllUsers(ctx)
+			All(ctx)
 		if err != nil {
 			logger.WithError(err).Error("failed to get users")
 			common.AbortInternalError(c)
@@ -83,7 +83,7 @@ func GetAlbum(r *gin.RouterGroup, albumService *album.Service, usersService *use
 		}
 
 		// if the user is not owner then get the owner info from keycloak
-		owner, err := usersService.Query().FirstUser(ctx, album.OwnerID)
+		owner, err := usersService.Query().First(ctx, album.OwnerID)
 		if err != nil {
 			logger.WithError(err).WithField("album id", album.ID).Error("failed to fetch owner from keycloak")
 			common.AbortInternalError(c)
@@ -199,7 +199,7 @@ func GetCreateAlbumForm(r *gin.RouterGroup, usersService *users.Service) {
 			Where(users.NotUsername(session.User.Username)).
 			Where(users.CanShare(true)).
 			Where(users.Roles([]entity.Role{entity.RoleEditor, entity.RoleUser})).
-			AllUsers(ctx)
+			All(ctx)
 		if err != nil {
 			logger.WithError(err).Error("failed to get users")
 			common.AbortInternalError(c)
@@ -353,7 +353,7 @@ func GetUpdateAlbumForm(r *gin.RouterGroup, albumService *album.Service, usersSe
 				Where(users.NotUsername(session.User.Username)).
 				Where(users.CanShare(true)).
 				Where(users.Roles([]entity.Role{entity.RoleEditor, entity.RoleUser})).
-				AllUsers(ctx)
+				All(ctx)
 			if err != nil {
 				logger.WithError(err).Error("failed to get users")
 				common.AbortInternalError(c)

@@ -31,7 +31,7 @@ func GetAlbums(r *gin.RouterGroup, albumService *album.Service, usersService *us
 		logger := logutil.GetLogger(c)
 
 		// fetch users from keycloak
-		users, err := usersService.Query().AllUsers(ctx)
+		users, err := usersService.Query().All(ctx)
 		if err != nil {
 			logger.WithError(err).Error("failed to get users")
 			common.AbortInternalErrorWithJson(c)
