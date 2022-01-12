@@ -1,12 +1,12 @@
 package encryption
 
 import (
+	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
-	"crypto/rand"
+	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"io"
 )
 
 const (
@@ -23,12 +23,10 @@ func NewGenerator(key string) *Generator {
 
 // EncryptData encrypts the data with the provided key. The result is not determinist.
 func (g *Generator) EncryptData(data string) (string, error) {
-	nonce := make([]byte, nonceSize)
+	hash := sha256.Sum256(bytes.NewBufferString(data).Bytes())
 
-	_, err := io.ReadFull(rand.Reader, nonce)
-	if err != nil {
-		return "", err
-	}
+	nonce := make([]byte, nonceSize)
+	copy(nonce, hash[:nonceSize])
 
 	return g.encryptDataWithNonce(data, nonce)
 }

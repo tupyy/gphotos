@@ -5,10 +5,10 @@ import (
 	"html"
 	"net/http"
 	"regexp"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	"github.com/tupyy/gophoto/internal/api/utils"
 	"github.com/tupyy/gophoto/internal/common"
 	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/entity"
@@ -28,7 +28,7 @@ var (
 )
 
 func UploadMedia(r *gin.RouterGroup, albumService *album.Service, mediaService *media.Service) {
-	r.POST("/api/albums/:id/album/upload", parseAlbumIDHandler, func(c *gin.Context) {
+	r.POST("/api/albums/:id/album/upload", utils.ParseAlbumIDHandler, func(c *gin.Context) {
 		reqCtx := c.Request.Context()
 		logger := logutil.GetLogger(c)
 
@@ -108,32 +108,6 @@ func validate(filename string) error {
 	}
 
 	return nil
-}
-
-// parseAlbumIDHandler decrypt the album id passes as parameters and set the id in the context.
-func parseAlbumIDHandler(c *gin.Context) {
-	logger := logutil.GetLogger(c)
-
-	// decrypt album id
-	gen := encryption.NewGenerator(conf.GetEncryptionKey())
-
-	decryptedID, err := gen.DecryptData(c.Param("id"))
-	if err != nil {
-		logger.WithError(err).Error("cannot decrypt album id")
-		c.AbortWithError(http.StatusNotFound, err) // explicit return not found here
-
-		return
-	}
-
-	id, err := strconv.Atoi(decryptedID)
-	if err != nil {
-		logger.WithError(err).WithField("id", decryptedID).Error("cannot parse album id")
-		c.AbortWithError(http.StatusNotFound, err)
-
-		return
-	}
-
-	c.Set("id", id)
 }
 
 func parseMediaFilenameHandler(c *gin.Context) {

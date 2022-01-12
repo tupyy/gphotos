@@ -1,6 +1,7 @@
 package funcs
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -26,4 +27,22 @@ func PermissionName(p entity.Permission) string {
 
 func Date(t time.Time) string {
 	return t.Format(time.RFC1123Z)
+}
+
+// set a nicer format of exif format
+func DatePhoto(s string) string {
+	format := "2006:01:02 15:04:05"
+	if t, err := time.Parse(format, s); err == nil {
+		return t.Format(time.RFC1123Z)
+	}
+
+	return s
+}
+
+func ExtractMetadata(name string, metadata map[string]string) string {
+	key := fmt.Sprintf("X-Amz-Meta-%s", strings.Title(name))
+	if value, found := metadata[key]; found {
+		return value
+	}
+	return "N/A"
 }

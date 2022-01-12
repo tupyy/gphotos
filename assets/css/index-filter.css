@@ -45,6 +45,7 @@
     font-size: 0.9rem;
     font-weight: bold;
     margin-bottom: 10px;
+    height: 15px;
 }
 
 .main-container .col-filter .row-filter {
@@ -110,7 +111,7 @@
     padding-right: 5px;
 }
 
-@media all and (max-width: 812px) {
+@media all and (max-width: 850px) {
     .container-filter-btn {
         display: flex;
         justify-content: center;
@@ -151,6 +152,10 @@
         -o-transition: .25s ease-in-out; 
         transition: .25s ease-in-out;
     } 
+
+    .main-container .col-filter .row-filter:first-child {
+        margin-top: 20px;
+    }
     
     .main-container .col-filter .input-daterange {
         display: block;    

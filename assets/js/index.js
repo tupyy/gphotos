@@ -9,13 +9,14 @@ let store = {
     countAlbums: 0,
 }
 
-let filterSort = {
+let queryParams = {
     personalAlbums: true,
     sharedAlbums: true,
     date: {
         start: '',
         end: '',
     },
+    tags: [],
     owners: [],
     sort: '',
     buildRequestURL: function(baseURL) {
@@ -35,6 +36,12 @@ let filterSort = {
             });
         }
 
+        if (this.tags.length > 0) {
+            this.tags.forEach(tag => {
+                reqUrl = reqUrl + "&tag=" + tag;
+            })
+        }
+
         if (this.sort !== '') {
             reqUrl = reqUrl + '&sort=' + this.sort;
         }
@@ -51,20 +58,51 @@ let filterSort = {
 
 
 const init = () => {
-    filterSort.personalAlbums =  $("#personalAlbumCheck").prop('checked');
-    filterSort.sharedAlbums = $("#sharedAlbumCheck").prop('checked');
-    filterSort.date.start = $('#startDate').val();
-    filterSort.date.end = $('#endDate').val();
-    filterSort.sort = $('#sortSelect').val();
+    queryParams.personalAlbums =  $("#personalAlbumCheck").prop('checked');
+    queryParams.sharedAlbums = $("#sharedAlbumCheck").prop('checked');
+    queryParams.date.start = $('#startDate').val();
+    queryParams.date.end = $('#endDate').val();
+    queryParams.sort = $('#sortSelect').val();
+
+    // init controls
+    $("#searchBar").val('');
 }
 
-const doReq = () => {
+const search = () => {
+    queryParams.tags = [];
+
+    let val = $("#searchBar").val();
+
+    if (val.indexOf(',') >= 0) {
+        let tags = val.split(',');
+        tags.forEach(tag => {
+            if (tag !== "") {
+                queryParams.tags.push(tag.trim());
+            }
+        });
+    } else {
+        if (val.trim() !== '') {
+            queryParams.tags.push(val);
+        }
+    }
+
+    fetch();
+
+    store.albums = [];
+
+    clearAlbums();
+    clearPagination();
+
+    render();
+}
+
+const fetch = () => {
     showSpinner($("#albums"),true);
     $("#count_albums").parent().hide();
 
     clearAlbums();
 
-    axios.get(filterSort.buildRequestURL(baseURL))
+    axios.get(queryParams.buildRequestURL(baseURL))
         .then(response => {
 
             store.data = response.data;
@@ -81,6 +119,7 @@ const doReq = () => {
         .then(() => {
             showSpinner($("#albums"), false);
             $("#count_albums").parent().show();
+
             bindToCardOwner();
         });
 }
@@ -96,6 +135,20 @@ let render = () => {
 }
 
 let renderAlbum = (album) => {
+    let tags = ""
+    
+    if (typeof album.tags != 'undefined') {
+        for(const [k,v] of Object.entries(album.tags)) {
+            color = "black";
+            if (v.color !== '') {
+                color = v.color;
+            }
+            tags += `<span class="album-tag" style="background:` + color + `">
+                <i class="fas fa-tag"></i>`+v.name+
+                `</span>`;
+        };
+    }
+
     return `
         <div class="album-col col-6" id="` + album.id + `">
             <div class="container-album-card card">
@@ -114,11 +167,16 @@ let renderAlbum = (album) => {
                             <i class="far fa-calendar-alt"></i>
                             ` + album.date + `
                         </span>
-                    </div> 
+                    </div>  
                 </div>
-                <a href="/album/` + album.id + `">
-                    <img src="` + album.thumbnail + `" class="card-img-top"/>
-                </a>
+                <div class="album-image">
+                    <div class="row-tags">
+                    ` + tags +`
+                    </div>
+                    <a href="/album/` + album.id + `">
+                        <img src="` + album.thumbnail + `" class="card-img-top"/>
+                    </a>
+                </div>
                 <div class="album">
                     <div class="card-body">
                         <h1 class="card-title title">
@@ -146,6 +204,10 @@ const renderPagination = (pageSize, offset, total) => {
     let nextDisabled = '';
     if (currentPage == numberPages) {
         nextDisabled = 'disabled';
+    }
+
+    if (numberPages === 0) {
+        return ""
     }
 
     head =  `
@@ -180,14 +242,14 @@ const renderPagination = (pageSize, offset, total) => {
 }
 
 const renderFilter = () => {
-        $("#personalAlbumCheck").prop('checked', filterSort.personalAlbums);
-        $("#sharedAlbumCheck").prop('checked', filterSort.sharedAlbums);
+        $("#personalAlbumCheck").prop('checked', queryParams.personalAlbums);
+        $("#sharedAlbumCheck").prop('checked', queryParams.sharedAlbums);
 
         
         $("#ownerFilter .form-check").each((_, e) => {
             id = $(e).find('input').val();
             find = false;
-            filterSort.owners.forEach((i) => {
+            queryParams.owners.forEach((i) => {
                 if (i === id) {
                     find = true;
                 }
@@ -212,6 +274,11 @@ const showSpinner = (parentElement, show) => {
     }
 }
 
+// parse the text of searchBar into key=value. If the key is not provided, use "any".
+const parseSearchInput = () => {
+    let val = $(searchBar).val();
+}
+
 const spinner = () => {
     return `
     <div class="d-flex justify-content-center" id="loadingSpinner">
@@ -224,21 +291,21 @@ const spinner = () => {
 
 const selectOwner = (ownerID) => {
     let exists = false;
-    filterSort.owners.forEach(v => {
+    queryParams.owners.forEach(v => {
         if (v === ownerID) {
             exists = true;
         }
     })
 
     if (!exists) {
-        filterSort.owners.push(ownerID);
+        queryParams.owners.push(ownerID);
     }
 }
 
 const removeOwner = (ownerID) => {
-    filterSort.owners.forEach( (v,idx) => {
+    queryParams.owners.forEach( (v,idx) => {
         if (v === ownerID) {
-            filterSort.owners.splice(idx, 1);
+            queryParams.owners.splice(idx, 1);
             return false;
         }
     })
@@ -253,10 +320,11 @@ const doPagination = (increase) => {
 
     store.albums = [];
 
-    doReq();
+    fetch();
 
     clearAlbums();
     clearPagination();
+
     render();
 }
 
@@ -269,38 +337,54 @@ const gotoPage = (page) => {
     store.offset = defaultPageSize * (page-1);
     store.albums = [];
 
-    doReq();
+    fetch();
 
     clearAlbums();
     clearPagination();
+
     render();
 }
 
 const bindToEvents = () => {
-    // bind to filterSort event
+    // bind to queryParams event
     $("#personalAlbumCheck").on("change", () => {
-        filterSort.personalAlbums =  $("#personalAlbumCheck").prop('checked');
+        queryParams.personalAlbums =  $("#personalAlbumCheck").prop('checked');
 
-        doReq();
+        fetch();
     });
     
     $("#sharedAlbumCheck").on("change", () => {
-        filterSort.sharedAlbums = $("#sharedAlbumCheck").prop('checked');
+        queryParams.sharedAlbums = $("#sharedAlbumCheck").prop('checked');
         
-        doReq();
+        fetch();
     });
 
     $("#startDate").on('change', (e) => {
-        filterSort.date.start = $(e.target).val();
+        queryParams.date.start = $(e.target).val();
 
-        doReq();
+        fetch();
     });
     
     $("#endDate").on('change', (e) => {
-        filterSort.date.end = $(e.target).val();
+        queryParams.date.end = $(e.target).val();
 
-        doReq();
+        fetch();
     });
+
+    $("#searchBar").on('keypress', (e) => {
+        if (e.which == 13) {
+            search();
+        }
+
+        $(".search-group button").removeClass('hidden');
+    })
+
+    $(".search-group button").on('click', (e) => {
+        $("#searchBar").val('');
+        $(".search-group button").addClass('hidden');
+
+        search();
+    })
 
     $("#ownerFilter").on("change","input", (e) => {
         checkElem = $(e.target)[0];
@@ -311,42 +395,46 @@ const bindToEvents = () => {
             removeOwner($(checkElem)[0].id);
         }
 
-        doReq();
+        fetch();
     });
 
     $("#selectedOwnersFilter").on('click', '.btn-close', (e) => {
         let parents = $(e.target).parents("div");
         let id = $(parents[0]).find('input').val();
         
-        filterSort.owners.forEach((v,idx) => {
+        queryParams.owners.forEach((v,idx) => {
             if ( v.id === id ) {
-                filterSort.owners.splice(idx, 1);
+                queryParams.owners.splice(idx, 1);
             }
         });
 
-        if ( filterSort.owners.length === 0 ) {
+        if ( queryParams.owners.length === 0 ) {
             $("#selectOwner option:eq(0)").prop('selected', true);
         }
 
         renderFilter();
 
-        doReq();
+        fetch();
     });
 
     $('#sortSelect').on('change', (e) => {
-        filterSort.sort = $(e.target).val();
+        queryParams.sort = $(e.target).val();
 
-        doReq();
+        fetch();
     });
 
     $('.main-container .col-filter .btn-close').on('click', () => {
        $('#filter-container').css('visibility','hidden'); 
         $('.main-container .col-filter .btn-close').css('visibility', 'hidden');
+        $('.search-group').css('visibility', 'visible');
+        $('#pagination').css('visibility', 'visible');
     });
 
     $('#btn-show-filter').on('click', () => {
         $('#filter-container').css('visibility', 'visible');
         $('.main-container .col-filter .btn-close').css('visibility', 'visible');
+        $('.search-group').css('visibility', 'hidden');
+        $('#pagination').css('visibility', 'hidden');
     });
 }
 
@@ -355,23 +443,23 @@ const bindToCardOwner = () => {
         ownerName = $(e.target).html().trim();
 
         if (ownerName == store.username) {
-            filterSort.personalAlbums = true;
-            filterSort.sharedAlbums = false;
-            filterSort.owners = [];
+            queryParams.personalAlbums = true;
+            queryParams.sharedAlbums = false;
+            queryParams.owners = [];
         } else {
             $("#ownerFilter .form-check").each((_, e) => {
                 if ($(e).find('label').text() === ownerName) {
                     id = $(e).find('input').val()
                     
-                    filterSort.owners = [id];
-                    filterSort.personalAlbums = false;
+                    queryParams.owners = [id];
+                    queryParams.personalAlbums = false;
                 }
             });
         }
 
         renderFilter();
 
-        doReq();
+        fetch();
     });
 }
 
@@ -412,13 +500,13 @@ $(() => {
             }
     });
 
-    // init filterSort obj
+    // init queryParams obj
     init();
 
     // get albums from server
-    doReq();
+    fetch();
     
-    // bind to filterSorts controls
+    // bind to queryParamss controls
     bindToEvents();
 
 });

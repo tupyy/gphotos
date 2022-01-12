@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta content="width=device-width, initial-scale=1" name="viewport" />
+        {{ template "base_css" }}
+        <link rel="stylesheet" href="/static/css/tags.css"/>
+        {{ template "js" }}
+        <script src="/static/js/album/alert.js"></script>
+        <script src="/static/js/jscolor.js"></script>
+        <script src="/static/js/tags/tags.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+        <title>Tags</title>
+    </head>
+    <header>
+        {{ template "header" . }}
+    </header>
+    <body>
+        <div class="container">
+            <div class="title">
+                <span class="col">Tags</span>
+            </div>
+            {{ if .tags }}
+                {{ range .tags }}
+                    <div class="row-tag">
+                        <input type="hidden" value="{{.ID}}"/>
+                        <div class="tag">
+                            <i class="fas fa-tag" style="color: {{.Color}}"></i>
+                            <span>{{.Name}}</span>
+                        </div>
+                        <div class="button">
+                            <button type="button" class="btn btn-outline-primary btn-sm btn-edit-tag">
+                                <i class="fas fa-pencil-alt"></i>
+                            </button>
+                        </div>
+                        <div class="button">
+                            <button type="button" class="btn btn-outline-danger btn-sm">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                {{end}}
+            {{ else }}
+                <span class="col">No tags</span>
+            {{ end }}
+        </div>
+        <div class="container container-buttons">
+            <button type="button" id="addTagButton" class="btn btn-outline-primary btn-sm">Add</button>
+            <button type="button" class="btn btn-outline-danger btn-sm">Close</button>
+        </div>
+        <div class="modal fade" tabindex="-1" role="dialog" id="addTag">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">Add tag</h5>
+                  <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <form id="addTagForm" class="needs-validation">
+                    <div class="modal-body">
+                            <input type="hidden" id="tagID" value=""/>
+                            <div class="form-group has-validation">
+                                <label for="tagName" class="form-label">Name</label>
+                                <input type="text" class="form-control" id="tagName" placeholder="Enter tag name" autocomplete="off" required></input>
+                                <div id="tagNameFeedback" class="invalid-feedback">
+                                    Please enter a name.
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="tagColor" class="form-label">Color</label>
+                                <input type="text" class="form-control" data-jscolor="{position: 'bottom'}" id="tagColor" required></input>
+                            </div>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="submit" id="submitButton" class="btn btn-primary">Save</button>
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </body>
+</html>

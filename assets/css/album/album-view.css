@@ -75,6 +75,76 @@
     margin-top: 20px;
 }
 
+.tab-content .container-tags .row-title {
+    display: flex;
+    justify-content: space-between;
+}
+
+.tab-content .container-tags .row-title span {
+    width: 200px;
+}
+
+/*
+ * Tags
+ */
+
+.tab-content .container-tags .row-tags {
+    margin-top: 15px;
+}
+
+.tab-content .container-tags .row-title .tag-buttons {
+    width: fit-content;
+    display: flex;
+    align-items: end;
+    padding-right: 1px;
+}
+
+.tab-content .container-tags .row-title .tag-buttons button:first-child {
+    margin-right: 0;
+}
+
+.tab-content .container-tags .btn.btn-outline-primary.btn-sm {
+    color: deepskyblue;
+    background-color: transparent;
+    border-color: deepskyblue;
+    width: 30px;
+    border: 0;
+}
+
+.tab-content .container-tags .btn.btn-outline-primary.btn-sm:hover {
+    color: black;
+    background-color: deepskyblue;
+    border-color: silver;
+}
+
+.tab-content .container-tags .btn.btn-outline-primary.btn-sm:focus {
+    box-shadow: 0 0 0;
+}
+
+.tab-content .container-tags .tag-container {
+    width: fit-content;
+    padding-left: 4px;
+    padding-right: 4px;
+}
+
+.tab-content .container-tags .tag {
+    padding: 6px 9px 6px 9px;
+    border-radius: 20px;
+    color: white;
+}
+
+.tab-content .container-tags .tag button {
+    transform: translateY(-22%);
+    font-size: 0.9rem;
+}
+
+.tab-content .container-tags .tag button:focus {
+    box-shadow: none;
+}
+
+/*
+ * Photos
+ */
 .container-photos #album-gallery {
     display: contents;
 }
@@ -85,6 +155,10 @@
     width: fit-content;
     margin: 0 auto 10px auto;
     height: 100%;
+}
+
+#lg-container-1 .photo-sub-html span:first-child {
+    margin-right: 15px;
 }
 
 .container-photos img {
@@ -137,13 +211,13 @@
     border-color: deepskyblue !important;
 }
 
-.tab-content .container-tab .btn {
+.tab-content .container-tab .row-tabs .btn {
     width: 140px;
     border-radius: 20px;
     line-height: 21px;
 }
 
-.tab-content .container-tab .btn:first-child {
+.tab-content .container-tab .row-tabs .btn:first-child {
     margin-right: 10px;
 }
 
@@ -201,5 +275,10 @@
 
     #upload-form .col-md-3 {
         margin-bottom: 10px;
+    }
+
+    .tab-content .container-tags .tag,
+    .tab-content .container-tags .tag button {
+        font-size: 0.8rem;
     }
 }

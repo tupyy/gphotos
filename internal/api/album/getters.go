@@ -8,11 +8,15 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 	"github.com/tupyy/gophoto/internal/api/dto"
+	"github.com/tupyy/gophoto/internal/api/utils"
 	"github.com/tupyy/gophoto/internal/common"
 	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/internal/services/album"
+	"github.com/tupyy/gophoto/internal/services/permissions"
+	"github.com/tupyy/gophoto/internal/services/tag"
 	"github.com/tupyy/gophoto/internal/services/users"
 	"github.com/tupyy/gophoto/utils/encryption"
 	"github.com/tupyy/gophoto/utils/logutil"
@@ -27,7 +31,7 @@ func GetAlbums(r *gin.RouterGroup, albumService *album.Service, usersService *us
 		logger := logutil.GetLogger(c)
 
 		// fetch users from keycloak
-		users, err := usersService.Query().AllUsers(ctx)
+		users, err := usersService.Query().All(ctx)
 		if err != nil {
 			logger.WithError(err).Error("failed to get users")
 			common.AbortInternalErrorWithJson(c)
@@ -89,6 +93,72 @@ func GetAlbums(r *gin.RouterGroup, albumService *album.Service, usersService *us
 	})
 }
 
+func GetAlbumsTags(r *gin.RouterGroup, albumService *album.Service, tagService *tag.Service) {
+	r.GET("/api/albums/:id/tags", utils.ParseAlbumIDHandler, func(c *gin.Context) {
+		s, _ := c.Get("sessionData")
+		session := s.(entity.Session)
+
+		ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
+		logger := logutil.GetLogger(ctx)
+
+		album, err := albumService.Query().First(ctx, int32(c.GetInt("id")))
+		if err != nil {
+			logger.WithError(err).WithField("id", c.GetInt("id")).Error("album not found")
+			common.AbortNotFound(c, err, "failed to album")
+
+			return
+		}
+
+		// check permissions to this album
+		ats := permissions.NewAlbumPermissionService()
+		hasPermission := ats.Policy(permissions.OwnerPolicy{}).
+			Policy(permissions.RolePolicy{Role: entity.RoleAdmin}).
+			Policy(permissions.AnyUserPermissionPolicty{}).
+			Policy(permissions.AnyGroupPermissionPolicy{}).
+			Strategy(permissions.AtLeastOneStrategy).
+			Resolve(album, session.User)
+
+		if !hasPermission {
+			logger.WithFields(logrus.Fields{
+				"album_id": album.ID,
+				"user_id":  session.User.ID,
+			}).Error("user has no permissions to access this album")
+
+			common.AbortForbiddenWithJson(c, common.NewMissingPermissionError(entity.PermissionReadAlbum, album, session.User), "user has no permission for the album")
+
+			return
+		}
+
+		tags, err := tagService.GetByAlbum(ctx, album.ID)
+		if err != nil {
+			logger.WithError(err).WithFields(logrus.Fields{
+				"album_id": album.ID,
+				"user_id":  session.User.ID,
+			}).Error("fetch tags for album")
+
+			common.AbortInternalErrorWithJson(c)
+
+			return
+		}
+
+		dtos := make([]dto.Tag, 0, len(tags))
+		for _, tag := range tags {
+			dto, err := dto.NewTagDTO(tag)
+			if err != nil {
+				logger.WithError(err).WithField("tag", tag.String()).Warn("create tag dto")
+
+				continue
+			}
+
+			dtos = append(dtos, dto)
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"tags": dtos,
+		})
+	})
+}
+
 type requestParams struct {
 	FetchPersonalAlbums bool
 	FetchSharedAlbums   bool
@@ -133,6 +203,7 @@ func generateFilters(c *gin.Context) []album.Predicate {
 	predicates := make([]album.Predicate, 0, 3)
 
 	logger := logutil.GetLogger(c)
+	gen := encryption.NewGenerator(conf.GetEncryptionKey())
 
 	if c.Query("start_date") != "" {
 		if startDate, err := time.Parse("02/01/2006", c.Query("start_date")); err != nil {
@@ -154,7 +225,6 @@ func generateFilters(c *gin.Context) []album.Predicate {
 
 	owners := c.QueryArray("owner")
 	if len(owners) > 0 {
-		gen := encryption.NewGenerator(conf.GetEncryptionKey())
 
 		ownerIDs := make([]string, 0, len(owners))
 		for _, o := range owners {
@@ -170,6 +240,18 @@ func generateFilters(c *gin.Context) []album.Predicate {
 		}
 
 		f := album.Owner(ownerIDs)
+		predicates = append(predicates, f)
+	}
+
+	tagParameter := c.QueryArray("tag")
+	if len(tagParameter) > 0 {
+		tags := make([]string, 0, len(tagParameter))
+
+		for _, tag := range tagParameter {
+			tags = append(tags, tag)
+		}
+
+		f := album.Tags(tags)
 		predicates = append(predicates, f)
 	}
 

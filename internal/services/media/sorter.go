@@ -19,5 +19,5 @@ func (ms *mediaSorter) Swap(i, j int) {
 }
 
 func (ms *mediaSorter) Less(i, j int) bool {
-	return ms.medias[i].LastModified.Before(ms.medias[j].LastModified)
+	return ms.medias[i].CreateDate.Before(ms.medias[j].CreateDate)
 }

@@ -3,7 +3,6 @@ package dto
 import (
 	"fmt"
 
-	"github.com/sirupsen/logrus"
 	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/utils/encryption"
@@ -22,11 +21,14 @@ type Album struct {
 	Thumbnail   string  `json:"thumbnail"`
 	Photos      []Media `json:"photos"`
 	Videos      []Media `json:"videos"`
+	// Tags - map with tag name as key and color as value
+	Tags []Tag `json:"tags"`
 }
 
 type Media struct {
 	Filename  string
 	Thumbnail string
+	Metadata  map[string]string
 }
 
 func NewAlbumDTO(a entity.Album, owner entity.User) (Album, error) {
@@ -68,7 +70,7 @@ func NewAlbumDTO(a entity.Album, owner entity.User) (Album, error) {
 				continue
 			}
 
-			encryptedPhotos = append(encryptedPhotos, Media{encryptedFilename, encryptedThumbnail})
+			encryptedPhotos = append(encryptedPhotos, Media{encryptedFilename, encryptedThumbnail, a.Photos[i].Metadata})
 		}
 
 		if i < len(a.Videos) {
@@ -89,7 +91,7 @@ func NewAlbumDTO(a entity.Album, owner entity.User) (Album, error) {
 				continue
 			}
 
-			encryptedVideos = append(encryptedVideos, Media{encryptedFilename, encryptedThumbnail})
+			encryptedVideos = append(encryptedVideos, Media{encryptedFilename, encryptedThumbnail, a.Videos[i].Metadata})
 		}
 
 		if !more {
@@ -97,10 +99,17 @@ func NewAlbumDTO(a entity.Album, owner entity.User) (Album, error) {
 		}
 	}
 
-	logutil.GetDefaultLogger().WithFields(logrus.Fields{
-		"id":           a.ID,
-		"encrypted_id": encryptedID,
-	}).Trace("encrypt album id")
+	tags := make([]Tag, 0, len(a.Tags))
+	for _, t := range a.Tags {
+		dto, err := NewTagDTO(t)
+		if err != nil {
+			logutil.GetDefaultLogger().WithField("tag", t.String()).WithError(err).Error("create tag dto")
+
+			continue
+		}
+
+		tags = append(tags, dto)
+	}
 
 	thumbnail := "/static/img/image_not_available.png"
 	if len(a.Thumbnail) > 0 {
@@ -117,6 +126,7 @@ func NewAlbumDTO(a entity.Album, owner entity.User) (Album, error) {
 		Photos:      encryptedPhotos,
 		Videos:      encryptedVideos,
 		Thumbnail:   thumbnail,
+		Tags:        tags,
 	}, nil
 }
 

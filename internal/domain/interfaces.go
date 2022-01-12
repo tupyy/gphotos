@@ -18,6 +18,7 @@ const (
 	AlbumRepoName
 	UserRepoName
 	MinioRepoName
+	TagRepoName
 )
 
 type KeycloakRepo interface {
@@ -58,9 +59,9 @@ type User interface {
 // Store describe photo store operations
 type Store interface {
 	// GetFile returns a reader to file.
-	GetFile(ctx context.Context, bucket, filename string) (io.ReadSeeker, error)
+	GetFile(ctx context.Context, bucket, filename string) (io.ReadSeeker, map[string]string, error)
 	// PutFile save a file to a bucket.
-	PutFile(ctx context.Context, bucket, filename string, size int64, r io.Reader) error
+	PutFile(ctx context.Context, bucket, filename string, size int64, r io.Reader, metadata map[string]string) error
 	// ListFiles list the content of a bucket
 	ListBucket(ctx context.Context, bucket string) ([]entity.Media, error)
 	// DeleteFile deletes a file from a bucket.
@@ -69,4 +70,25 @@ type Store interface {
 	CreateBucket(ctx context.Context, bucket string) error
 	// DeleteBucket removes bucket.
 	DeleteBucket(ctx context.Context, bucket string) error
+}
+
+type Tag interface {
+	// Create -- create the tag.
+	Create(ctx context.Context, tag entity.Tag) (int32, error)
+	// Update -- update the tag.
+	Update(ctx context.Context, tag entity.Tag) error
+	// Delete -- delete the tag. it does not cascade.
+	Delete(ctx context.Context, id int32) error
+	// GetByUser -- fetch all user's tags
+	GetByUser(ctx context.Context, userID string) ([]entity.Tag, error)
+	// GetByName -- fetch the tag by name and user id.
+	GetByName(ctx context.Context, userID, name string) (entity.Tag, error)
+	// GetByID -- fetch the tag by id
+	GetByID(ctx context.Context, userID string, id int32) (entity.Tag, error)
+	// GetByAlbum -- fetch all user's tag for the album
+	GetByAlbum(ctx context.Context, albumID int32) ([]entity.Tag, error)
+	// AssociateTag -- associates a tag with an album.
+	Associate(ctx context.Context, albumID, tagID int32) error
+	// Dissociate -- removes a tag from an album.
+	Dissociate(ctx context.Context, albumID, tagID int32) error
 }

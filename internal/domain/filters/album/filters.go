@@ -18,6 +18,8 @@ const (
 	FilterByOwnerID
 	// NotFilterByOwnerID filter out the albums whose owner is not in filter values.
 	NotFilterByOwnerID
+	// FilterByTag selects albums with the tag.
+	FilterByTag
 )
 
 type Filter func(tx *gorm.DB) *gorm.DB
@@ -63,6 +65,15 @@ func GenerateFilterFuncs(filter FilterName, filterValues interface{}) (Filter, e
 			midnight := time.Date(v.Year(), v.Month(), v.Day(), 0, 0, 0, 0, time.UTC)
 			return tx.Where("album.created_at > ?", midnight)
 		}, nil
+	case FilterByTag:
+		v, ok := filterValues.([]string)
+		if !ok {
+			return nil, errors.Errorf("%v invalid value. expecting list of strings", filter)
+		}
+		return func(tx *gorm.DB) *gorm.DB {
+			return tx.Where("tags.name IN ?", v)
+		}, nil
+
 	}
 
 	return nil, errors.Errorf("%v is invalid filter", filter)

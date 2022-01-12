@@ -30,7 +30,7 @@ func Index(r *gin.RouterGroup, usersService *users.Service) {
 				Where(users.NotUsername(session.User.Username)).
 				Where(users.CanShare(true)).
 				Where(users.Roles([]entity.Role{entity.RoleEditor, entity.RoleUser})).
-				AllUsers(ctx)
+				All(ctx)
 			if err != nil {
 				logger.WithError(err).Error("failed to get users")
 				common.AbortInternalError(c)

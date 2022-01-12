@@ -28,7 +28,7 @@ CREATE TYPE permission_id as ENUM (
 
 CREATE TABLE album_user_permissions (
     user_id TEXT NOT NULL,
-    album_id SERIAL REFERENCES album(id),
+    album_id SERIAL REFERENCES album(id) ON DELETE CASCADE,
     permissions permission_id[] NOT NULL,
     CONSTRAINT album_user_permissions_pk PRIMARY KEY (
         user_id,
@@ -40,7 +40,7 @@ CREATE INDEX user_id_idx ON album_user_permissions  (user_id);
 
 CREATE TABLE album_group_permissions (
     group_name TEXT NOT NULL,
-    album_id SERIAL REFERENCES album(id),
+    album_id SERIAL REFERENCES album(id) ON DELETEE CASCADE,
     permissions permission_id[] NOT NULL,
     CONSTRAINT album_group_permissions_pk PRIMARY KEY (
         group_name,
@@ -52,19 +52,20 @@ CREATE INDEX group_name_idx ON album_group_permissions (group_name);
 
 CREATE TABLE tag (
     id SERIAL PRIMARY KEY,
-    name TEXT NOT NULL,
+    name TEXT NOT NULL UNIQUE,
+    user_id TEXT NOT NULL,
     color TEXT 
 );
 
+CREATE INDEX tag_user_id_idx ON tag (user_id);
+
 CREATE TABLE albums_tags (
-    user_id TEXT NOT NULL,
-    album_id SERIAL REFERENCES album(id),
-    tag_id SERIAL REFERENCES tag(id),
+    album_id SERIAL REFERENCES album(id) ON DELETE CASCADE,
+    tag_id SERIAL REFERENCES tag(id) ON DELETE CASCADE,
     CONSTRAINT albums_tags_pk PRIMARY KEY (
-        user_id,
         album_id,
         tag_id
-    )
+    ) 
 );
 
 COMMIT;

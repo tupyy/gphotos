@@ -1,0 +1,47 @@
+.modal {
+    color: black;
+}
+
+.modal .modal-content {
+    background: #2a2f34;
+    color: silver;
+    border-color: silver;
+}
+
+.modal .modal-content input {
+    border-color: silver;
+    background: #202327;
+    color: silver;
+}
+
+.modal .modal-content input:focus {
+    box-shadow: 0 0 0 .1rem silver;
+    outline: 0;
+}
+
+.modal .modal-body .form-group:last-child {
+    margin-top: 15px;
+}
+
+.modal .modal-header .close {
+    background: transparent;
+    border: none;
+    color: silver;
+}
+
+.modal .modal-footer .btn-primary {
+    background: #2ea54f;
+    border-color: #2ea54f; 
+    color: white;
+}
+
+@media all and (max-width: 576px) {
+    .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        margin-right: 20px;
+        margin: auto;
+    }
+}

@@ -28,3 +28,10 @@ func Owner(id []string) Predicate {
 		return f
 	}
 }
+
+func Tags(tags []string) Predicate {
+	return func() album.Filter {
+		f, _ := album.GenerateFilterFuncs(album.FilterByTag, tags)
+		return f
+	}
+}
