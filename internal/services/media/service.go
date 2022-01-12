@@ -48,7 +48,7 @@ func (s *Service) ListBucket(ctx context.Context, bucket string) ([]entity.Media
 	// if a media has no thumbnail, create it now
 	for _, m := range media {
 		if len(m.Thumbnail) == 0 {
-			r, err := s.GetPhoto(ctx, m.Bucket, m.Filename)
+			r, _, err := s.GetPhoto(ctx, m.Bucket, m.Filename)
 			if err != nil {
 				logutil.GetLogger(ctx).WithError(err).WithField("filename", m.Filename).Error("failed to get photo from repo")
 
@@ -71,13 +71,13 @@ func (s *Service) ListBucket(ctx context.Context, bucket string) ([]entity.Media
 	return ms.medias, nil
 }
 
-func (s *Service) GetPhoto(ctx context.Context, bucket, filename string) (io.ReadSeeker, error) {
-	r, err := s.repo.GetFile(ctx, bucket, filename)
+func (s *Service) GetPhoto(ctx context.Context, bucket, filename string) (io.ReadSeeker, map[string]string, error) {
+	r, metadata, err := s.repo.GetFile(ctx, bucket, filename)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return r, nil
+	return r, metadata, nil
 }
 
 func (s *Service) SaveMedia(ctx context.Context, bucket, filename string, r io.ReadSeeker, mediaType MediaType) error {
@@ -108,7 +108,14 @@ func processPhoto(ctx context.Context, repo domain.Store, bucket, filename strin
 
 	basename := strings.Split(filename, ".")[0]
 
-	if err := repo.PutFile(ctx, bucket, fmt.Sprintf("photos/%s.jpg", basename), int64(imgBuffer.Len()), &imgBuffer); err != nil {
+	_, _ = r.Seek(0, 0)
+
+	metadata, err := image.Metadata(r)
+	if err != nil {
+		return err
+	}
+
+	if err := repo.PutFile(ctx, bucket, fmt.Sprintf("photos/%s.jpg", basename), int64(imgBuffer.Len()), &imgBuffer, metadata); err != nil {
 		return fmt.Errorf("failed to copy processed image to bucket '%s': %v", bucket, err)
 	}
 
@@ -124,7 +131,9 @@ func createThumbnail(ctx context.Context, repo domain.Store, bucket, filename st
 
 	_, basename := path.Split(filename)
 
-	if err := repo.PutFile(ctx, bucket, fmt.Sprintf("thumbnail/%s", basename), int64(imgThumbnailBuffer.Len()), &imgThumbnailBuffer); err != nil {
+	emptyMetadata := make(map[string]string)
+
+	if err := repo.PutFile(ctx, bucket, fmt.Sprintf("thumbnail/%s", basename), int64(imgThumbnailBuffer.Len()), &imgThumbnailBuffer, emptyMetadata); err != nil {
 		return fmt.Errorf("failed to copy thumbnail image to bucket '%s': %v", bucket, err)
 	}
 

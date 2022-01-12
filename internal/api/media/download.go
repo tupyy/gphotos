@@ -102,7 +102,7 @@ func DownloadMedia(r *gin.RouterGroup, albumService *album.Service, mediaService
 			return
 		}
 
-		r, err := mediaService.GetPhoto(ctx, album.Bucket, c.GetString("media"))
+		r, _, err := mediaService.GetPhoto(ctx, album.Bucket, c.GetString("media"))
 		if err != nil {
 			logger.WithFields(logrus.Fields{
 				"album_id": album.ID,

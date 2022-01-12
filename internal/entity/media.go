@@ -11,9 +11,10 @@ const (
 )
 
 type Media struct {
-	MediaType    MediaType
-	Filename     string
-	Bucket       string
-	Thumbnail    string
-	LastModified time.Time
+	MediaType  MediaType
+	Filename   string
+	Bucket     string
+	Thumbnail  string
+	Metadata   map[string]string
+	CreateDate time.Time
 }

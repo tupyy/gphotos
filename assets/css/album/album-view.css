@@ -157,6 +157,10 @@
     height: 100%;
 }
 
+#lg-container-1 .photo-sub-html span:first-child {
+    margin-right: 15px;
+}
+
 .container-photos img {
     width: 150px;
 }

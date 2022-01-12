@@ -6,10 +6,18 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"time"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/utils/logutil"
+)
+
+// this format depends on exif extract library
+const (
+	dateFormat       = "2006:01:02 15:04:05"
+	photoContentType = "application/jpg"
+	dateKey          = "X-Amz-Meta-Date"
 )
 
 type MinioRepo struct {
@@ -104,7 +112,7 @@ func (m *MinioRepo) DeleteBucket(ctx context.Context, bucket string) error {
 	return nil
 }
 
-func (m *MinioRepo) PutFile(ctx context.Context, bucket, filename string, size int64, r io.Reader) error {
+func (m *MinioRepo) PutFile(ctx context.Context, bucket, filename string, size int64, r io.Reader, metadata map[string]string) error {
 	if len(bucket) == 0 || len(filename) == 0 {
 		return errors.New("failed to upload file to minio. bucket or filename missing.")
 	}
@@ -118,7 +126,7 @@ func (m *MinioRepo) PutFile(ctx context.Context, bucket, filename string, size i
 		return fmt.Errorf("failed to upload file %s to bucket %s on endpoint %s: %+v", filename, bucket, m.client.EndpointURL(), err)
 	}
 
-	_, err = m.client.PutObject(ctx, bucket, filename, r, size, minio.PutObjectOptions{ContentType: "application/octet-stream"})
+	_, err = m.client.PutObject(ctx, bucket, filename, r, size, minio.PutObjectOptions{ContentType: photoContentType, UserMetadata: metadata})
 	if err != nil {
 		return fmt.Errorf("failed to upload file %s to bucket %s on endpoint %s: %+v", filename, bucket, m.client.EndpointURL(), err)
 	}
@@ -126,26 +134,31 @@ func (m *MinioRepo) PutFile(ctx context.Context, bucket, filename string, size i
 	return nil
 }
 
-func (m *MinioRepo) GetFile(ctx context.Context, bucket, filename string) (io.ReadSeeker, error) {
+func (m *MinioRepo) GetFile(ctx context.Context, bucket, filename string) (io.ReadSeeker, map[string]string, error) {
 	if len(bucket) == 0 || len(filename) == 0 {
-		return nil, errors.New("failed to get file. bucket or filename missing.")
+		return nil, nil, errors.New("failed to get file. bucket or filename missing.")
 	}
 
 	exists, err := m.client.BucketExists(ctx, bucket)
 	if err != nil {
-		return nil, fmt.Errorf("%w internal error on endpoint %s", err, m.client.EndpointURL())
+		return nil, nil, fmt.Errorf("%w internal error on endpoint %s", err, m.client.EndpointURL())
 	}
 
 	if !exists {
-		return nil, fmt.Errorf("%w bucket %s does not exists on endpoint %s", err, bucket, m.client.EndpointURL())
+		return nil, nil, fmt.Errorf("%w bucket %s does not exists on endpoint %s", err, bucket, m.client.EndpointURL())
 	}
 
 	r, err := m.client.GetObject(ctx, bucket, filename, minio.GetObjectOptions{})
 	if err != nil {
-		return nil, fmt.Errorf("%w failed to read file '%s/%s'", err, bucket, filename)
+		return nil, nil, fmt.Errorf("%w failed to read file '%s/%s'", err, bucket, filename)
 	}
 
-	return r, nil
+	objectInfo, err := r.Stat()
+	if err != nil {
+		return nil, nil, fmt.Errorf("%w failed to stat file '%s/%s'", err, bucket, filename)
+	}
+
+	return r, objectInfo.UserMetadata, nil
 }
 
 func (m *MinioRepo) DeleteFile(ctx context.Context, bucket, filename string) error {
@@ -187,7 +200,8 @@ func (m *MinioRepo) ListBucket(ctx context.Context, bucket string) ([]entity.Med
 	}
 
 	objectCh := m.client.ListObjects(ctx, bucket, minio.ListObjectsOptions{
-		Recursive: true,
+		Recursive:    true,
+		WithMetadata: true,
 	})
 
 	mediaMap := make(map[string]entity.Media)
@@ -220,6 +234,16 @@ func toEntity(o minio.ObjectInfo, bucket string) entity.Media {
 	e := entity.Media{
 		Filename: o.Key,
 		Bucket:   bucket,
+		Metadata: o.UserMetadata,
+	}
+
+	if createTime, found := o.UserMetadata[dateKey]; found {
+		t, err := time.Parse(dateFormat, createTime)
+		if err != nil {
+			logutil.GetDefaultLogger().WithField("create_time", createTime).WithError(err).Warn("parse time from metadata")
+		} else {
+			e.CreateDate = t
+		}
 	}
 
 	if strings.Index(o.Key, "jpg") > 0 {

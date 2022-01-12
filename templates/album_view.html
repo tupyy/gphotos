@@ -72,7 +72,7 @@
                                 <div class="row justify-content-center">
                                     <div class="col col-md-10" id="album-gallery">
                                         {{ range .album.Photos }}
-                                        <a href="/api/albums/{{$.album.ID}}/album/{{.Filename}}/media">
+                                        <a href="/api/albums/{{$.album.ID}}/album/{{.Filename}}/media" data-sub-html="<div class='photo-sub-html'><span>Model: {{ extract_metadata "model" .Metadata }}</span><span>Date: {{ date_photo (extract_metadata "date" .Metadata) }}</span></div>">
                                             <img src="/api/albums/{{$.album.ID}}/album/{{.Thumbnail}}/media"/>
                                             <i class="fas fa-check-circle hidden"></i>
                                         </a>

@@ -28,6 +28,7 @@ type Album struct {
 type Media struct {
 	Filename  string
 	Thumbnail string
+	Metadata  map[string]string
 }
 
 func NewAlbumDTO(a entity.Album, owner entity.User) (Album, error) {
@@ -69,7 +70,7 @@ func NewAlbumDTO(a entity.Album, owner entity.User) (Album, error) {
 				continue
 			}
 
-			encryptedPhotos = append(encryptedPhotos, Media{encryptedFilename, encryptedThumbnail})
+			encryptedPhotos = append(encryptedPhotos, Media{encryptedFilename, encryptedThumbnail, a.Photos[i].Metadata})
 		}
 
 		if i < len(a.Videos) {
@@ -90,7 +91,7 @@ func NewAlbumDTO(a entity.Album, owner entity.User) (Album, error) {
 				continue
 			}
 
-			encryptedVideos = append(encryptedVideos, Media{encryptedFilename, encryptedThumbnail})
+			encryptedVideos = append(encryptedVideos, Media{encryptedFilename, encryptedThumbnail, a.Videos[i].Metadata})
 		}
 
 		if !more {

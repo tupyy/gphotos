@@ -22,12 +22,12 @@ func NewCacheRepo(r domain.Store, ttl time.Duration, cleanInterval time.Duration
 	}
 }
 
-func (r *minioRepoCache) GetFile(ctx context.Context, bucket, filename string) (io.ReadSeeker, error) {
+func (r *minioRepoCache) GetFile(ctx context.Context, bucket, filename string) (io.ReadSeeker, map[string]string, error) {
 	return r.repo.GetFile(ctx, bucket, filename)
 }
 
-func (r *minioRepoCache) PutFile(ctx context.Context, bucket, filename string, size int64, reader io.Reader) error {
-	err := r.repo.PutFile(ctx, bucket, filename, size, reader)
+func (r *minioRepoCache) PutFile(ctx context.Context, bucket, filename string, size int64, reader io.Reader, metadata map[string]string) error {
+	err := r.repo.PutFile(ctx, bucket, filename, size, reader, metadata)
 	if err != nil {
 		return err
 	}

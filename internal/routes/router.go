@@ -80,13 +80,13 @@ func loadTemplates(templateDir string) (multitemplate.Renderer, error) {
 	}
 
 	templateFuncs := template.FuncMap{
-		"day":       funcs.Day,
-		"month":     funcs.Month,
-		"year":      funcs.Year,
-		"perm_name": funcs.PermissionName,
-		"date":      funcs.Date,
-		"tag_name":  funcs.TagName,
-		"tag_color": funcs.TagColor,
+		"day":              funcs.Day,
+		"month":            funcs.Month,
+		"year":             funcs.Year,
+		"perm_name":        funcs.PermissionName,
+		"date":             funcs.Date,
+		"date_photo":       funcs.DatePhoto,
+		"extract_metadata": funcs.ExtractMetadata,
 	}
 
 	for _, t := range templates {

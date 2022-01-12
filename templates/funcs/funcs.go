@@ -1,6 +1,7 @@
 package funcs
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -28,14 +29,20 @@ func Date(t time.Time) string {
 	return t.Format(time.RFC1123Z)
 }
 
-func TagName(tag []string) string {
-	return tag[0]
-}
-
-func TagColor(tag []string) string {
-	if len(tag) == 2 && tag[1] != "" {
-		return tag[1]
+// set a nicer format of exif format
+func DatePhoto(s string) string {
+	format := "2006:01:02 15:04:05"
+	if t, err := time.Parse(format, s); err == nil {
+		return t.Format(time.RFC1123Z)
 	}
 
-	return "black"
+	return s
+}
+
+func ExtractMetadata(name string, metadata map[string]string) string {
+	key := fmt.Sprintf("X-Amz-Meta-%s", strings.Title(name))
+	if value, found := metadata[key]; found {
+		return value
+	}
+	return "N/A"
 }
