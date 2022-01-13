@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -248,7 +249,7 @@ func generateFilters(c *gin.Context) []album.Predicate {
 		tags := make([]string, 0, len(tagParameter))
 
 		for _, tag := range tagParameter {
-			tags = append(tags, tag)
+			tags = append(tags, strings.ToLower(tag))
 		}
 
 		f := album.Tags(tags)
