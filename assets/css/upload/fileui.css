@@ -69,6 +69,10 @@
         margin-top: 10px;
     }
     
+    #upload-form .row:first-child .col:last-child button:first-child{
+        margin-right: 20px;
+    }
+    
     .container-upload .file-ui {
         display: block;
         margin-bottom: 10px;

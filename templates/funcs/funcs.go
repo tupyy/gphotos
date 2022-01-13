@@ -32,8 +32,9 @@ func Date(t time.Time) string {
 // set a nicer format of exif format
 func DatePhoto(s string) string {
 	format := "2006:01:02 15:04:05"
+	outputFormat := "02/01/2006 15:04:05"
 	if t, err := time.Parse(format, s); err == nil {
-		return t.Format(time.RFC1123Z)
+		return t.Format(outputFormat)
 	}
 
 	return s

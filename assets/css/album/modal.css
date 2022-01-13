@@ -44,4 +44,12 @@
         margin-right: 20px;
         margin: auto;
     }
+
+    .modal h5 {
+        font-size: 0.9rem;
+    }
+
+    .modal .form-check {
+        font-size: 0.8rem;
+    }
 }
