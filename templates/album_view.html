@@ -14,6 +14,7 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.2.1/lightgallery.umd.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.2.1/plugins/zoom/lg-zoom.umd.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.2.1/plugins/thumbnail/lg-thumbnail.umd.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.2.1/plugins/fullscreen/lg-fullscreen.umd.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/js/jquery.justifiedGallery.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
         {{ if or .edit_permission .is_owner }}
@@ -54,16 +55,16 @@
                         {{ if .album.Photos }}
                             {{ if or .edit_permission .is_owner }}
                             <div class="row row-edit-tools">
-                                <div class="col-12 col-sm-2">
+                                <div class="col-12 col-sm-3">
                                     <div class="form-check form-switch">
                                         <input class="form-check-input" type="checkbox" id="flexSwitchCheckDefault">
                                         <label class="form-check-label" for="flexSwitchCheckDefault">Edit mode</label>
                                     </div>
                                 </div>
-                                <div class="col col-sm-2">
+                                <div class="col col-sm-3">
                                     <button class="btn btn-outline-primary btn-sm" id="btn-set-thumbnail" disabled>Set thumbnail</button>
                                 </div>
-                                <div class="col col-sm-2">
+                                <div class="col col-sm-3">
                                     <button class="btn btn-outline-danger btn-sm" id="btn-delete-photos" disabled>Delete photos</button>
                                 </div>
                             </div>

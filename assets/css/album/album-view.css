@@ -295,3 +295,9 @@
         font-size: 0.8rem;
     }
 }
+
+@media all and (max-width: 860px) {
+    #lg-container-1 .photo-sub-html {
+        font-size: 0.8rem;
+    }
+}

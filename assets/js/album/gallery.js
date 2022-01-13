@@ -58,13 +58,15 @@ $(function () {
                 autoplayFirstVideo: false,
                 pager: true,
                 galleryId: "photos",
-                plugins: [lgThumbnail],
+                plugins: [lgFullscreen,lgZoom, lgThumbnail],
                 licenseKey: '0000-0000-000-0000',
                 mobileSettings: {
                   controls: true,
                   showCloseIcon: true,
                   download: true,
-                  rotate: true
+                  rotate: true,
+                  fullScreen: true,
+                  thumbnail: false
                 }
               }
             );
