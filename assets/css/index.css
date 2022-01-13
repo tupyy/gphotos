@@ -149,7 +149,7 @@
     .main-container #albums {
         margin: 5px 0 5px 0;
         display: flex;
-        justify-content: center;
+        justify-content: space-evenly;
     }
 
     .main-container .sort-row span {
