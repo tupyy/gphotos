@@ -36,11 +36,25 @@
         padding: 0;
     }
 
+    .navbar-right-side .navbar-nav .nav-item:first-child {
+        padding-top: 0;
+    }
+    
+    .navbar-left-side .navbar-nav .nav-item:last-child {
+        padding-bottom: 0;
+        margin-bottom: 0;
+    }
+    
+    .navbar-left-side .navbar-nav .nav-item:first-child {
+        margin-top: 5px;
+    }
+    
     .navbar-nav .nav-item {
         text-align: right;
         margin: 0 0 3px auto;
         padding-top: 2px;
     }
+    
     
     .navbar-nav .nav-item .navbar-nav-user {
         margin: 0 0 3px auto;

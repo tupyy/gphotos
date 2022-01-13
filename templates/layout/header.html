@@ -6,7 +6,7 @@
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="toggleNavbar">
-        <div class="col">
+        <div class="col navbar-left-side">
             <ul class="navbar-nav">
             {{ if .user_role }}
                 {{ if or ( eq .user_role "editor" ) ( eq .user_role "admin" ) }}
