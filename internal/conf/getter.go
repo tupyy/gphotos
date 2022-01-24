@@ -2,6 +2,7 @@ package conf
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -10,8 +11,9 @@ import (
 
 // Below all the different keys used to configure this service.
 const (
-	prefix   = "GOPHOTO"
-	logLevel = "LOG_LEVEL"
+	prefix       = "GOPHOTO"
+	logLevel     = "LOG_LEVEL"
+	logFormatter = "LOG_FORMATTER"
 
 	gracefulShutdown        = "GRACEFUL_SHUTDOWN"
 	defaultGracefulShutdown = 5 * time.Second
@@ -73,6 +75,15 @@ func GetLogLevel() logrus.Level {
 	}
 
 	return logrus.WarnLevel
+}
+
+func GetLogFormatter() logrus.Formatter {
+	switch strings.ToLower(viper.GetString(logFormatter)) {
+	case "json":
+		return &logrus.JSONFormatter{}
+	default:
+		return &logrus.TextFormatter{}
+	}
 }
 
 func GetGracefulShutdownDuration() time.Duration {

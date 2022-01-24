@@ -56,6 +56,8 @@ var serveCmd = &cobra.Command{
 		fmt.Printf("Conf used\n %s\n", keycloakConf.String())
 
 		logrus.SetLevel(conf.GetLogLevel())
+		logrus.SetReportCaller(true)
+		logrus.SetFormatter(conf.GetLogFormatter())
 
 		// initialize cookie store
 		store := memstore.NewStore([]byte(conf.GetServerSecretKey()))
