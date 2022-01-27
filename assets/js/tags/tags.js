@@ -7,6 +7,7 @@ $(function () {
         
             jscolor.presets.default = {    
                 position: 'right',    
+                closeButton: true,
                 palette: [        
                     '#000000', '#7d7d7d', '#870014', '#ec1c23', '#ff7e26',        
                     '#fef100', '#22b14b', '#00a1e7', '#3f47cc', '#a349a4',        
