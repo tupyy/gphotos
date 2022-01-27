@@ -42,6 +42,8 @@ func RegisterMediaHandler(privateGroup *gin.RouterGroup, as *albumService.Servic
 	media.DownloadMedia(privateGroup, as, ms)
 	media.GetAlbumMedia(privateGroup, as, ms)
 
+	media.DeleteMedia(privateGroup, as, ms)
+
 	logutil.GetDefaultLogger().Info("api media registered")
 }
 

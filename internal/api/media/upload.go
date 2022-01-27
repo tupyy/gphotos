@@ -88,7 +88,7 @@ func UploadMedia(r *gin.RouterGroup, albumService *album.Service, mediaService *
 
 		sanitizedFilename := html.EscapeString(file.Filename)
 
-		if err := mediaService.SaveMedia(reqCtx, album.Bucket, sanitizedFilename, src, media.Photo); err != nil {
+		if err := mediaService.Save(reqCtx, album.Bucket, sanitizedFilename, src, media.Photo); err != nil {
 			logger.WithError(err).Error("failed to upload media")
 
 			common.AbortInternalErrorWithJson(c)
