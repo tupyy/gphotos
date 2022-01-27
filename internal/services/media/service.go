@@ -80,7 +80,7 @@ func (s *Service) GetPhoto(ctx context.Context, bucket, filename string) (io.Rea
 	return r, metadata, nil
 }
 
-func (s *Service) SaveMedia(ctx context.Context, bucket, filename string, r io.ReadSeeker, mediaType MediaType) error {
+func (s *Service) Save(ctx context.Context, bucket, filename string, r io.ReadSeeker, mediaType MediaType) error {
 	switch mediaType {
 	case Photo:
 		if err := processPhoto(ctx, s.repo, bucket, filename, r); err != nil {
@@ -97,6 +97,20 @@ func (s *Service) SaveMedia(ctx context.Context, bucket, filename string, r io.R
 	default:
 		return fmt.Errorf("media type not supported")
 	}
+}
+
+func (s *Service) Delete(ctx context.Context, bucket, filename string) error {
+	if strings.Index(filename, "/") > 0 {
+		parts := strings.Split(filename, "/")
+
+		// delete thumbnail
+		if err := s.repo.DeleteFile(ctx, bucket, fmt.Sprintf("thumbnail/%s", parts[len(parts)-1])); err != nil {
+			return err
+		}
+
+	}
+
+	return s.repo.DeleteFile(ctx, bucket, filename)
 }
 
 func processPhoto(ctx context.Context, repo domain.Store, bucket, filename string, r io.ReadSeeker) error {

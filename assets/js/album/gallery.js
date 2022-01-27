@@ -138,7 +138,32 @@ $(function () {
         },
 
         onDeletePhotos: function(e) {
-            console.log("delete photos");
+            var url = location.href;
+            const parts = url.split('/');
+
+            let mySpinner = $.spinner('test');
+
+            e.data.currentSelectedImages.forEach( (img) => {
+                a = $(img).parent('a');
+                const imgParts = a[0].getAttribute('href').split('/');
+
+                axios({
+                    method: 'delete',
+                    url: e.data.baseURL + '/' + parts[parts.length-1] + '/album/' + imgParts[imgParts.length-2] + '/media'
+                }).then(function(response) {
+                    mySpinner.remove();
+                    location.reload();
+                
+                    $.alert('Media removed', {
+                        closeTime: 2000,
+                        autoClose: true,
+                        position: ['top-left'],
+                        withTime: false,
+                        type: 'success',
+                        isOnly: false
+                    });
+                });
+            } )
         }
     }
 
