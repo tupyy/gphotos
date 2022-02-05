@@ -1,0 +1,69 @@
+[IndexAlbumType]
+description = "Name of the album type"
+hash = "sha1-b88ff167eae28cf466a147b66e784fd4fa25f976"
+other = "Album type"
+
+[IndexAlbumTypePersonal]
+description = "Personal albums"
+hash = "sha1-0c779ea926a836f6ec06232c85411304a6933259"
+other = "Personal"
+
+[IndexAlbumTypeShared]
+description = "Shared albums"
+hash = "sha1-000a72588840944c57910f349294a9a936ea83cb"
+other = "Shared"
+
+[IndexFilterDate]
+description = "Filter date"
+hash = "sha1-900fe6a3f1a418bd85c124acf2dd14f5f2f5c859"
+other = "Date"
+
+[IndexFilterSharedByOthers]
+description = "Filter shared by others"
+hash = "sha1-0ac3e5097a083607ebb42fe469f102a8dc72a5e8"
+other = "Shared by others"
+
+[IndexFilterTo]
+description = "Filter date to"
+hash = "sha1-38af9a00ca61763268b4f666da2dc927606e23c2"
+other = "to"
+
+[IndexSort]
+description = "Sort by"
+hash = "sha1-fdb02e8afbf4af6e2345ddef0654eede39510d7a"
+other = "Sort by"
+
+[IndexSortByDate]
+description = "Sort by date"
+hash = "sha1-483e6cf4473e4b94fe418590a68ef2203f5bbb6c"
+other = "Date (most recent to old)"
+
+[IndexSortByDateRev]
+description = "Sort by date reverse"
+hash = "sha1-779a0a7f579ca1197dba1a99304d228431ab4ff0"
+other = "Date (old to recent)"
+
+[IndexSortByLocation]
+description = "Sort by location"
+hash = "sha1-5f130bd3e463c0705d105f112a8ed1940708d348"
+other = "Location"
+
+[IndexSortByName]
+description = "Sort by name"
+hash = "sha1-8c84a2ac2c13029e0473ce0afc970bc7cb30f96e"
+other = "Name"
+
+[NavBarCreateAlbum]
+description = "create album in navbar"
+hash = "sha1-ad121d5c5301ccc6af3cb7784ebcf4cf254dcf22"
+other = "Create album"
+
+[NavBarTags]
+description = "tags"
+hash = "sha1-b21a0c712fc16d8dc87e88ab0b9d1f47691f1251"
+other = "Tags"
+
+[Title]
+description = "Page title"
+hash = "sha1-5fc6a5f6fb5ae3e3a9371a45143808b948fe7cf9"
+other = "Photos"
