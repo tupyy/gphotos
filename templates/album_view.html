@@ -37,11 +37,11 @@
         <div class="container">
         <div class="menu-bar">
             <nav class="nav nav-pills flex-column flex-sm-row">
-                <button class="flex-sm-fill text-sm-center nav-link active" aria-current="page" data-bs-toggle="tab" data-bs-target="#photo" type="button">Photos</button>
+                <button class="flex-sm-fill text-sm-center nav-link active" aria-current="page" data-bs-toggle="tab" data-bs-target="#photo" type="button">{{ to_title .Photos }}</button>
                 <!-- <button class="flex-sm-fill text-sm-center nav-link" data-bs-toggle="tab" data-bs-target="#video" type="button">Videos</button> -->
                 <button class="flex-sm-fill text-sm-center nav-link" data-bs-toggle="tab" data-bs-target="#upload" type="button">Upload</button>
-                <button class="flex-sm-fill text-sm-center nav-link" data-bs-toggle="tab" data-bs-target="#about" type="button">About</button>
-                <button class="flex-sm-fill text-sm-center nav-link" data-bs-toggle="tab" data-bs-target="#settings" type="button">Settings</button>
+                <button class="flex-sm-fill text-sm-center nav-link" data-bs-toggle="tab" data-bs-target="#about" type="button">{{ to_title .About }}</button>
+                <button class="flex-sm-fill text-sm-center nav-link" data-bs-toggle="tab" data-bs-target="#settings" type="button">{{ to_title .Settings }}</button>
             </nav>
         </div>
         <div class="tab-content">
@@ -141,10 +141,10 @@
                 <div class="container container-tab container-about">
                     <div class="container container-details">
                         <div class="row row-title">
-                            <h4 class="title">Details</h4>
+                            <h4 class="title">{{ to_title .Details }}</h4>
                         </div>
                         <div class="row">
-                            <div class="col-lg-2 col title">Owner</div>
+                            <div class="col-lg-2 col title">{{ to_title .Owner }}</div>
                             {{ if .is_owner }}
                                 <div class="col-lg-4 subtitle col">You</div>
                             {{ else }}
@@ -152,19 +152,19 @@
                             {{ end }}
                         </div>
                         <div class="row">
-                            <div class="col-lg-2 col title">Name</div>
+                            <div class="col-lg-2 col title">{{ to_title .Name }}</div>
                             <div class="col-lg-4 col subtitle">{{.album.Name}}</div>
                         </div>
                         <div class="row">
-                            <div class="col-lg-2 col title">Created at</div>
+                            <div class="col-lg-2 col title">{{ to_title .CreatedAt }}</div>
                             <div class="col-lg-4 col subtitle">{{.album.Date}}</div>
                         </div>
                         <div class="row">
-                            <div class="col-lg-2 col title">Description</div>
+                            <div class="col-lg-2 col title">{{ to_title .Description }}</div>
                             <div class="col-lg-4 col subtitle">{{.album.Description}}</div>
                         </div>
                         <div class="row">
-                            <div class="col-lg-2 col title">Location</div>
+                            <div class="col-lg-2 col title">{{ to_title .Location }}</div>
                             <div class="col-lg-4 col subtitle">{{.album.Location}}</div>
                         </div>
                     </div>

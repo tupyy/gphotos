@@ -53,5 +53,9 @@ func ToLower(s string) string {
 }
 
 func ToTitle(s string) string {
-	return strings.ToTitle(s)
+	return strings.Title(s)
+}
+
+func CapFirst(s string) string {
+	return strings.ToUpper(string(s[0])) + string(s[1:])
 }

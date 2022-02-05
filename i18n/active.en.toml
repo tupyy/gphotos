@@ -1,4 +1,6 @@
-None = "none"
+[AlbumDescription]
+description = "Album form description"
+other = "description"
 
 [AlbumFormCreate]
 description = "Album form create"
@@ -8,10 +10,6 @@ other = "create"
 description = "Album form delete permission"
 other = "delete"
 
-[AlbumFormDescription]
-description = "Album form description"
-other = "description"
-
 [AlbumFormEditPermission]
 description = "Album form edit permission"
 other = "edit"
@@ -20,29 +18,65 @@ other = "edit"
 description = "album form granted permissions"
 other = "permissions granted"
 
-[AlbumFormGroupPermissions]
-description = "album form group permissions"
-other = "group permissions"
-
-[AlbumFormLocation]
-description = "Album form localtion"
-other = "location"
-
-[AlbumFormName]
-description = "Album form name"
-other = "Name"
-
 [AlbumFormReadPermission]
 description = "Album form read permission"
 other = "read"
 
-[AlbumFormUserPermissions]
-description = "album form user permissions"
-other = "user permissions"
+[AlbumFormUpdate]
+description = "Album form update button"
+other = "update"
 
 [AlbumFormWritePermission]
 description = "Album form write permission"
 other = "write"
+
+[AlbumGroupPermissions]
+description = "album form group permissions"
+other = "group permissions"
+
+[AlbumLocation]
+description = "Album form localtion"
+other = "location"
+
+[AlbumOwner]
+description = "album owner"
+other = "owner"
+
+[AlbumCreatedAt]
+description = "album creation date"
+other = "created at"
+
+[AlbumDetails]
+description = "album details"
+other = "details"
+
+[AlbumName]
+description = "Album form name"
+other = "Name"
+
+[AlbumUserPermissions]
+description = "album form user permissions"
+other = "user permissions"
+
+[AlbumViewAbout]
+description = "description tab"
+other = "about"
+
+[AlbumViewPhotos]
+description = "photo tab"
+other = "photos"
+
+[AlbumViewSettings]
+description = "settings tab"
+other = "settings"
+
+[AlbumViewUpdate]
+description = "update tab"
+other = "update"
+
+[AlbumViewNoPermission]
+description = "album view no permission"
+other = ""
 
 [Albums]
 description = "Albums"
@@ -103,6 +137,10 @@ other = "Create album"
 [NavBarTags]
 description = "tags"
 other = "Tags"
+
+[None]
+description = "None"
+other = "none"
 
 [Title]
 description = "Page title"

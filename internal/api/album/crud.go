@@ -229,17 +229,18 @@ func GetCreateAlbumForm(r *gin.RouterGroup, usersService *users.Service) {
 			"canShare":           session.User.CanShare,
 			"isOwner":            true,
 			csrf.TemplateTag:     csrf.TemplateField(c.Request),
-			"Name":               i18n.GetTranslation(localizer, "AlbumFormName"),
-			"Description":        i18n.GetTranslation(localizer, "AlbumFormDescription"),
-			"Location":           i18n.GetTranslation(localizer, "AlbumFormLocation"),
-			"UserPermissions":    i18n.GetTranslation(localizer, "AlbumFormUserPermissions"),
+			"Name":               i18n.GetTranslation(localizer, "AlbumName"),
+			"Description":        i18n.GetTranslation(localizer, "AlbumDescription"),
+			"Location":           i18n.GetTranslation(localizer, "AlbumLocation"),
+			"UserPermissions":    i18n.GetTranslation(localizer, "AlbumUserPermissions"),
 			"ReadPermission":     i18n.GetTranslation(localizer, "AlbumFormReadPermission"),
 			"WritePermission":    i18n.GetTranslation(localizer, "AlbumFormWritePermission"),
 			"EditPermission":     i18n.GetTranslation(localizer, "AlbumFormEditPermission"),
 			"DeletePermission":   i18n.GetTranslation(localizer, "AlbumFormDeletePermission"),
 			"PermissionsGranted": i18n.GetTranslation(localizer, "AlbumFormGrantedPermissions"),
-			"GroupPermissions":   i18n.GetTranslation(localizer, "AlbumFormGroupPermissions"),
+			"GroupPermissions":   i18n.GetTranslation(localizer, "AlbumGroupPermissions"),
 			"None":               i18n.GetTranslation(localizer, "None"),
+			"Create":             i18n.GetTranslation(localizer, "AlbumFormCreate"),
 		})
 	})
 }
@@ -353,6 +354,10 @@ func GetUpdateAlbumForm(r *gin.RouterGroup, albumService *album.Service, usersSe
 			return
 		}
 
+		// localizer
+		accept := c.GetHeader("Accept-Language")
+		localizer := goI18n.NewLocalizer(i18n.Bundle, accept)
+
 		albumDTO, err := dto.NewAlbumDTO(album, session.User)
 		if err != nil {
 			logger.WithError(err).WithField("id", album.ID).Error("failed to serialize the album")
@@ -417,6 +422,18 @@ func GetUpdateAlbumForm(r *gin.RouterGroup, albumService *album.Service, usersSe
 				"groups_permissions": string(groupPermissions),
 				"is_admin":           session.User.Role == entity.RoleAdmin,
 				csrf.TemplateTag:     csrf.TemplateField(c.Request),
+				"Name":               i18n.GetTranslation(localizer, "AlbummName"),
+				"Description":        i18n.GetTranslation(localizer, "AlbumDescription"),
+				"Location":           i18n.GetTranslation(localizer, "AlbumLocation"),
+				"UserPermissions":    i18n.GetTranslation(localizer, "AlbumUserPermissions"),
+				"ReadPermission":     i18n.GetTranslation(localizer, "AlbumFormReadPermission"),
+				"WritePermission":    i18n.GetTranslation(localizer, "AlbumFormWritePermission"),
+				"EditPermission":     i18n.GetTranslation(localizer, "AlbumFormEditPermission"),
+				"DeletePermission":   i18n.GetTranslation(localizer, "AlbumFormDeletePermission"),
+				"PermissionsGranted": i18n.GetTranslation(localizer, "AlbumFormGrantedPermissions"),
+				"GroupPermissions":   i18n.GetTranslation(localizer, "AlbumGroupPermissions"),
+				"None":               i18n.GetTranslation(localizer, "None"),
+				"Update":             i18n.GetTranslation(localizer, "AlbumFormUpdate"),
 			})
 
 			return
@@ -441,10 +458,22 @@ func GetUpdateAlbumForm(r *gin.RouterGroup, albumService *album.Service, usersSe
 		}
 
 		c.HTML(http.StatusOK, "album_form.html", gin.H{
-			"album":          albumDTO,
-			"canShare":       session.User.CanShare,
-			"isOwner":        false,
-			csrf.TemplateTag: csrf.TemplateField(c.Request),
+			"album":              albumDTO,
+			"canShare":           session.User.CanShare,
+			"isOwner":            false,
+			csrf.TemplateTag:     csrf.TemplateField(c.Request),
+			"Name":               i18n.GetTranslation(localizer, "AlbumName"),
+			"Description":        i18n.GetTranslation(localizer, "AlbumDescription"),
+			"Location":           i18n.GetTranslation(localizer, "AlbumLocation"),
+			"UserPermissions":    i18n.GetTranslation(localizer, "AlbumUserPermissions"),
+			"ReadPermission":     i18n.GetTranslation(localizer, "AlbumFormReadPermission"),
+			"WritePermission":    i18n.GetTranslation(localizer, "AlbumFormWritePermission"),
+			"EditPermission":     i18n.GetTranslation(localizer, "AlbumFormEditPermission"),
+			"DeletePermission":   i18n.GetTranslation(localizer, "AlbumFormDeletePermission"),
+			"PermissionsGranted": i18n.GetTranslation(localizer, "AlbumFormGrantedPermissions"),
+			"GroupPermissions":   i18n.GetTranslation(localizer, "AlbumGroupPermissions"),
+			"None":               i18n.GetTranslation(localizer, "None"),
+			"Update":             i18n.GetTranslation(localizer, "AlbumFormUpdate"),
 		})
 	})
 
