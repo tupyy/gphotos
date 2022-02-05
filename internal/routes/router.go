@@ -88,6 +88,7 @@ func loadTemplates(templateDir string) (multitemplate.Renderer, error) {
 		"date_photo":       funcs.DatePhoto,
 		"extract_metadata": funcs.ExtractMetadata,
 		"to_lower":         funcs.ToLower,
+		"to_title":         funcs.ToTitle,
 	}
 
 	for _, t := range templates {

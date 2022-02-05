@@ -1,10 +1,52 @@
+None = "none"
+
+[AlbumFormCreate]
+description = "Album form create"
+other = "create"
+
+[AlbumFormDeletePermission]
+description = "Album form delete permission"
+other = "delete"
+
+[AlbumFormDescription]
+description = "Album form description"
+other = "description"
+
+[AlbumFormEditPermission]
+description = "Album form edit permission"
+other = "edit"
+
+[AlbumFormGrantedPermissions]
+description = "album form granted permissions"
+other = "permissions granted"
+
+[AlbumFormGroupPermissions]
+description = "album form group permissions"
+other = "group permissions"
+
+[AlbumFormLocation]
+description = "Album form localtion"
+other = "location"
+
+[AlbumFormName]
+description = "Album form name"
+other = "Name"
+
+[AlbumFormReadPermission]
+description = "Album form read permission"
+other = "read"
+
+[AlbumFormUserPermissions]
+description = "album form user permissions"
+other = "user permissions"
+
+[AlbumFormWritePermission]
+description = "Album form write permission"
+other = "write"
+
 [Albums]
 description = "Albums"
 other = "Albums"
-
-[IndexFilters]
-description = "Filters"
-other = "Filters"
 
 [IndexAlbumType]
 description = "Name of the album type"
@@ -29,6 +71,10 @@ other = "Shared by others"
 [IndexFilterTo]
 description = "Filter date to"
 other = "to"
+
+[IndexFilters]
+description = "Filters"
+other = "Filters"
 
 [IndexSort]
 description = "Sort by"

@@ -20,34 +20,34 @@
             {{ .csrfField }}
             <div class="container.metadata row ">
                 <div class="mb-3">
-                    <label for="name">Name</label>
+                    <label for="name">{{ to_title .Name}}</label>
                     {{ if .album }}
-                        <input name="name" type="text" id="name" class="form-control" placeholder="name" value="{{.album.Name}}"required>
+                    <input name="name" type="text" id="name" class="form-control" placeholder="{{ to_lower .Name }}" value="{{.album.Name}}"required>
                     {{ else }}
-                        <input name="name" type="text" id="name" class="form-control" placeholder="name" value="{{.album.Name}}"required>
+                    <input name="name" type="text" id="name" class="form-control" placeholder="{{ to_lower .Name }}" value="{{.album.Name}}"required>
                     {{ end }}
                 </div>
                 <div class="mb-3">
-                    <label for="description">Description</label>
+                    <label for="description">{{ to_title .Description }}</label>
                     {{ if .album }}
-                        <input name="description" type="text" id="description" class="form-control" placeholder="description" value="{{.album.Description}}" required>
+                    <input name="description" type="text" id="description" class="form-control" placeholder="{{ to_lower .Description }}" value="{{.album.Description}}" required>
                     {{ else }}
-                        <input name="description" type="text" id="description" class="form-control" placeholder="description" required>
+                    <input name="description" type="text" id="description" class="form-control" placeholder="{{ to_lower .Description }}" required>
                     {{ end }}
                 </div>
                 <div class="mb-3">
-                    <label for="location">Location</label>
+                    <label for="location">{{ to_title .Location }}</label>
                     {{ if .album }}
-                        <input name="location" type="text" id="location" class="form-control" placeholder="location" value="{{.album.Location}}" required>
+                    <input name="location" type="text" id="location" class="form-control" placeholder="{{ to_lower .Location }}" value="{{.album.Location}}" required>
                     {{ else }}
-                        <input name="location" type="text" id="location" class="form-control" placeholder="location" required>
+                    <input name="location" type="text" id="location" class="form-control" placeholder="{{ to_lower .Location }}" required>
                     {{ end }}
                 </div>
             </div>
             {{ if or ( and .canShare .isOwner ) .is_admin }}
                 {{ if .users }}
                     <div class="container-permissions container-permissions-user">
-                        <div class="title container-permissions-title">User permission</div>
+                        <div class="title container-permissions-title">{{ to_title .UserPermissions}}</div>
                         <div class="mb-3">
                             <label for="select-users">Users</label>
                             <select class="form-select" id="select-users">
@@ -58,19 +58,19 @@
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" value="r" id="readUserPermissionCheck">
-                            <label class="form-check-label" for="readUserPermissionCheck">Read</label>
+                            <label class="form-check-label" for="readUserPermissionCheck">{{ to_title .ReadPermission }}</label>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" value="w" id="writeUserPermissionCheck">
-                            <label class="form-check-label" for="writeUserPermissionCheck">Write</label>
+                            <label class="form-check-label" for="writeUserPermissionCheck">{{ to_title .WritePermission }}</label>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" value="e" id="editUserPermissionCheck">
-                            <label class="form-check-label" for="editUserPermissionCheck">Edit</label>
+                            <label class="form-check-label" for="editUserPermissionCheck">{{ to_title .EditPermission }}</label>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" value="d" id="deleteUserPermissionCheck">
-                            <label class="form-check-label" for="deleteUserPermissionCheck">Delete</label>
+                            <label class="form-check-label" for="deleteUserPermissionCheck">{{ to_title .DeletePermission }}</label>
                         </div>
                         <div class="container-permissions-button row">
                         </div>
@@ -78,7 +78,7 @@
                             <input id="inputUserPermissions" type="hidden" name="user_permissions" value="{{.users_permissions}}"/>
                             <div class="row container-permissions-selected-users">
                                 <div class="title-group">
-                                    <span class="title"> Permissions granted </span>
+                                    <span class="title">{{to_title .PermissionsGranted}}</span>
                                     <button type="button" class="btn btn-outline-primary btn-sm" id="userPermissionButton"><i class="fas fa-plus"></i></button>
                                 </div>
                                 <ul class="list-group" id="selected-users">
@@ -88,10 +88,10 @@
                             <input id="inputUserPermissions" type="hidden" name="user_permissions" value=""/>
                             <div class="row container-permissions-selected-users">
                                 <div class="title-group">
-                                    <span class="title"> Permissions granted </span>
+                                    <span class="title">{{ to_title .PermissionsGranted }}</span>
                                     <button type="button" class="btn btn-outline-primary btn-sm" id="userPermissionButton"><i class="fas fa-plus"></i></button>
                                 </div>
-                                <div class="title no-users-permission">None</div>
+                                <div class="title no-users-permission">{{ to_title .None }}</div>
                                 <ul class="list-group" id="selected-users">
                                 </ul>
                             </div>
@@ -100,7 +100,7 @@
                 {{ end }}
                 {{ if .groups }}
                     <div class="container-permissions container-permissions-group">
-                        <div class="title container-permissions-title">Group permission</div>
+                        <div class="title container-permissions-title">{{ to_title .GroupPermissions }}</div>
                         <label for="select-groups">Groups</label>
                         <div class="mb-3">
                             <select class="form-select" id="select-groups">
@@ -111,25 +111,25 @@
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" value="r" id="readGroupPermissionCheck">
-                            <label class="form-check-label" for="readGroupPermissionCheck">Read</label>
+                            <label class="form-check-label" for="readGroupPermissionCheck">{{ to_title .ReadPermission }}</label>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" value="w" id="writeGroupPermissionCheck">
-                            <label class="form-check-label" for="writeGroupPermissionCheck">Write</label>
+                            <label class="form-check-label" for="writeGroupPermissionCheck">{{ to_title .WritePermission }}</label>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" value="e" id="editGroupPermissionCheck">
-                            <label class="form-check-label" for="editGroupPermissionCheck">Edit</label>
+                            <label class="form-check-label" for="editGroupPermissionCheck">{{ to_title .EditPermission }}</label>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" value="d" id="deleteGroupPermissionCheck">
-                            <label class="form-check-label" for="deleteGroupPermissionCheck">Delete</label>
+                            <label class="form-check-label" for="deleteGroupPermissionCheck">{{ to_title .DeletePermission }}</label>
                         </div>
                         {{ if .groups_permissions }}
                             <input id="inputGroupPermissions" type="hidden" name="group_permissions" value="{{.groups_permissions}}"/>
                             <div class="row container-permissions-selected-groups">
                                 <div class=title-group>
-                                    <span class="title">Permissions granted</span>
+                                    <span class="title">{{ to_title .PermissionsGranted }}</span>
                                     <button type="button" id="groupPermissionButton" class="btn btn-outline-primary btn-sm"><i class="fas fa-plus"></i></button>
                                 </div>
                                 <ul class="list-group" id="selected-groups">
@@ -139,10 +139,10 @@
                             <input id="inputGroupPermissions" type="hidden" name="group_permissions" value=""/>
                             <div class="row container-permissions-selected-groups">
                                 <div class="title-group">
-                                    <span class="title">Permissions granted</span>
+                                    <span class="title">{{ to_title .PermissionsGranted }}</span>
                                     <button type="button" id="groupPermissionButton" class="btn btn-outline-primary btn-sm"><i class="fas fa-plus"></i></button>
                                 </div>
-                                <div class="title no-groups-permission">None</div>
+                                <div class="title no-groups-permission">{{ to_title .None }}</div>
                                 <ul class="list-group" id="selected-groups">
                                 </ul>
                             </div>

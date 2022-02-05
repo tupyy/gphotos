@@ -1,3 +1,8 @@
+[Albums]
+description = "Albums"
+hash = "sha1-8e5f000257b00af5469765cd9657caf85fd6b43b"
+other = "Albume"
+
 [IndexAlbumType]
 description = "Name of the album type"
 hash = "sha1-b88ff167eae28cf466a147b66e784fd4fa25f976"
@@ -27,6 +32,11 @@ other = "Partajate de"
 description = "Filter date to"
 hash = "sha1-38af9a00ca61763268b4f666da2dc927606e23c2"
 other = "pana la"
+
+[IndexFilters]
+description = "Filters"
+hash = "sha1-15f6b304eb8cc91480b286ee867ae8593ffc879e"
+other = "Filtre"
 
 [IndexSort]
 description = "Sort by"
@@ -68,12 +78,61 @@ description = "Page title"
 hash = "sha1-5fc6a5f6fb5ae3e3a9371a45143808b948fe7cf9"
 other = "Poze"
 
-[Albums]
-description = "Albums"
-hash = "sha1-8e5f000257b00af5469765cd9657caf85fd6b43b"
-other = "Albume"
+[AlbumFormCreate]
+description = "Album form create"
+hash = "sha1-e83b8b5c4a3a00b61c8d478e61d04047e3a84dae"
+other = "creeaza"
 
-[IndexFilters]
-description = "Filters"
-hash = "sha1-15f6b304eb8cc91480b286ee867ae8593ffc879e"
-other = "Filtre"
+[AlbumFormDeletePermission]
+description = "Album form delete permission"
+hash = "sha1-9ff933aced799ccb07763ceb20c0bf1c07cd0505"
+other = "stergere"
+
+[AlbumFormDescription]
+description = "Album form description"
+hash = "sha1-296b0f3d56c314584a8b8050b976888efe297230"
+other = "descriere"
+
+[AlbumFormEditPermission]
+description = "Album form edit permission"
+hash = "sha1-89103c8d3605f13742da5ccfbfba0b1420c48caf"
+other = "editare"
+
+[AlbumFormGrantedPermissions]
+description = "album form granted permissions"
+hash = "sha1-ae8fe55fd62cdb21081845fae3528ef1f55a1a26"
+other = "permisii acordate"
+
+[AlbumFormGroupPermissions]
+description = "album form group permissions"
+hash = "sha1-c219bf9be1c6674aba37fac7c2c01b350f4369e1"
+other = "permisii de group"
+
+[AlbumFormLocation]
+description = "Album form localtion"
+hash = "sha1-02c0fe8db22cd3d5b790e37ffcf975cd650d6f30"
+other = "locatie"
+
+[AlbumFormName]
+description = "Album form name"
+hash = "sha1-9754349dd8efb627d611028ba6023dd5c0a1ae25"
+other = "nume"
+
+[AlbumFormReadPermission]
+description = "Album form read permission"
+hash = "sha1-4a69ea1c801de7311fdc34ff21996073fda49357"
+other = "citire"
+
+[AlbumFormUserPermissions]
+description = "album form user permissions"
+hash = "sha1-2a6879b384489c9ca47430b2cee3fb4f8fa85672"
+other = "permisii pentru useri"
+
+[AlbumFormWritePermission]
+description = "Album form write permission"
+hash = "sha1-12b8642b93cc408a04f440db791a6858d7349eee"
+other = "scriere"
+
+[None]
+hash = "sha1-71f8e7976e4cbc4561c9d62fb283e7f788202acb"
+other = "niciuna"

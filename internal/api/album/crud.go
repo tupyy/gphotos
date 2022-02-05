@@ -13,7 +13,9 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/csrf"
+	goI18n "github.com/nicksnyder/go-i18n/v2/i18n"
 	"github.com/sirupsen/logrus"
+	"github.com/tupyy/gophoto/i18n"
 	"github.com/tupyy/gophoto/internal/api/dto"
 	"github.com/tupyy/gophoto/internal/api/utils"
 	"github.com/tupyy/gophoto/internal/common"
@@ -217,12 +219,27 @@ func GetCreateAlbumForm(r *gin.RouterGroup, usersService *users.Service) {
 
 		usersDTO := dto.NewUserDTOs(users)
 
+		// localizer
+		accept := c.GetHeader("Accept-Language")
+		localizer := goI18n.NewLocalizer(i18n.Bundle, accept)
+
 		c.HTML(http.StatusOK, "album_form.html", gin.H{
-			"users":          usersDTO,
-			"groups":         groups,
-			"canShare":       session.User.CanShare,
-			"isOwner":        true,
-			csrf.TemplateTag: csrf.TemplateField(c.Request),
+			"users":              usersDTO,
+			"groups":             groups,
+			"canShare":           session.User.CanShare,
+			"isOwner":            true,
+			csrf.TemplateTag:     csrf.TemplateField(c.Request),
+			"Name":               i18n.GetTranslation(localizer, "AlbumFormName"),
+			"Description":        i18n.GetTranslation(localizer, "AlbumFormDescription"),
+			"Location":           i18n.GetTranslation(localizer, "AlbumFormLocation"),
+			"UserPermissions":    i18n.GetTranslation(localizer, "AlbumFormUserPermissions"),
+			"ReadPermission":     i18n.GetTranslation(localizer, "AlbumFormReadPermission"),
+			"WritePermission":    i18n.GetTranslation(localizer, "AlbumFormWritePermission"),
+			"EditPermission":     i18n.GetTranslation(localizer, "AlbumFormEditPermission"),
+			"DeletePermission":   i18n.GetTranslation(localizer, "AlbumFormDeletePermission"),
+			"PermissionsGranted": i18n.GetTranslation(localizer, "AlbumFormGrantedPermissions"),
+			"GroupPermissions":   i18n.GetTranslation(localizer, "AlbumFormGroupPermissions"),
+			"None":               i18n.GetTranslation(localizer, "None"),
 		})
 	})
 }
