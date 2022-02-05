@@ -47,3 +47,7 @@ func ExtractMetadata(name string, metadata map[string]string) string {
 	}
 	return "N/A"
 }
+
+func ToLower(s string) string {
+	return strings.ToLower(s)
+}

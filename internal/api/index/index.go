@@ -7,6 +7,8 @@ import (
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	goI18n "github.com/nicksnyder/go-i18n/v2/i18n"
+	"github.com/tupyy/gophoto/i18n"
 	"github.com/tupyy/gophoto/internal/api/dto"
 	"github.com/tupyy/gophoto/internal/common"
 	"github.com/tupyy/gophoto/internal/entity"
@@ -77,11 +79,31 @@ func Index(r *gin.RouterGroup, usersService *users.Service) {
 			return
 		}
 
+		// localizer
+		accept := c.GetHeader("Accept-Language")
+		localizer := goI18n.NewLocalizer(i18n.Bundle, accept)
+
 		c.HTML(http.StatusOK, "index.html", gin.H{
-			"name":      fmt.Sprintf("%s %s", session.User.FirstName, session.User.LastName),
-			"user_role": session.User.Role.String(),
-			"can_share": session.User.CanShare,
-			"users":     dto.NewUserDTOs(relatedUsers),
+			"name":           fmt.Sprintf("%s %s", session.User.FirstName, session.User.LastName),
+			"user_role":      session.User.Role.String(),
+			"can_share":      session.User.CanShare,
+			"users":          dto.NewUserDTOs(relatedUsers),
+			"Title":          i18n.GetTranslation(localizer, "Title"),
+			"CreateAlbum":    i18n.GetTranslation(localizer, "NavBarCreateAlbum"),
+			"Tags":           i18n.GetTranslation(localizer, "NavBarTags"),
+			"Filters":        i18n.GetTranslation(localizer, "IndexFilters"),
+			"AlbumType":      i18n.GetTranslation(localizer, "IndexAlbumType"),
+			"Personal":       i18n.GetTranslation(localizer, "IndexAlbumTypePersonal"),
+			"Shared":         i18n.GetTranslation(localizer, "IndexAlbumTypeShared"),
+			"Date":           i18n.GetTranslation(localizer, "IndexFilterDate"),
+			"To":             i18n.GetTranslation(localizer, "IndexFilterTo"),
+			"SharedByOthers": i18n.GetTranslation(localizer, "IndexFilterSharedByOthers"),
+			"Albums":         i18n.GetTranslation(localizer, "Albums"),
+			"SortBy":         i18n.GetTranslation(localizer, "IndexSort"),
+			"Name":           i18n.GetTranslation(localizer, "IndexSortByName"),
+			"DateNormal":     i18n.GetTranslation(localizer, "IndexSortByDate"),
+			"DateRev":        i18n.GetTranslation(localizer, "IndexSortByDateRev"),
+			"Location":       i18n.GetTranslation(localizer, "IndexSortByLocation"),
 		})
 	})
 }

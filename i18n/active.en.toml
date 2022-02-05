@@ -1,3 +1,11 @@
+[Albums]
+description = "Albums"
+other = "Albums"
+
+[IndexFilters]
+description = "Filters"
+other = "Filters"
+
 [IndexAlbumType]
 description = "Name of the album type"
 other = "Album type"

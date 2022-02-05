@@ -1,7 +1,7 @@
 [IndexAlbumType]
 description = "Name of the album type"
 hash = "sha1-b88ff167eae28cf466a147b66e784fd4fa25f976"
-other = "Album type"
+other = "Tipul albumului"
 
 [IndexAlbumTypePersonal]
 description = "Personal albums"
@@ -11,59 +11,69 @@ other = "Personal"
 [IndexAlbumTypeShared]
 description = "Shared albums"
 hash = "sha1-000a72588840944c57910f349294a9a936ea83cb"
-other = "Shared"
+other = "Partajat"
 
 [IndexFilterDate]
 description = "Filter date"
 hash = "sha1-900fe6a3f1a418bd85c124acf2dd14f5f2f5c859"
-other = "Date"
+other = "Data"
 
 [IndexFilterSharedByOthers]
 description = "Filter shared by others"
 hash = "sha1-0ac3e5097a083607ebb42fe469f102a8dc72a5e8"
-other = "Shared by others"
+other = "Partajate de"
 
 [IndexFilterTo]
 description = "Filter date to"
 hash = "sha1-38af9a00ca61763268b4f666da2dc927606e23c2"
-other = "to"
+other = "pana la"
 
 [IndexSort]
 description = "Sort by"
 hash = "sha1-fdb02e8afbf4af6e2345ddef0654eede39510d7a"
-other = "Sort by"
+other = "Sortare dupa"
 
 [IndexSortByDate]
 description = "Sort by date"
 hash = "sha1-483e6cf4473e4b94fe418590a68ef2203f5bbb6c"
-other = "Date (most recent to old)"
+other = "Data (recent la vechi)"
 
 [IndexSortByDateRev]
 description = "Sort by date reverse"
 hash = "sha1-779a0a7f579ca1197dba1a99304d228431ab4ff0"
-other = "Date (old to recent)"
+other = "Data (vechi la recent)"
 
 [IndexSortByLocation]
 description = "Sort by location"
 hash = "sha1-5f130bd3e463c0705d105f112a8ed1940708d348"
-other = "Location"
+other = "Locatie"
 
 [IndexSortByName]
 description = "Sort by name"
 hash = "sha1-8c84a2ac2c13029e0473ce0afc970bc7cb30f96e"
-other = "Name"
+other = "Nume"
 
 [NavBarCreateAlbum]
 description = "create album in navbar"
 hash = "sha1-ad121d5c5301ccc6af3cb7784ebcf4cf254dcf22"
-other = "Create album"
+other = "Creeaza album"
 
 [NavBarTags]
 description = "tags"
 hash = "sha1-b21a0c712fc16d8dc87e88ab0b9d1f47691f1251"
-other = "Tags"
+other = "Etichete"
 
 [Title]
 description = "Page title"
 hash = "sha1-5fc6a5f6fb5ae3e3a9371a45143808b948fe7cf9"
-other = "Photos"
+other = "Poze"
+
+[Albums]
+description = "Albums"
+hash = "sha1-8e5f000257b00af5469765cd9657caf85fd6b43b"
+other = "Albume"
+
+[IndexFilters]
+description = "Filters"
+hash = "sha1-15f6b304eb8cc91480b286ee867ae8593ffc879e"
+other = "Filtre"
