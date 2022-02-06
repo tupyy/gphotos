@@ -22,6 +22,7 @@ FROM gcr.io/distroless/base
 COPY --from=build /app/target/run /usr/bin/run
 COPY --from=build /app/templates /templates
 COPY --from=build /app/resources/.gophoto-prod.yaml /conf/.gophoto-prod.yaml
+COPY --from=build /app/assets/i18n /i18n
 
 # API port
 EXPOSE 8080
