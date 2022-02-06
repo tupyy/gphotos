@@ -35,6 +35,7 @@ import (
 	"github.com/tupyy/gophoto/internal/domain/postgres/tag"
 	"github.com/tupyy/gophoto/internal/domain/postgres/user"
 	"github.com/tupyy/gophoto/internal/entity"
+	"github.com/tupyy/gophoto/internal/i18n"
 	albumService "github.com/tupyy/gophoto/internal/services/album"
 	"github.com/tupyy/gophoto/internal/services/media"
 	tagService "github.com/tupyy/gophoto/internal/services/tag"
@@ -65,6 +66,9 @@ var serveCmd = &cobra.Command{
 		// register sessionData
 		gob.Register(entity.Session{})
 		gob.Register(entity.Alert{})
+
+		// init i18n
+		i18n.Init()
 
 		// initialize postgres client
 		client, err := pgclient.NewClient(conf.GetPostgresConf())

@@ -6,8 +6,8 @@ import (
 	"time"
 
 	goI18n "github.com/nicksnyder/go-i18n/v2/i18n"
-	"github.com/tupyy/gophoto/i18n"
 	"github.com/tupyy/gophoto/internal/entity"
+	"github.com/tupyy/gophoto/internal/i18n"
 )
 
 func Day(t time.Time) int {
