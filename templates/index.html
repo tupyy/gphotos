@@ -45,7 +45,7 @@
         {{end}}
         <div class="container container-filter-btn">
             <button class="btn btn-outline-primary btn-sm" type="button" id="btn-show-filter">
-                {{.Filters}}
+                {{caps_first (translate .lang "IndexFilters")}}
             </button>
         </div>
         <div class="container-xl main-container">
