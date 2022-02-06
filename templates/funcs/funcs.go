@@ -5,6 +5,8 @@ import (
 	"strings"
 	"time"
 
+	goI18n "github.com/nicksnyder/go-i18n/v2/i18n"
+	"github.com/tupyy/gophoto/i18n"
 	"github.com/tupyy/gophoto/internal/entity"
 )
 
@@ -58,4 +60,9 @@ func ToTitle(s string) string {
 
 func CapFirst(s string) string {
 	return strings.ToUpper(string(s[0])) + string(s[1:])
+}
+
+func Translate(lang, id string) string {
+	localizer := goI18n.NewLocalizer(i18n.Bundle, lang)
+	return i18n.GetTranslation(localizer, id)
 }

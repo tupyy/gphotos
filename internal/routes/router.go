@@ -90,6 +90,7 @@ func loadTemplates(templateDir string) (multitemplate.Renderer, error) {
 		"to_lower":         funcs.ToLower,
 		"to_title":         funcs.ToTitle,
 		"caps_first":       funcs.CapFirst,
+		"translate":        funcs.Translate,
 	}
 
 	for _, t := range templates {

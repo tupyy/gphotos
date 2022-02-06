@@ -1,7 +1,17 @@
+[AlbumCreatedAt]
+description = "album creation date"
+hash = "sha1-1c9e1ca9ea60b502273fa9f7e59167064d1ccca5"
+other = "creat la"
+
 [AlbumDescription]
 description = "Album form description"
 hash = "sha1-296b0f3d56c314584a8b8050b976888efe297230"
 other = "descriere"
+
+[AlbumDetails]
+description = "album details"
+hash = "sha1-6e0bcfe3c6e57c2f4600be035f23e06abd02530e"
+other = "detalii"
 
 [AlbumFormCreate]
 description = "Album form create"
@@ -53,6 +63,11 @@ description = "Album form name"
 hash = "sha1-9754349dd8efb627d611028ba6023dd5c0a1ae25"
 other = "nume"
 
+[AlbumOwner]
+description = "album owner"
+hash = "sha1-8a104b39c69de79a3edb59cbb5a134cd529d0a01"
+other = "proprietar"
+
 [AlbumUserPermissions]
 description = "album form user permissions"
 hash = "sha1-2a6879b384489c9ca47430b2cee3fb4f8fa85672"
@@ -62,6 +77,66 @@ other = "permisii pentru utilizatori"
 description = "description tab"
 hash = "sha1-3a5c7e4d258606077db8ec5086ae900428491c8c"
 other = "despre"
+
+[AlbumViewDeleteAlbum]
+description = "album view delete permission"
+hash = "sha1-7cea00ebe5e60a3304cef2e073159e50c4189ce3"
+other = "sterge albumul"
+
+[AlbumViewDeleteMessageAlbum]
+description = "album view delete message album"
+hash = "sha1-feee052928df4c57495aba6149babb9f24bc5f5a"
+other = "odata sters, toate pozele sunt pierdute"
+
+[AlbumViewDeleteWarningMessage]
+description = "album view delete warning message"
+hash = "sha1-9dcef75bb5acbc20a5d033387166b7ba29ebb246"
+other = "sunteti sigur ca vreti sa stergeti albumul?"
+
+[AlbumViewEditAlbum]
+description = "album view edit permission"
+hash = "sha1-86a1a428c4929894140b4d21aead15538104f8ec"
+other = "editeaza albumul"
+
+[AlbumViewEditAlbumMessage]
+description = "album view edit album message"
+hash = "sha1-c682fec62ebac2514ca49dbc4be111233a7c3c94"
+other = "poti sa editezi albumum"
+
+[AlbumViewNoEditDeletePermissions]
+description = "album view no edit or delete permission"
+hash = "sha1-65faa4ca7e84f408a673989392b835e1d4dbfb31"
+other = "nu ai permisiunea nici de editare nici de stergere"
+
+[AlbumViewNoGroupPermissions]
+description = "album view no group permissions"
+hash = "sha1-9afe22f6836c0076b0ce64aa18d4dc4755469889"
+other = "nici o permisie de group"
+
+[AlbumViewNoPhotoSubMessage]
+description = "sub message for no photo"
+hash = "sha1-25178133d242409182115008e8447c2b63eebb25"
+other = "te rog incarca poze"
+
+[AlbumViewNoPhotos]
+description = "album view no photos"
+hash = "sha1-ff4f93e76986c24808eb1c6d6e79d1e8255c17cb"
+other = "nimic de vazut"
+
+[AlbumViewNoReadPermission]
+description = "album view no read permissions"
+hash = "sha1-2caba29c828b09f04b16b78025cd893e255035fd"
+other = "nu ai permisiunea de citire"
+
+[AlbumViewNoUserPermissions]
+description = "album view no user permissions"
+hash = "sha1-b2d805c17f62bb3d814e4a59a18ee54e1396c827"
+other = "nici o permisie de utilizator"
+
+[AlbumViewNoWritePermission]
+description = "album view no permission"
+hash = "sha1-49be9feede71200de90634f2647b0483f7aeb55d"
+other = "nu ai permisinuea de scriere."
 
 [AlbumViewPhotos]
 description = "photo tab"
@@ -82,6 +157,11 @@ other = "actualizeaza"
 description = "Albums"
 hash = "sha1-8e5f000257b00af5469765cd9657caf85fd6b43b"
 other = "Albume"
+
+[Delete]
+description = "delete"
+hash = "sha1-08fb45705d1553d090bf87e7946f21e8d326e7be"
+other = "sterge"
 
 [IndexAlbumType]
 description = "Name of the album type"
@@ -153,12 +233,16 @@ description = "tags"
 hash = "sha1-b21a0c712fc16d8dc87e88ab0b9d1f47691f1251"
 other = "Etichete"
 
+[None]
+description = "None"
+hash = "sha1-858ecc751b466c4aebc0fe94eccd6a6ccb1da62d"
+other = "niciuna"
+
 [Title]
 description = "Page title"
 hash = "sha1-5fc6a5f6fb5ae3e3a9371a45143808b948fe7cf9"
 other = "Poze"
 
-[None]
-description = "None"
-hash = "sha1-858ecc751b466c4aebc0fe94eccd6a6ccb1da62d"
-other = "niciuna"
+[You]
+hash = "sha1-8af56de68279cb6f5ed022f31af18b9fcdcc2e92"
+other = "dvs"

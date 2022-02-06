@@ -16,7 +16,7 @@
         <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
         <script src="/static/js/index.js"></script>
-        <title>{{.Title}}</title>
+        <title>{{translate .lang "Title"}}</title>
     </head>
     <body>
         <header>
@@ -26,7 +26,7 @@
             <div class="row">
                 <div class="search-group input-group md-3">
                     <span class="input-group-text" id="search-icon"><i class="fas fa-search"></i></span>
-                    <input type="text" class="form-control" id="searchBar" placeholder="{{.Tags}}" autocomplete="off">
+                    <input type="text" class="form-control" id="searchBar" placeholder="{{caps_first (translate .lang "NavBarTags")}}" autocomplete="off">
                     <button class="input-group-text hidden"><i class="far fa-times-circle"></i></button>
                 </div>
             </div>
@@ -53,37 +53,37 @@
                 <div class="col-2 col-sm-3 col-md-2 custom-col col-filter" id="filter-container">
                     <div class="row row-filter">
                         <div class="col title">
-                        <span class="title">{{.Filters}}</span>
+                        <span class="title">{{caps_first (translate .lang "IndexFilters")}}</span>
                         <button type="button" class="btn-close btn-close-white" aria-label="Close" id="btn-close-filter"></button>
                         </div>
                     </div>
                     {{ if .can_share }}
                         <div class="row row-filter">
-                            <span class="title">{{.AlbumType}}</span>
+                            <span class="title">{{caps_first (translate .lang "IndexAlbumType")}}</span>
                             <div class="container">
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" value="" id="personalAlbumCheck" checked>
                                     <label class="form-check-label" for="personalAlbumCheck">
-                                        {{.Personal}}
+                                        {{caps_first (translate .lang "IndexAlbumTypePersonal")}}
                                     </label>
                                 </div>
                                 <div class="form-check">
                                   <input class="form-check-input" type="checkbox" value="" id="sharedAlbumCheck" checked>
                                   <label class="form-check-label" for="sharedAlbumCheck">
-                                        {{.Shared}}
+                                        {{caps_first (translate .lang "IndexAlbumTypeShared")}}
                                   </label>
                                 </div>
                             </div>
                         </div>
                     {{ end }}
                     <div class="row row-filter">
-                        <span class="title">{{.Date}}</span>
+                        <span class="title">{{caps_first (translate .lang "IndexFilterDate")}}</span>
                         <div class="input-daterange input-group" id="datepicker">
                             <div class="row">
                                 <input type="text" class="input-sm form-control" id="startDate" name="start" />
                             </div>
                             <div class="row">
-                                <span class="input-group-addon">{{.To}}</span>
+                                <span class="input-group-addon">{{caps_first (translate .lang "IndexFilterTo")}}</span>
                             </div>
                             <div class="row">
                                 <input type="text" class="input-sm form-control" id="endDate" name="end" />
@@ -91,7 +91,7 @@
                         </div>
                     </div>
                         <div class="row row-filter">
-                            <span class="title">{{.SharedByOthers}}</span>
+                            <span class="title">{{caps_first (translate .lang "IndexFilterSharedByOthers")}}</span>
                             <div class="container" id="ownerFilter">
                                 {{ range .users }}
                                     <div class="form-check">
@@ -105,17 +105,17 @@
                 <div class="col-sm-9 col-md-12 col-lg-10 col-12 custom-col albums-col">
                     <div class="row justify-content-between sort-row">
                         <div class="col-4 col-lg-3">
-                            <span class="count-albums" id="count_albums">0</span><span>{{ to_lower .Albums}}</span>
+                            <span class="count-albums" id="count_albums">0</span><span>{{ to_lower (translate .lang "Albums")}}</span>
                         </div>
                         <div class="col-8 col-lg-6 select-row">
                             <div class="row gx-3 justify-content-end">
-                                <span class="col-4 col-lg-3">{{.SortBy}}:</span>
+                                <span class="col-4 col-lg-3">{{caps_first (translate .lang "IndexSort")}}:</span>
                                 <div class="col-8 col-lg-7" id="sortSelect">
                                     <select class="form-select">
-                                        <option value="name">{{.Name}}</option>
-                                        <option value="date-reversed" selected>{{.DateNormal}}</option>
-                                        <option value="date-normal">{{.DateRev}}</option>
-                                        <option value="location">{{.Location}}</option>
+                                        <option value="name">{{caps_first (translate .lang "IndexSortByName")}}</option>
+                                        <option value="date-reversed" selected>{{caps_first (translate .lang "IndexSortByDate")}}</option>
+                                        <option value="date-normal">{{caps_first (translate .lang "IndexSortByDateRev")}}</option>
+                                        <option value="location">{{caps_first (translate .lang "IndexSortByLocation") }}</option>
                                     </select>
                                 </div>
                             </div>

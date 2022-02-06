@@ -1,6 +1,16 @@
+You = "you"
+
+[AlbumCreatedAt]
+description = "album creation date"
+other = "created at"
+
 [AlbumDescription]
 description = "Album form description"
 other = "description"
+
+[AlbumDetails]
+description = "album details"
+other = "details"
 
 [AlbumFormCreate]
 description = "Album form create"
@@ -38,21 +48,13 @@ other = "group permissions"
 description = "Album form localtion"
 other = "location"
 
-[AlbumOwner]
-description = "album owner"
-other = "owner"
-
-[AlbumCreatedAt]
-description = "album creation date"
-other = "created at"
-
-[AlbumDetails]
-description = "album details"
-other = "details"
-
 [AlbumName]
 description = "Album form name"
 other = "Name"
+
+[AlbumOwner]
+description = "album owner"
+other = "owner"
 
 [AlbumUserPermissions]
 description = "album form user permissions"
@@ -61,6 +63,54 @@ other = "user permissions"
 [AlbumViewAbout]
 description = "description tab"
 other = "about"
+
+[AlbumViewDeleteAlbum]
+description = "album view delete permission"
+other = "delete this album"
+
+[AlbumViewDeleteMessageAlbum]
+description = "album view delete message album"
+other = "once you delete this album, everything is lost!!"
+
+[AlbumViewDeleteWarningMessage]
+description = "album view delete warning message"
+other = "are you really want to delete this album?"
+
+[AlbumViewEditAlbum]
+description = "album view edit permission"
+other = "edit this album"
+
+[AlbumViewEditAlbumMessage]
+description = "album view edit album message"
+other = "you can edit the details of this album"
+
+[AlbumViewNoEditDeletePermissions]
+description = "album view no edit or delete permission"
+other = "You don't have neither edit or delete permissions for this album."
+
+[AlbumViewNoGroupPermissions]
+description = "album view no group permissions"
+other = "no group permissions set."
+
+[AlbumViewNoPhotoSubMessage]
+description = "sub message for no photo"
+other = "please upload some photos"
+
+[AlbumViewNoPhotos]
+description = "album view no photos"
+other = "nothing to see here!!!"
+
+[AlbumViewNoReadPermission]
+description = "album view no read permissions"
+other = "you don't have read permission for this album."
+
+[AlbumViewNoUserPermissions]
+description = "album view no user permissions"
+other = "no user permissions set."
+
+[AlbumViewNoWritePermission]
+description = "album view no permission"
+other = "You don't have write permission for this album."
 
 [AlbumViewPhotos]
 description = "photo tab"
@@ -74,13 +124,13 @@ other = "settings"
 description = "update tab"
 other = "update"
 
-[AlbumViewNoPermission]
-description = "album view no permission"
-other = ""
-
 [Albums]
 description = "Albums"
 other = "Albums"
+
+[Delete]
+description = "delete"
+other = "delete"
 
 [IndexAlbumType]
 description = "Name of the album type"
