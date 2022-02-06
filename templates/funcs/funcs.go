@@ -5,6 +5,8 @@ import (
 	"strings"
 	"time"
 
+	goI18n "github.com/nicksnyder/go-i18n/v2/i18n"
+	"github.com/tupyy/gophoto/i18n"
 	"github.com/tupyy/gophoto/internal/entity"
 )
 
@@ -46,4 +48,21 @@ func ExtractMetadata(name string, metadata map[string]string) string {
 		return value
 	}
 	return "N/A"
+}
+
+func ToLower(s string) string {
+	return strings.ToLower(s)
+}
+
+func ToTitle(s string) string {
+	return strings.Title(s)
+}
+
+func CapFirst(s string) string {
+	return strings.ToUpper(string(s[0])) + string(s[1:])
+}
+
+func Translate(lang, id string) string {
+	localizer := goI18n.NewLocalizer(i18n.Bundle, lang)
+	return i18n.GetTranslation(localizer, id)
 }

@@ -81,6 +81,7 @@ func Index(r *gin.RouterGroup, usersService *users.Service) {
 			"name":      fmt.Sprintf("%s %s", session.User.FirstName, session.User.LastName),
 			"user_role": session.User.Role.String(),
 			"can_share": session.User.CanShare,
+			"lang":      c.GetHeader("Accept-Language"),
 			"users":     dto.NewUserDTOs(relatedUsers),
 		})
 	})

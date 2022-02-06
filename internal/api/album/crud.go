@@ -174,6 +174,7 @@ func GetAlbum(r *gin.RouterGroup, albumService *album.Service, usersService *use
 			"delete_permission": permissions[entity.PermissionDeleteAlbum],
 			"is_admin":          session.User.Role == entity.RoleAdmin,
 			"tags":              tags,
+			"lang":              c.GetHeader("Accept-Language"),
 		})
 	})
 }
@@ -223,6 +224,7 @@ func GetCreateAlbumForm(r *gin.RouterGroup, usersService *users.Service) {
 			"canShare":       session.User.CanShare,
 			"isOwner":        true,
 			csrf.TemplateTag: csrf.TemplateField(c.Request),
+			"lang":           c.GetHeader("Accept-Language"),
 		})
 	})
 }
@@ -399,6 +401,7 @@ func GetUpdateAlbumForm(r *gin.RouterGroup, albumService *album.Service, usersSe
 				"users_permissions":  string(userPermissions),
 				"groups_permissions": string(groupPermissions),
 				"is_admin":           session.User.Role == entity.RoleAdmin,
+				"lang":               c.GetHeader("Accept-Language"),
 				csrf.TemplateTag:     csrf.TemplateField(c.Request),
 			})
 
@@ -427,6 +430,7 @@ func GetUpdateAlbumForm(r *gin.RouterGroup, albumService *album.Service, usersSe
 			"album":          albumDTO,
 			"canShare":       session.User.CanShare,
 			"isOwner":        false,
+			"lang":           c.GetHeader("Accept-Language"),
 			csrf.TemplateTag: csrf.TemplateField(c.Request),
 		})
 	})

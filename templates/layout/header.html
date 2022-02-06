@@ -11,10 +11,10 @@
             {{ if .user_role }}
                 {{ if or ( eq .user_role "editor" ) ( eq .user_role "admin" ) }}
                     <li class="nav-item active">
-                      <a class="nav-link" href="/album">Create album</a>
+                        <a class="nav-link" href="/album">{{caps_first (translate .lang "NavBarCreateAlbum")}}</a>
                     </li>
                     <li class="nav-item">
-                      <a class="nav-link" href="/tags">Tags</a>
+                        <a class="nav-link" href="/tags">{{caps_first (translate .lang "NavBarTags")}}</a>
                     </li>
                 {{ end }}
             {{ end }}
