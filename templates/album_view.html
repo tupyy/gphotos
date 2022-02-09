@@ -146,7 +146,7 @@
                         <div class="row">
                             <div class="col-lg-2 col title">{{ to_title (translate .lang "AlbumOwner" )}}</div>
                             {{ if .is_owner }}
-                            <div class="col-lg-4 subtitle colPhotos">{{translate .lang "You"}}</div>
+                            <div class="col-lg-4 subtitle col">{{translate .lang "You"}}</div>
                             {{ else }}
                                 <div class="col-lg-4 subtitle col">{{.album.Owner}}</div>
                             {{ end }}

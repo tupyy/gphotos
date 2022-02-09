@@ -36,6 +36,7 @@
     margin: auto;
     margin-top: 20px;
     max-width: 600px;
+    margin-bottom: 20px;
 }
 
 .form-container-button {
@@ -69,10 +70,6 @@
     border-color: silver;
 }
     
-.form-container .title {
-    font-weight: bold;
-}
-
 .form-container-button .btn{
     margin-left: 10px;
 }
@@ -145,12 +142,11 @@
     padding-right: 0;
 }
 
-
-
 @media all and (max-width: 576px) {
   .form-container {
     margin: auto;
     max-width: 100%;
+    margin-bottom: 20px;
   }
 
   .container-permissions-button {

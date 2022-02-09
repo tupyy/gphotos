@@ -69,6 +69,7 @@
 
 .tab-content .container .title {
     font-weight: bold;
+    font-size: 0.9rem;
 }
 
 .tab-content .container-tab {
@@ -253,12 +254,12 @@
         margin-bottom: 5px;
     }
 
-    .tab-content .title {
+    .title {
         font-size: 0.9rem;
     }
     
-    .tab-content .subtitle {
-        font-size: 0.8rem;
+    .subtitle {
+        font-size: 0.85rem;
     }
     
     .tab-content .container-about .container-title {
