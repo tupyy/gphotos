@@ -201,7 +201,7 @@ other = "Filtre"
 [IndexSort]
 description = "Sort by"
 hash = "sha1-fdb02e8afbf4af6e2345ddef0654eede39510d7a"
-other = "Sortare dupa"
+other = "Sortare"
 
 [IndexSortByDate]
 description = "Sort by date"
