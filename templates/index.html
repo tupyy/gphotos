@@ -78,14 +78,16 @@
                     {{ end }}
                     <div class="row row-filter">
                         <span class="title">{{caps_first (translate .lang "IndexFilterDate")}}</span>
-                        <div class="input-daterange input-group" id="datepicker">
-                            <div class="row">
+                        <div class="input-group input-group-daterange">
+                            <div class="row input-daterange datepicker" id="datepicker-start">
                                 <input type="text" class="input-sm form-control" id="startDate" name="start" />
                             </div>
-                            <div class="row">
-                                <span class="input-group-addon">{{caps_first (translate .lang "IndexFilterTo")}}</span>
-                            </div>
-                            <div class="row">
+                        </div>
+                        <div class="row row-addon">
+                            <span class="input-group-addon">{{caps_first (translate .lang "IndexFilterTo")}}</span>
+                        </div>
+                        <div class="input-group input-group-daterange">
+                            <div class="row input-daterange datepicker" id="datepicker-end">
                                 <input type="text" class="input-sm form-control" id="endDate" name="end" />
                             </div>
                         </div>

@@ -22,14 +22,6 @@ let queryParams = {
     buildRequestURL: function(baseURL) {
         let reqUrl = baseURL + "?personal=" + this.personalAlbums + "&shared=" + this.sharedAlbums;
         
-        if ( this.date.start !== "" ) {
-            reqUrl = reqUrl + "&start_date=" + this.date.start;
-        }
-
-        if (this.date.end !== "") {
-            reqUrl = reqUrl + "&end_date=" + this.date.end;
-        }
-
         if (this.owners.length > 0) {
             this.owners.forEach(id => {
                 reqUrl = reqUrl + "&owner=" + id
@@ -37,7 +29,7 @@ let queryParams = {
         }
 
         if (this.searchExpression !== "") {
-            reqUrl = reqUrl + "&filter=" + this.searchExpression;
+            reqUrl = reqUrl + "&filter=" + btoa(encodeURI(this.searchExpression));
         }
 
         if (this.sort !== '') {
@@ -65,7 +57,7 @@ const init = () => {
 }
 
 const search = () => {
-    queryParams.searchExpression = btoa(encodeURI($("#searchBar").val()));
+    queryParams.searchExpression = $("#searchBar").val();
 
     fetch();
 
@@ -341,17 +333,10 @@ const bindToEvents = () => {
     });
 
     $("#startDate").on('change', (e) => {
-        queryParams.searchExpression = 'date > "' + $(e.target).val() + '"';
-
-        fetch();
     });
     
     $("#endDate").on('change', (e) => {
-        if (queryParams.searchExpression !== '') {
-            queryParams.searchExpression +=' & date < "' + $(e.target).val() + '"';
-        } else {
-            queryParams.searchExpression ='date < "' + $(e.target).val() + '"';
-        }
+        queryParams.searchExpression +='date > "' + $("#startDate").val() + '" & date < "' + $(e.target).val() + '"';
 
         fetch();
     });
@@ -449,7 +434,25 @@ const bindToCardOwner = () => {
 }
 
 $(() => {
-    $('#datepicker').datepicker({
+    $('#datepicker-start').datepicker({
+        format: "dd/mm/yyyy",
+        weekStart: 1,
+        autoclose: true,
+        clearBtn: true,
+        todayHighlight: true,
+        beforeShowMonth: function(date){
+              if (date.getMonth() == 8) {
+                return false;
+              }
+            },
+        beforeShowYear: function(date){
+              if (date.getFullYear() == 2007) {
+                return false;
+              }
+            }
+    });
+    
+    $('#datepicker-end').datepicker({
         format: "dd/mm/yyyy",
         weekStart: 1,
         autoclose: true,
