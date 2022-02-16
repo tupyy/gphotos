@@ -38,7 +38,8 @@ func (l *Lexer) Scan() (int, Token, string) {
 			l.next()
 		}
 		name := string(l.src[start : l.offset-1])
-		tok := keywordToken(name)
+		tok := VAR_NAME
+		val = name
 
 		return pos, tok, val
 	}
@@ -56,7 +57,7 @@ func (l *Lexer) Scan() (int, Token, string) {
 			tok = NOT_EQUALS
 			l.next()
 		default:
-			tok = NOT
+			tok = ILLEGAL
 		}
 	case '<':
 		switch l.ch {
@@ -96,7 +97,7 @@ func (l *Lexer) Scan() (int, Token, string) {
 		val = "unexpected char"
 	}
 
-	return pos, tok, val
+	return l.pos, tok, val
 
 }
 
@@ -109,11 +110,13 @@ func (l *Lexer) next() {
 		if l.ch != 0 {
 			l.ch = 0
 			l.offset++
+			l.nextPos++
 		}
 		return
 	}
 	ch := l.src[l.offset]
 	l.ch = ch
+	l.nextPos++
 	l.offset++
 }
 
