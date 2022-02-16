@@ -34,7 +34,7 @@ func NewSearchEngine(filterExpr string) (*SearchEngine, error) {
 	return &SearchEngine{expr}, nil
 }
 
-// Resolve tries to resolve the album against the filter expression.
+// Resolve tries to resolve the album against the search expression.
 // Returns false if the album does not pass the expression.
 func (f *SearchEngine) Resolve(album entity.Album) (bool, error) {
 	return resolveAST(f.expr, album)
