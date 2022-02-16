@@ -4,7 +4,8 @@ import (
 	"fmt"
 )
 
-// Parser state
+// Parser parses logical and comparison expressions like
+// `album_field_name` = 'something' & 'album_field_name2' = 'something else'
 type parser struct {
 	// Lexer instance and current token values
 	lexer *Lexer
