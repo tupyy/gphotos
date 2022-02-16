@@ -91,7 +91,7 @@ func TestFilterEngine(t *testing.T) {
 
 	for _, d := range data {
 		t.Run(d.expr, func(t *testing.T) {
-			filterEngine, err := NewFilterEngine(d.expr)
+			filterEngine, err := NewSearchEngine(d.expr)
 			assert.Nil(t, err)
 
 			result, err := filterEngine.Resolve(d.album)

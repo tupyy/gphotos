@@ -21,22 +21,22 @@ var (
 	dateLayouts = []string{"02/Jan/2006", "02/01/2006"}
 )
 
-type FilterEngine struct {
+type SearchEngine struct {
 	expr *BinaryExpr
 }
 
-func NewFilterEngine(filterExpr string) (*FilterEngine, error) {
+func NewSearchEngine(filterExpr string) (*SearchEngine, error) {
 	expr, err := parseSearchExpression([]byte(filterExpr))
 	if err != nil {
 		return nil, err
 	}
 
-	return &FilterEngine{expr}, nil
+	return &SearchEngine{expr}, nil
 }
 
 // Resolve tries to resolve the album against the filter expression.
 // Returns false if the album does not pass the expression.
-func (f *FilterEngine) Resolve(album entity.Album) (bool, error) {
+func (f *SearchEngine) Resolve(album entity.Album) (bool, error) {
 	return resolveAST(f.expr, album)
 }
 
