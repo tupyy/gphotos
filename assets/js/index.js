@@ -16,30 +16,20 @@ let queryParams = {
         start: '',
         end: '',
     },
-    tags: [],
+    searchExpression: '',
     owners: [],
     sort: '',
     buildRequestURL: function(baseURL) {
         let reqUrl = baseURL + "?personal=" + this.personalAlbums + "&shared=" + this.sharedAlbums;
         
-        if ( this.date.start !== "" ) {
-            reqUrl = reqUrl + "&start_date=" + this.date.start;
-        }
-
-        if (this.date.end !== "") {
-            reqUrl = reqUrl + "&end_date=" + this.date.end;
-        }
-
         if (this.owners.length > 0) {
             this.owners.forEach(id => {
                 reqUrl = reqUrl + "&owner=" + id
             });
         }
 
-        if (this.tags.length > 0) {
-            this.tags.forEach(tag => {
-                reqUrl = reqUrl + "&tag=" + tag;
-            })
+        if (this.searchExpression !== "") {
+            reqUrl = reqUrl + "&filter=" + btoa(encodeURI(this.searchExpression));
         }
 
         if (this.sort !== '') {
@@ -60,8 +50,6 @@ let queryParams = {
 const init = () => {
     queryParams.personalAlbums =  $("#personalAlbumCheck").prop('checked');
     queryParams.sharedAlbums = $("#sharedAlbumCheck").prop('checked');
-    queryParams.date.start = $('#startDate').val();
-    queryParams.date.end = $('#endDate').val();
     queryParams.sort = $('#sortSelect').val();
 
     // init controls
@@ -69,22 +57,7 @@ const init = () => {
 }
 
 const search = () => {
-    queryParams.tags = [];
-
-    let val = $("#searchBar").val();
-
-    if (val.indexOf(',') >= 0) {
-        let tags = val.split(',');
-        tags.forEach(tag => {
-            if (tag !== "") {
-                queryParams.tags.push(tag.trim());
-            }
-        });
-    } else {
-        if (val.trim() !== '') {
-            queryParams.tags.push(val);
-        }
-    }
+    queryParams.searchExpression = $("#searchBar").val();
 
     fetch();
 
@@ -360,13 +333,10 @@ const bindToEvents = () => {
     });
 
     $("#startDate").on('change', (e) => {
-        queryParams.date.start = $(e.target).val();
-
-        fetch();
     });
     
     $("#endDate").on('change', (e) => {
-        queryParams.date.end = $(e.target).val();
+        queryParams.searchExpression +='date > "' + $("#startDate").val() + '" & date < "' + $(e.target).val() + '"';
 
         fetch();
     });
@@ -464,7 +434,25 @@ const bindToCardOwner = () => {
 }
 
 $(() => {
-    $('#datepicker').datepicker({
+    $('#datepicker-start').datepicker({
+        format: "dd/mm/yyyy",
+        weekStart: 1,
+        autoclose: true,
+        clearBtn: true,
+        todayHighlight: true,
+        beforeShowMonth: function(date){
+              if (date.getMonth() == 8) {
+                return false;
+              }
+            },
+        beforeShowYear: function(date){
+              if (date.getFullYear() == 2007) {
+                return false;
+              }
+            }
+    });
+    
+    $('#datepicker-end').datepicker({
         format: "dd/mm/yyyy",
         weekStart: 1,
         autoclose: true,

@@ -57,7 +57,17 @@ func TestFilterEngine(t *testing.T) {
 			hasError: true,
 		},
 		{
-			expr:     "date > '01/01/2022'",
+			expr:     "date > '01/01/2022' & date < '01/03/2022'",
+			album:    entity.Album{CreatedAt: createDate(2022, 04, 01)},
+			expected: false,
+		},
+		{
+			expr:     "date > '11/01/2021' & date < '16/11/2021'",
+			album:    entity.Album{CreatedAt: createDate(2021, 11, 15)},
+			expected: true,
+		},
+		{
+			expr:     "date > '01/01/2022' & date < '01/03/2022'",
 			album:    entity.Album{CreatedAt: createDate(2022, 02, 01)},
 			expected: true,
 		},

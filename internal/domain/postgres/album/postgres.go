@@ -7,7 +7,6 @@ import (
 
 	"github.com/sirupsen/logrus"
 	repo "github.com/tupyy/gophoto/internal/domain"
-	albumFilters "github.com/tupyy/gophoto/internal/domain/filters/album"
 	"github.com/tupyy/gophoto/internal/domain/models"
 	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/utils/logutil"
@@ -179,7 +178,7 @@ func (a *AlbumPostgresRepo) Update(ctx context.Context, album entity.Album) erro
 }
 
 // Get returns all the albums sorted by id.
-func (a *AlbumPostgresRepo) Get(ctx context.Context, filters albumFilters.Filters) ([]entity.Album, error) {
+func (a *AlbumPostgresRepo) Get(ctx context.Context) ([]entity.Album, error) {
 	var albums albumJoinRows
 
 	tagSubQuery := a.db.WithContext(ctx).Table("tag").
@@ -192,10 +191,6 @@ func (a *AlbumPostgresRepo) Get(ctx context.Context, filters albumFilters.Filter
 		Joins("LEFT JOIN album_user_permissions ON (album.id = album_user_permissions.album_id)").
 		Joins("LEFT JOIN album_group_permissions ON (album.id = album_group_permissions.album_id)").
 		Joins("LEFT JOIN (?) as tags ON (tags.album_id = album.id)", tagSubQuery)
-
-	for _, f := range filters {
-		tx = f(tx)
-	}
 
 	tx.Find(&albums)
 	if tx.Error != nil {
@@ -246,8 +241,7 @@ func (a *AlbumPostgresRepo) GetByID(ctx context.Context, id int32) (entity.Album
 }
 
 // GetByOwnerID return all albums of an user.
-// It does not sort or filter the album here. The sorting and filter is done at cache level.
-func (a *AlbumPostgresRepo) GetByOwnerID(ctx context.Context, ownerID string, filters albumFilters.Filters) ([]entity.Album, error) {
+func (a *AlbumPostgresRepo) GetByOwnerID(ctx context.Context, ownerID string) ([]entity.Album, error) {
 	var albums albumJoinRows
 
 	tagSubQuery := a.db.WithContext(ctx).Table("tag").
@@ -261,10 +255,6 @@ func (a *AlbumPostgresRepo) GetByOwnerID(ctx context.Context, ownerID string, fi
 		Joins("LEFT JOIN album_group_permissions ON (album.id = album_group_permissions.album_id)").
 		Joins("LEFT JOIN (?) as tags ON (tags.album_id = album.id)", tagSubQuery).
 		Where("album.owner_id = ?", ownerID)
-
-	for _, f := range filters {
-		tx = f(tx)
-	}
 
 	tx.Find(&albums)
 	if tx.Error != nil {
@@ -283,8 +273,7 @@ func (a *AlbumPostgresRepo) GetByOwnerID(ctx context.Context, ownerID string, fi
 }
 
 // GetByUserID returns a list of albums for which the user has at one permission set.
-// It does not sort or filter the album here. The sorting and filter is done at cache level.
-func (a *AlbumPostgresRepo) GetByUserID(ctx context.Context, userID string, filters albumFilters.Filters) ([]entity.Album, error) {
+func (a *AlbumPostgresRepo) GetByUserID(ctx context.Context, userID string) ([]entity.Album, error) {
 	var albums albumJoinRows
 
 	tagSubQuery := a.db.WithContext(ctx).Table("tag").
@@ -298,10 +287,6 @@ func (a *AlbumPostgresRepo) GetByUserID(ctx context.Context, userID string, filt
 		Joins("LEFT JOIN album_group_permissions ON (album.id = album_group_permissions.album_id)").
 		Joins("LEFT JOIN (?) as tags ON (tags.album_id = album.id)", tagSubQuery).
 		Where("album_user_permissions.user_id = ?", userID)
-
-	for _, f := range filters {
-		tx = f(tx)
-	}
 
 	tx.Find(&albums)
 	if tx.Error != nil {
@@ -320,8 +305,7 @@ func (a *AlbumPostgresRepo) GetByUserID(ctx context.Context, userID string, filt
 }
 
 // GetAlbumsByGroup returns a list of albums for which the group has at one permission set.
-// It does not sort or filter the album here. The sorting and filter is done at cache level.
-func (a *AlbumPostgresRepo) GetByGroupName(ctx context.Context, groupName string, filters albumFilters.Filters) ([]entity.Album, error) {
+func (a *AlbumPostgresRepo) GetByGroupName(ctx context.Context, groupName string) ([]entity.Album, error) {
 	var albums albumJoinRows
 
 	tagSubQuery := a.db.WithContext(ctx).Table("tag").
@@ -335,10 +319,6 @@ func (a *AlbumPostgresRepo) GetByGroupName(ctx context.Context, groupName string
 		Joins("LEFT JOIN album_group_permissions ON (album.id = album_group_permissions.album_id)").
 		Joins("LEFT JOIN (?) as tags ON (tags.album_id = album.id)", tagSubQuery).
 		Where("album_group_permissions.group_name= ?", groupName)
-
-	for _, f := range filters {
-		tx = f(tx)
-	}
 
 	tx.Find(&albums)
 	if tx.Error != nil {
@@ -357,7 +337,7 @@ func (a *AlbumPostgresRepo) GetByGroupName(ctx context.Context, groupName string
 }
 
 // GetByGroups returns a list of albums with at least one persmission for at least on group in the list.
-func (a *AlbumPostgresRepo) GetByGroups(ctx context.Context, groupNames []string, filters albumFilters.Filters) ([]entity.Album, error) {
+func (a *AlbumPostgresRepo) GetByGroups(ctx context.Context, groupNames []string) ([]entity.Album, error) {
 	var albums albumJoinRows
 
 	if len(groupNames) == 0 {
@@ -384,10 +364,6 @@ func (a *AlbumPostgresRepo) GetByGroups(ctx context.Context, groupNames []string
 		Joins("LEFT JOIN album_group_permissions ON (album.id = album_group_permissions.album_id)").
 		Joins("LEFT JOIN (?) as tags ON (tags.album_id = album.id)", tagSubQuery).
 		Where(fmt.Sprintf("album_group_permissions.group_name = ANY(ARRAY[%s])", groups.String()))
-
-	for _, f := range filters {
-		tx = f(tx)
-	}
 
 	tx.Find(&albums)
 	if tx.Error != nil {

@@ -4,7 +4,6 @@ import (
 	"context"
 	"io"
 
-	albumFilters "github.com/tupyy/gophoto/internal/domain/filters/album"
 	userFilters "github.com/tupyy/gophoto/internal/domain/filters/user"
 	"github.com/tupyy/gophoto/internal/entity"
 )
@@ -38,17 +37,17 @@ type Album interface {
 	// Delete removes an album from postgres.
 	Delete(ctx context.Context, id int32) error
 	// Get return all the albums.
-	Get(ctx context.Context, filters albumFilters.Filters) ([]entity.Album, error)
+	Get(ctx context.Context) ([]entity.Album, error)
 	// GetByID return an album by id.
 	GetByID(ctx context.Context, id int32) (entity.Album, error)
 	// GetByOwner return all albums of a user for which he is the owner.
-	GetByOwnerID(ctx context.Context, ownerID string, filters albumFilters.Filters) ([]entity.Album, error)
+	GetByOwnerID(ctx context.Context, ownerID string) ([]entity.Album, error)
 	// GetByUserID returns a list of albums for which the user has at least one permission set.
-	GetByUserID(ctx context.Context, userID string, filters albumFilters.Filters) ([]entity.Album, error)
+	GetByUserID(ctx context.Context, userID string) ([]entity.Album, error)
 	// GetByGroup returns a list of albums for which the group has at least one permission.
-	GetByGroupName(ctx context.Context, groupName string, filters albumFilters.Filters) ([]entity.Album, error)
+	GetByGroupName(ctx context.Context, groupName string) ([]entity.Album, error)
 	// GetByGroups returns a list of albums with at least one persmission for at least on group in the list.
-	GetByGroups(ctx context.Context, groups []string, filters albumFilters.Filters) ([]entity.Album, error)
+	GetByGroups(ctx context.Context, groups []string) ([]entity.Album, error)
 }
 
 // Postgres repo to handler relationships between users

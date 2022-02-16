@@ -26,7 +26,7 @@
             <div class="row">
                 <div class="search-group input-group md-3">
                     <span class="input-group-text" id="search-icon"><i class="fas fa-search"></i></span>
-                    <input type="text" class="form-control" id="searchBar" placeholder="{{caps_first (translate .lang "NavBarTags")}}" autocomplete="off">
+                    <input type="text" class="form-control" id="searchBar" placeholder="{{caps_first (translate .lang "NavBarSearch")}}" autocomplete="off">
                     <button class="input-group-text hidden"><i class="far fa-times-circle"></i></button>
                 </div>
             </div>
@@ -78,14 +78,16 @@
                     {{ end }}
                     <div class="row row-filter">
                         <span class="title">{{caps_first (translate .lang "IndexFilterDate")}}</span>
-                        <div class="input-daterange input-group" id="datepicker">
-                            <div class="row">
+                        <div class="input-group input-group-daterange">
+                            <div class="row input-daterange datepicker" id="datepicker-start">
                                 <input type="text" class="input-sm form-control" id="startDate" name="start" />
                             </div>
-                            <div class="row">
-                                <span class="input-group-addon">{{caps_first (translate .lang "IndexFilterTo")}}</span>
-                            </div>
-                            <div class="row">
+                        </div>
+                        <div class="row row-addon">
+                            <span class="input-group-addon">{{caps_first (translate .lang "IndexFilterTo")}}</span>
+                        </div>
+                        <div class="input-group input-group-daterange">
+                            <div class="row input-daterange datepicker" id="datepicker-end">
                                 <input type="text" class="input-sm form-control" id="endDate" name="end" />
                             </div>
                         </div>
