@@ -233,6 +233,11 @@ description = "tags"
 hash = "sha1-b21a0c712fc16d8dc87e88ab0b9d1f47691f1251"
 other = "Etichete"
 
+[NavBarSearch]
+description = "search"
+hash = "sha1-728ac9230b2a49dd11a38f1dac45ed9ca0381ad7"
+other = "Cautare"
+
 [None]
 description = "None"
 hash = "sha1-858ecc751b466c4aebc0fe94eccd6a6ccb1da62d"

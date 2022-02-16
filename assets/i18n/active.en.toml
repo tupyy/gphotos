@@ -184,6 +184,10 @@ other = "Name"
 description = "create album in navbar"
 other = "Create album"
 
+[NavBarSearch]
+description = "search"
+other = "Search"
+
 [NavBarTags]
 description = "tags"
 other = "Tags"

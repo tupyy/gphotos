@@ -2,24 +2,23 @@ package album
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
-	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"github.com/tupyy/gophoto/internal/api/dto"
 	"github.com/tupyy/gophoto/internal/api/utils"
 	"github.com/tupyy/gophoto/internal/common"
-	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/entity"
+	"github.com/tupyy/gophoto/internal/search"
 	"github.com/tupyy/gophoto/internal/services/album"
 	"github.com/tupyy/gophoto/internal/services/permissions"
 	"github.com/tupyy/gophoto/internal/services/tag"
 	"github.com/tupyy/gophoto/internal/services/users"
-	"github.com/tupyy/gophoto/utils/encryption"
 	"github.com/tupyy/gophoto/utils/logutil"
 )
 
@@ -46,8 +45,16 @@ func GetAlbums(r *gin.RouterGroup, albumService *album.Service, usersService *us
 			OwnAlbums(reqParams.FetchPersonalAlbums).
 			SharedAlbums(reqParams.FetchSharedAlbums)
 
-		for _, f := range reqParams.Filters {
-			q.Where(f)
+		if reqParams.FilterExpression != "" {
+			searchEngine, err := search.NewSearchEngine(reqParams.FilterExpression)
+			if err != nil {
+				logger.WithError(err).Error("failed to create search engine")
+				common.AbortBadRequestWithJson(c, err, "filter expression not valid")
+
+				return
+			}
+
+			q.SearchEngine(searchEngine)
 		}
 
 		// setup sort
@@ -163,7 +170,7 @@ func GetAlbumsTags(r *gin.RouterGroup, albumService *album.Service, tagService *
 type requestParams struct {
 	FetchPersonalAlbums bool
 	FetchSharedAlbums   bool
-	Filters             []album.Predicate
+	FilterExpression    string
 }
 
 // bindRequestParams returns a struct with filters and a sorter generated from query parameters
@@ -193,68 +200,21 @@ func bindRequestParams(c *gin.Context) requestParams {
 		}
 	}
 
-	reqParams.Filters = generateFilters(c)
+	if len(c.Query("filter")) > 0 {
+		decodedStr, err := base64.StdEncoding.DecodeString(c.Query("filter"))
+		if err != nil {
+			logger.WithError(err).WithField("filter", c.Query("filter")).Error("failed to decode from base64")
+
+		}
+
+		if filterExpr, err := url.QueryUnescape(string(decodedStr)); err != nil {
+			logger.WithError(err).WithField("filter", c.Query("filter")).Error("failed to unescape")
+		} else {
+			reqParams.FilterExpression = filterExpr
+		}
+
+	}
 
 	return reqParams
 
-}
-
-// GenerateAlbumFilters generates a list of filters from the query parameters.
-func generateFilters(c *gin.Context) []album.Predicate {
-	predicates := make([]album.Predicate, 0, 3)
-
-	logger := logutil.GetLogger(c)
-	gen := encryption.NewGenerator(conf.GetEncryptionKey())
-
-	if c.Query("start_date") != "" {
-		if startDate, err := time.Parse("02/01/2006", c.Query("start_date")); err != nil {
-			logger.WithError(err).Error("cannot parse start_date query param")
-		} else {
-			f := album.AfterDate(startDate)
-			predicates = append(predicates, f)
-		}
-	}
-
-	if c.Query("end_date") != "" {
-		if endDate, err := time.Parse("02/01/2006", c.Query("end_date")); err != nil {
-			logger.WithError(err).Error("cannot parse end_date query param")
-		} else {
-			f := album.BeforeDate(endDate)
-			predicates = append(predicates, f)
-		}
-	}
-
-	owners := c.QueryArray("owner")
-	if len(owners) > 0 {
-
-		ownerIDs := make([]string, 0, len(owners))
-		for _, o := range owners {
-			ownerID, err := gen.DecryptData(o)
-			if err != nil {
-				logger.WithError(err).WithField("data", o).Error("error decrypt owner id")
-
-				continue
-			}
-
-			ownerIDs = append(ownerIDs, ownerID)
-			logger.WithField("owner_id", ownerID).Debug("filter by owner id created")
-		}
-
-		f := album.Owner(ownerIDs)
-		predicates = append(predicates, f)
-	}
-
-	tagParameter := c.QueryArray("tag")
-	if len(tagParameter) > 0 {
-		tags := make([]string, 0, len(tagParameter))
-
-		for _, tag := range tagParameter {
-			tags = append(tags, strings.ToLower(tag))
-		}
-
-		f := album.Tags(tags)
-		predicates = append(predicates, f)
-	}
-
-	return predicates
 }
