@@ -141,7 +141,7 @@ func (q *Query) All(ctx context.Context, user entity.User) ([]entity.Album, int,
 	}
 
 	// put all the albums into a list and return them
-	ret := make([]entity.Album, 0, len(albums))
+	albs := make([]entity.Album, 0, len(albums))
 	for _, a := range albums {
 		if q.searchEngine != nil {
 			found, err := q.searchEngine.Resolve(a)
@@ -152,22 +152,22 @@ func (q *Query) All(ctx context.Context, user entity.User) ([]entity.Album, int,
 			}
 
 			if found {
-				ret = append(ret, a)
+				albs = append(albs, a)
 			}
 		} else {
-			ret = append(ret, a)
+			albs = append(albs, a)
 		}
 	}
 
 	// filter albums
 
 	if q.sorter != nil {
-		q.sorter.Sort(ret)
+		q.sorter.Sort(albs)
 	}
 
-	pages := q.paginate(ret)
+	pages := q.paginate(albs)
 
-	return pages, len(pages), nil
+	return pages, len(albs), nil
 }
 
 func (q *Query) First(ctx context.Context, id int32) (entity.Album, error) {
