@@ -43,6 +43,7 @@ func Index(r *gin.RouterGroup, usersService *users.Service) {
 				"user_role": session.User.Role.String(),
 				"can_share": session.User.CanShare,
 				"users":     dto.NewUserDTOs(users),
+				"lang":      c.GetHeader("Accept-Language"),
 			})
 
 			return
@@ -68,6 +69,7 @@ func Index(r *gin.RouterGroup, usersService *users.Service) {
 				"can_share": session.User.CanShare,
 				"users":     dto.NewUserDTOs(relatedUsers),
 				"alerts":    session.Alerts,
+				"lang":      c.GetHeader("Accept-Language"),
 			})
 
 			session.ClearAlerts()
