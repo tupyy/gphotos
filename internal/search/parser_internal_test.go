@@ -13,63 +13,68 @@ func TestParser(t *testing.T) {
 		expected string
 		hasError bool
 	}{
-		// {
-		// 	test:     "name = 'test'",
-		// 	expected: "(\"name\" = \"test\")",
-		// 	hasError: false,
-		// },
-		// {
-		// 	test:     "name = 'test' & description != 'toto' & location = 'loc'",
-		// 	expected: "(((\"name\" = \"test\") & (\"description\" != \"toto\")) & (\"location\" = \"loc\"))",
-		// 	hasError: false,
-		// },
-		// {
-		// 	test:     "name = 'test' & description != 'toto' & location = 'loc' | tag = 'tag'",
-		// 	expected: "((((\"name\" = \"test\") & (\"description\" != \"toto\")) & (\"location\" = \"loc\")) | (\"tag\" = \"tag\"))",
-		// 	hasError: false,
-		// },
-		// {
-		// 	test:     "name = 'test' | description != 'toto'",
-		// 	expected: "((\"name\" = \"test\") | (\"description\" != \"toto\"))",
-		// 	hasError: false,
-		// },
-		// {
-		// 	test:     "name = 'test' description != 'toto'",
-		// 	hasError: true,
-		// },
-		// {
-		// 	test:     "& name = 'test'",
-		// 	hasError: true,
-		// },
-		// {
-		// 	test:     "name = 'test' &",
-		// 	hasError: true,
-		// },
-		// {
-		// 	test:     "name & 'test'",
-		// 	hasError: true,
-		// },
-		// {
-		// 	test:     "name = 'test' =",
-		// 	hasError: true,
-		// },
-		// {
-		// 	test:     "name ='test' & (name != 'toto' & name != 'titi')",
-		// 	expected: "((\"name\" = \"test\") & ((\"name\" != \"toto\") & (\"name\" != \"titi\")))",
-		// 	hasError: false,
-		// },
-		// {
-		// 	test:     "name ='test' & (name != 'toto' & (name != 'titi'))",
-		// 	expected: "((\"name\" = \"test\") & ((\"name\" != \"toto\") & (\"name\" != \"titi\")))",
-		// 	hasError: false,
-		// },
-		// {
-		// 	test:     "name ='test' & (name != 'toto' & (name != 'titi')",
-		// 	hasError: true,
-		// },
+		{
+			test:     "name = 'test'",
+			expected: "(\"name\" = \"test\")",
+			hasError: false,
+		},
+		{
+			test:     "name = 'test' & description != 'toto' & location = 'loc'",
+			expected: "(((\"name\" = \"test\") & (\"description\" != \"toto\")) & (\"location\" = \"loc\"))",
+			hasError: false,
+		},
+		{
+			test:     "name = 'test' & description != 'toto' & location = 'loc' | tag = 'tag'",
+			expected: "((((\"name\" = \"test\") & (\"description\" != \"toto\")) & (\"location\" = \"loc\")) | (\"tag\" = \"tag\"))",
+			hasError: false,
+		},
+		{
+			test:     "name = 'test' | description != 'toto'",
+			expected: "((\"name\" = \"test\") | (\"description\" != \"toto\"))",
+			hasError: false,
+		},
+		{
+			test:     "name = 'test' description != 'toto'",
+			hasError: true,
+		},
+		{
+			test:     "& name = 'test'",
+			hasError: true,
+		},
+		{
+			test:     "name = 'test' &",
+			hasError: true,
+		},
+		{
+			test:     "name & 'test'",
+			hasError: true,
+		},
+		{
+			test:     "name = 'test' =",
+			hasError: true,
+		},
+		{
+			test:     "name ='test' & (name != 'toto' & name != 'titi')",
+			expected: "((\"name\" = \"test\") & ((\"name\" != \"toto\") & (\"name\" != \"titi\")))",
+			hasError: false,
+		},
+		{
+			test:     "name ='test' & (name != 'toto' & (name != 'titi'))",
+			expected: "((\"name\" = \"test\") & ((\"name\" != \"toto\") & (\"name\" != \"titi\")))",
+			hasError: false,
+		},
+		{
+			test:     "name ='test' & (name != 'toto' & (name != 'titi')",
+			hasError: true,
+		},
 		{
 			test:     "(name ='test') & (name != 'toto') & (name != 'titi')",
-			expected: "((\"name\" = \"test\") & (\"name\" != \"toto\") & (\"name\" != \"titi\"))",
+			expected: "(((\"name\" = \"test\") & (\"name\" != \"toto\")) & (\"name\" != \"titi\"))",
+			hasError: false,
+		},
+		{
+			test:     "((name ='test' & name != 'toto') & name != 'titi') & name > 'tata'",
+			expected: "((((\"name\" = \"test\") & (\"name\" != \"toto\")) & (\"name\" != \"titi\")) & (\"name\" > \"tata\"))",
 			hasError: false,
 		},
 	}

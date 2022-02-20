@@ -8,7 +8,8 @@ import (
 
 // Grammar
 //
-// expression: equality | equality (( "&" | "|" ) equality)*								;
+// expression: logical | (logical)												;
+// logical: equality | equality (( "&" | "|" ) equality)*						;
 // equality: term ( ("==" | "!=" | "<" | "<=" | ">" | ">=" | "~") primary )*	;
 // term: VAR_NAME																;
 // primary: STRING | DATE | REGEX												;
@@ -60,19 +61,19 @@ func parse(src []byte) (searchExpr *BinaryExpr, err error) {
 	return
 }
 
-// Parse an expression
+// Parse a logic expression
 //
 // equality | equality (( "&" | "|" ) equality)*
 //
 func (p *parser) expression() Expr {
-	expr := p.equality()
+	var expr Expr
 
-	if !p.matches(AND, OR) {
-		// at this point either we reached the end of expression or the right parenthese
-		if p.tok != EOL && p.tok != RPAREN {
-			panic(p.errorf("unexpected expression at left of '%s'", expr.String()))
-		}
-		return expr
+	if p.matches(LPAREN) {
+		p.next()
+		expr = p.expression()
+		p.consume(RPAREN, "expected ')' after expression")
+	} else {
+		expr = p.equality()
 	}
 
 	for p.matches(AND, OR) {
@@ -100,10 +101,7 @@ func (p *parser) expression() Expr {
 //
 func (p *parser) equality() Expr {
 	p.expect(VAR_NAME)
-	name := p.val
-	expr := &BinaryExpr{Left: &VarExpr{name}}
-
-	p.next()
+	expr := &BinaryExpr{Left: p.primary()}
 
 	switch p.tok {
 	case GREATER, GTE, LESS, LTE, EQUALS, NOT_EQUALS, TILDA:
@@ -127,6 +125,8 @@ func (p *parser) primary() Expr {
 	var expr Expr
 
 	switch p.tok {
+	case VAR_NAME:
+		expr = &VarExpr{p.val}
 	case STRING:
 		expr = &StrExpr{p.val}
 	case DATE:
