@@ -45,6 +45,41 @@ func (l *Lexer) Scan() (int, Token, string) {
 	}
 
 	switch ch {
+	case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+		// this has to be a date in format 01/02/2020
+		start := l.offset - 2
+		// check the day
+		countDigits := 1
+		for isDigit(l.ch) {
+			countDigits++
+			l.next()
+		}
+		if l.ch != '/' || countDigits != 2 {
+			return l.pos, ILLEGAL, "expected 2 digits for day"
+		}
+
+		l.next()
+		countDigits = 0
+		for isDigit(l.ch) {
+			countDigits++
+			l.next()
+		}
+		if l.ch != '/' || countDigits != 2 {
+			return l.pos, ILLEGAL, "expected 2 digits for month"
+		}
+
+		l.next()
+		countDigits = 0
+		for isDigit(l.ch) {
+			countDigits++
+			l.next()
+		}
+		if countDigits != 4 {
+			return l.pos, ILLEGAL, "expected 4 digits for year"
+		}
+
+		tok = DATE
+		val = string(l.src[start : l.offset-1])
 	case '(':
 		tok = LPAREN
 	case ')':
@@ -92,6 +127,28 @@ func (l *Lexer) Scan() (int, Token, string) {
 		l.next()
 		tok = STRING
 		val = string(chars)
+	case '/':
+		chars := make([]byte, 0, 32)
+		for l.ch != ch {
+			c := l.ch
+			if c == 0 {
+				return l.pos, ILLEGAL, "didn't find / at the end of regex"
+			}
+			l.next()
+			chars = append(chars, c)
+		}
+		l.next()
+		tok = REGEX
+		val = string(chars)
+	case '~':
+		switch l.ch {
+		case '=':
+			tok = TILDA_EQUALS
+			l.next()
+		default:
+			tok = ILLEGAL
+			val = "unexpected character after ~"
+		}
 	default:
 		tok = ILLEGAL
 		val = "unexpected char"
@@ -122,4 +179,8 @@ func (l *Lexer) next() {
 
 func isNameStart(ch byte) bool {
 	return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')
+}
+
+func isDigit(ch byte) bool {
+	return ch >= '0' && ch <= '9'
 }
