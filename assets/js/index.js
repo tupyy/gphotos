@@ -29,7 +29,8 @@ let queryParams = {
         }
 
         if (this.searchExpression !== "") {
-            reqUrl = reqUrl + "&filter=" + btoa(encodeURI(this.searchExpression));
+            console.log(encodeURI(this.searchExpression))
+            reqUrl = reqUrl + "&filter=" + $.base64.btoa(encodeURI(this.searchExpression));
         }
 
         if (this.sort !== '') {
@@ -336,7 +337,7 @@ const bindToEvents = () => {
     });
     
     $("#endDate").on('change', (e) => {
-        queryParams.searchExpression +='date > "' + $("#startDate").val() + '" & date < "' + $(e.target).val() + '"';
+        queryParams.searchExpression ='date > ' + $("#startDate").val() + ' & date < ' + $(e.target).val() + '';
 
         fetch();
     });
