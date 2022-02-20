@@ -8,8 +8,7 @@ import (
 
 // Grammar
 //
-// expression: logical | (logical)												;
-// logical: equality | equality (( "&" | "|" ) equality)*						;
+// expression: equality | equality (( "&" | "|" ) equality)*					;
 // equality: term ( ("==" | "!=" | "<" | "<=" | ">" | ">=" | "~") primary )*	;
 // term: VAR_NAME																;
 // primary: STRING | DATE | REGEX												;
@@ -74,6 +73,10 @@ func (p *parser) expression() Expr {
 		p.consume(RPAREN, "expected ')' after expression")
 	} else {
 		expr = p.equality()
+	}
+
+	if !p.matches(AND, OR) && !p.matches(EOL, RPAREN) {
+		panic(p.errorf("unexpected expression after '%s'", p.tok))
 	}
 
 	for p.matches(AND, OR) {
