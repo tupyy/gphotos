@@ -15,7 +15,7 @@ const (
 	LTE
 	LESS
 	OR
-	TILDA_EQUALS
+	TILDA
 	NOT_EQUALS
 	RPAREN
 
@@ -27,23 +27,24 @@ const (
 )
 
 var tokenNames = map[Token]string{
-	ILLEGAL:      "illegal",
-	EOL:          "EOL",
-	AND:          "&",
-	DIV:          "/",
-	EQUALS:       "=",
-	GTE:          ">=",
-	GREATER:      ">",
-	LPAREN:       "(",
-	LTE:          "<=",
-	LESS:         "<",
-	OR:           "|",
-	TILDA_EQUALS: "~=",
-	RPAREN:       ")",
-	NOT_EQUALS:   "!=",
-	VAR_NAME:     "name",
-	STRING:       "string",
-	DATE:         "date",
+	ILLEGAL:    "illegal",
+	EOL:        "EOL",
+	AND:        "&",
+	DIV:        "/",
+	EQUALS:     "=",
+	GTE:        ">=",
+	GREATER:    ">",
+	LPAREN:     "(",
+	LTE:        "<=",
+	LESS:       "<",
+	OR:         "|",
+	TILDA:      "~",
+	RPAREN:     ")",
+	NOT_EQUALS: "!=",
+	VAR_NAME:   "name",
+	STRING:     "string",
+	DATE:       "date",
+	REGEX:      "regex",
 }
 
 func (t Token) String() string {

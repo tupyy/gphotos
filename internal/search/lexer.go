@@ -141,14 +141,7 @@ func (l *Lexer) Scan() (int, Token, string) {
 		tok = REGEX
 		val = string(chars)
 	case '~':
-		switch l.ch {
-		case '=':
-			tok = TILDA_EQUALS
-			l.next()
-		default:
-			tok = ILLEGAL
-			val = "unexpected character after ~"
-		}
+		tok = TILDA
 	default:
 		tok = ILLEGAL
 		val = "unexpected char"

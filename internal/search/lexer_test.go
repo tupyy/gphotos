@@ -13,12 +13,16 @@ func TestTokens(t *testing.T) {
 		output string
 	}{
 		{
-			input:  "( ) = != < <= > >= ~= name 'test' \"test\" ",
-			output: "( ) = != < <= > >= ~= name string string EOL",
+			input:  "( ) = != < <= > >= ~ name 'test' \"test\" ",
+			output: "( ) = != < <= > >= ~ name string string EOL",
 		},
 		{
 			input:  "name = 'test'",
 			output: "name = string EOL",
+		},
+		{
+			input:  "name = 'test' & description != 'toto' & location = 'loc'",
+			output: "name = string & name != string & name = string EOL",
 		},
 	}
 
@@ -93,10 +97,6 @@ func TestErrors(t *testing.T) {
 		{
 			input:  "/ss",
 			output: "didn't find / at the end of regex",
-		},
-		{
-			input:  "~a",
-			output: "unexpected character after ~",
 		},
 		{
 			input:  "20/20/22",

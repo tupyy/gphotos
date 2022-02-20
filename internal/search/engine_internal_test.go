@@ -8,7 +8,7 @@ import (
 	"github.com/tupyy/gophoto/internal/entity"
 )
 
-func TestFilterEngine(t *testing.T) {
+func FilterEngine(t *testing.T) {
 	data := []struct {
 		expr     string
 		album    entity.Album

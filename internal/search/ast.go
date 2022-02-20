@@ -2,16 +2,19 @@ package search
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
+	"time"
 )
 
-type SearchExpr struct {
+// FilterExpr represents the top level expression.
+type FilterExpr struct {
 	expr Expr
 }
 
 // String returns an indented, pretty-printed version of the parsed
 // program.
-func (p *SearchExpr) String() string {
+func (p *FilterExpr) String() string {
 	return fmt.Sprintf("%s\n\n", p.expr.String())
 }
 
@@ -40,6 +43,23 @@ type StrExpr struct {
 
 func (e *StrExpr) String() string {
 	return strconv.Quote(e.Value)
+}
+
+// Date expression
+type DateExpr struct {
+	date time.Time
+}
+
+func (d *DateExpr) String() string {
+	return strconv.Quote(d.date.Format("02/01/2006"))
+}
+
+type RegexExpr struct {
+	regex *regexp.Regexp
+}
+
+func (r *RegexExpr) String() string {
+	return strconv.Quote(r.regex.String())
 }
 
 // VarExpr is a variable reference (name, description,location).

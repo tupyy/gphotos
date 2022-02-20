@@ -2,17 +2,20 @@ package search
 
 import (
 	"fmt"
+	"regexp"
+	"time"
 )
 
-// Parser parses logical and comparison expressions like
-// `album_field_name` = 'something' & 'album_field_name2' = 'something else'
-type parser struct {
-	// Lexer instance and current token values
-	lexer *Lexer
-	pos   int    // position of last token (tok)
-	tok   Token  // last lexed token
-	val   string // string value of last token (or "")
-}
+// Grammar
+//
+// expression: equality | equality (( "&" | "|" ) equality)*								;
+// equality: term ( ("==" | "!=" | "<" | "<=" | ">" | ">=" | "~") primary )*	;
+// term: VAR_NAME																;
+// primary: STRING | DATE | REGEX												;
+//
+// Note: to make it easy for user to enter expressions "&" and "|" are equivalent with "&&" and "||"
+// Date has only one format accepted: 01/02/2002 ( 02 -> month )
+// Regex format is /regex/ and it has to be Go regex.
 
 // ParseError (actually *ParseError) is the type of error returned by ParseSearchExpression.
 type ParseError struct {
@@ -28,7 +31,15 @@ func (e *ParseError) Error() string {
 	return fmt.Sprintf("parse error at %d: %s", e.Position, e.Message)
 }
 
-func parseSearchExpression(src []byte) (searchExpr *BinaryExpr, err error) {
+type parser struct {
+	// Lexer instance and current token values
+	lexer *Lexer
+	pos   int    // position of last token (tok)
+	tok   Token  // last lexed token
+	val   string // string value of last token (or "")
+}
+
+func parse(src []byte) (searchExpr *BinaryExpr, err error) {
 	defer func() {
 		// The parser uses panic with a *ParseError to signal parsing
 		// errors internally, and they're caught here. This
@@ -44,38 +55,50 @@ func parseSearchExpression(src []byte) (searchExpr *BinaryExpr, err error) {
 	p.next() // initialize p.tok
 
 	// Parse into abstract syntax tree
-	searchExpr = p.parse().(*BinaryExpr)
+	searchExpr = p.expression().(*BinaryExpr)
 
 	return
 }
 
-func (p *parser) parse() Expr {
-	var expr Expr
+// Parse an expression
+//
+// equality | equality (( "&" | "|" ) equality)*
+//
+func (p *parser) expression() Expr {
+	expr := p.equality()
 
-	for p.tok != EOL {
-		switch p.tok {
-		case AND, OR:
-			if expr == nil {
-				panic(p.errorf("expected expression at left of %s", p.tok))
-			}
-			op := p.tok
-			p.next()
-			p.expect(VAR_NAME)
-			expr = &BinaryExpr{Left: expr, Op: op, Right: p.eqlExpr()}
-		case VAR_NAME:
-			expr = p.eqlExpr()
-			if p.tok != EOL && !p.matches(AND, OR) {
-				panic(p.errorf("expected operator after expression instead of %s", p.tok))
-			}
-		default:
-			panic(p.errorf("expected expression instead of %s", p.tok))
+	if !p.matches(AND, OR) {
+		// at this point either we reached the end of expression or the right parenthese
+		if p.tok != EOL && p.tok != RPAREN {
+			panic(p.errorf("unexpected expression at left of '%s'", expr.String()))
 		}
+		return expr
+	}
+
+	for p.matches(AND, OR) {
+		op := p.tok
+		p.next()
+
+		var right Expr
+		if p.matches(LPAREN) {
+			p.next()
+			right = p.expression()
+			p.consume(RPAREN, "expected ')' after expression")
+		} else {
+			right = p.equality()
+		}
+
+		expr = &BinaryExpr{Left: expr, Op: op, Right: right}
 	}
 
 	return expr
 }
 
-func (p *parser) eqlExpr() Expr {
+// Parse equality expression
+//
+// term ( ("==" | "!=" | "<" | "<=" | ">" | ">=" | "~") primary )*	;
+//
+func (p *parser) equality() Expr {
 	p.expect(VAR_NAME)
 	name := p.val
 	expr := &BinaryExpr{Left: &VarExpr{name}}
@@ -83,17 +106,33 @@ func (p *parser) eqlExpr() Expr {
 	p.next()
 
 	switch p.tok {
-	case GREATER, GTE, LESS, LTE, EQUALS, NOT_EQUALS:
+	case GREATER, GTE, LESS, LTE, EQUALS, NOT_EQUALS, TILDA:
 		expr.Op = p.tok
+		p.next()
 	default:
 		panic(p.errorf("expected operator instead of %s", p.tok))
 
 	}
 
-	p.next()
+	expr.Right = p.primary()
+
+	return expr
+}
+
+// Parse primary
+//
+// STRING | DATE | REGEX
+//
+func (p *parser) primary() Expr {
+	var expr Expr
+
 	switch p.tok {
 	case STRING:
-		expr.Right = &StrExpr{p.val}
+		expr = &StrExpr{p.val}
+	case DATE:
+		expr = p.dateExpr(p.val)
+	case REGEX:
+		expr = p.regexExpr(p.val)
 	default:
 		panic(p.errorf("expected string instead of %s", p.tok))
 	}
@@ -101,6 +140,24 @@ func (p *parser) eqlExpr() Expr {
 	p.next()
 
 	return expr
+}
+
+func (p *parser) dateExpr(date string) Expr {
+	t, err := time.Parse("02/01/2006", date)
+	if err != nil {
+		panic(p.errorf("expected date instead of '%s'", date))
+	}
+
+	return &DateExpr{t}
+}
+
+func (p *parser) regexExpr(regex string) Expr {
+	r, err := regexp.Compile(regex)
+	if err != nil {
+		panic(p.errorf("expected valid regex instead of '%s'", regex))
+	}
+
+	return &RegexExpr{r}
 }
 
 // Parse next token into p.tok (and set p.pos and p.val).
@@ -127,6 +184,13 @@ func (p *parser) expect(tok Token) {
 	if p.tok != tok {
 		panic(p.errorf("expected %s instead of %s", tok, p.tok))
 	}
+}
+
+func (p *parser) consume(tok Token, msg string) {
+	if !p.matches(tok) {
+		panic(p.errorf(msg))
+	}
+	p.next()
 }
 
 // Format given string and args with Sprintf and return an error
