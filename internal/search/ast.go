@@ -23,50 +23,50 @@ type Expr interface {
 	String() string
 }
 
-// BinaryExpr is an expression like 1 + 2.
-type BinaryExpr struct {
+// binaryExpr is an expression like 1 + 2.
+type binaryExpr struct {
 	Left  Expr
 	Op    Token
 	Right Expr
 }
 
-func (e *BinaryExpr) String() string {
+func (e *binaryExpr) String() string {
 	var opStr string
 	opStr = " " + e.Op.String() + " "
 	return "(" + e.Left.String() + opStr + e.Right.String() + ")"
 }
 
-// StrExpr is a literal string like "foo".
-type StrExpr struct {
+// strExpr is a literal string like "foo".
+type strExpr struct {
 	Value string
 }
 
-func (e *StrExpr) String() string {
+func (e *strExpr) String() string {
 	return strconv.Quote(e.Value)
 }
 
 // Date expression
-type DateExpr struct {
-	date time.Time
+type dateExpr struct {
+	Date time.Time
 }
 
-func (d *DateExpr) String() string {
-	return strconv.Quote(d.date.Format("02/01/2006"))
+func (d *dateExpr) String() string {
+	return strconv.Quote(d.Date.Format("02/01/2006"))
 }
 
-type RegexExpr struct {
-	regex *regexp.Regexp
+type regexExpr struct {
+	Regex *regexp.Regexp
 }
 
-func (r *RegexExpr) String() string {
-	return strconv.Quote(r.regex.String())
+func (r *regexExpr) String() string {
+	return strconv.Quote(r.Regex.String())
 }
 
-// VarExpr is a variable reference (name, description,location).
-type VarExpr struct {
+// varExpr is a variable reference (name, description,location).
+type varExpr struct {
 	Name string
 }
 
-func (v *VarExpr) String() string {
+func (v *varExpr) String() string {
 	return strconv.Quote(v.Name)
 }

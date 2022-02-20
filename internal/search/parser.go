@@ -39,7 +39,7 @@ type parser struct {
 	val   string // string value of last token (or "")
 }
 
-func parse(src []byte) (searchExpr *BinaryExpr, err error) {
+func parse(src []byte) (searchExpr *binaryExpr, err error) {
 	defer func() {
 		// The parser uses panic with a *ParseError to signal parsing
 		// errors internally, and they're caught here. This
@@ -55,7 +55,7 @@ func parse(src []byte) (searchExpr *BinaryExpr, err error) {
 	p.next() // initialize p.tok
 
 	// Parse into abstract syntax tree
-	searchExpr = p.expression().(*BinaryExpr)
+	searchExpr = p.expression().(*binaryExpr)
 
 	return
 }
@@ -92,7 +92,7 @@ func (p *parser) expression() Expr {
 			right = p.equality()
 		}
 
-		expr = &BinaryExpr{Left: expr, Op: op, Right: right}
+		expr = &binaryExpr{Left: expr, Op: op, Right: right}
 	}
 
 	return expr
@@ -104,7 +104,7 @@ func (p *parser) expression() Expr {
 //
 func (p *parser) equality() Expr {
 	p.expect(VAR_NAME)
-	expr := &BinaryExpr{Left: p.primary()}
+	expr := &binaryExpr{Left: p.primary()}
 
 	switch p.tok {
 	case GREATER, GTE, LESS, LTE, EQUALS, NOT_EQUALS, TILDA:
@@ -129,9 +129,9 @@ func (p *parser) primary() Expr {
 
 	switch p.tok {
 	case VAR_NAME:
-		expr = &VarExpr{p.val}
+		expr = &varExpr{p.val}
 	case STRING:
-		expr = &StrExpr{p.val}
+		expr = &strExpr{p.val}
 	case DATE:
 		expr = p.dateExpr(p.val)
 	case REGEX:
@@ -151,7 +151,7 @@ func (p *parser) dateExpr(date string) Expr {
 		panic(p.errorf("expected date instead of '%s'", date))
 	}
 
-	return &DateExpr{t}
+	return &dateExpr{t}
 }
 
 func (p *parser) regexExpr(regex string) Expr {
@@ -160,7 +160,7 @@ func (p *parser) regexExpr(regex string) Expr {
 		panic(p.errorf("expected valid regex instead of '%s'", regex))
 	}
 
-	return &RegexExpr{r}
+	return &regexExpr{r}
 }
 
 // Parse next token into p.tok (and set p.pos and p.val).
