@@ -14,7 +14,7 @@ import (
 	"github.com/tupyy/gophoto/internal/api/utils"
 	"github.com/tupyy/gophoto/internal/common"
 	"github.com/tupyy/gophoto/internal/entity"
-	"github.com/tupyy/gophoto/internal/search"
+	"github.com/tupyy/gophoto/internal/filter"
 	"github.com/tupyy/gophoto/internal/services/album"
 	"github.com/tupyy/gophoto/internal/services/permissions"
 	"github.com/tupyy/gophoto/internal/services/tag"
@@ -46,7 +46,7 @@ func GetAlbums(r *gin.RouterGroup, albumService *album.Service, usersService *us
 			SharedAlbums(reqParams.FetchSharedAlbums)
 
 		if reqParams.FilterExpression != "" {
-			filter, err := search.New(reqParams.FilterExpression)
+			filter, err := filter.New(reqParams.FilterExpression)
 			if err != nil {
 				logger.WithError(err).Error("failed to create search engine")
 				common.AbortBadRequestWithJson(c, err, "filter expression not valid")
@@ -69,21 +69,19 @@ func GetAlbums(r *gin.RouterGroup, albumService *album.Service, usersService *us
 			q.Sort(album.SortByDate, album.ReverseOrder)
 		}
 
-		var offset int
 		if len(c.Query("offset")) > 0 {
 			if o, err := strconv.Atoi(c.Query("offset")); err == nil {
-				offset = o
+				q.Offset(o)
 			}
 		}
 
-		var limit int
 		if len(c.Query("limit")) > 0 {
 			if l, err := strconv.Atoi(c.Query("limit")); err == nil {
-				limit = l
+				q.Limit(l)
 			}
 		}
 
-		albums, count, err := q.Offset(offset).Limit(limit).All(ctx, session.User)
+		albums, count, err := q.All(ctx, session.User)
 		if err != nil {
 			logger.WithError(err).Error("failed to get albums")
 

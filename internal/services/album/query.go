@@ -143,8 +143,8 @@ func (q *Query) All(ctx context.Context, user entity.User) ([]entity.Album, int,
 	// put all the albums into a list and return them
 	albs := make([]entity.Album, 0, len(albums))
 	for _, a := range albums {
-		if q.filterEngine != nil {
-			resolved, err := q.filterEngine.Resolve(a)
+		if q.filter != nil {
+			resolved, err := q.filter.Resolve(a)
 			if err != nil {
 				logutil.GetDefaultLogger().WithError(err).WithField("album id", a.ID).Error("failed to resolve album")
 
