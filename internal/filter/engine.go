@@ -1,4 +1,4 @@
-package search
+package filter
 
 import (
 	"errors"
@@ -15,22 +15,22 @@ var (
 	FieldNotFoundError = errors.New("album field not found")
 )
 
-type FilterEngine struct {
+type Filter struct {
 	expr *binaryExpr
 }
 
-func NewSearchEngine(filterExpr string) (*FilterEngine, error) {
+func New(filterExpr string) (*Filter, error) {
 	expr, err := parse([]byte(filterExpr))
 	if err != nil {
 		return nil, err
 	}
 
-	return &FilterEngine{expr}, nil
+	return &Filter{expr}, nil
 }
 
 // Resolve tries to resolve the album against the filter expression.
 // Returns false if the album does not pass the expression.
-func (f *FilterEngine) Resolve(album entity.Album) (bool, error) {
+func (f *Filter) Resolve(album entity.Album) (bool, error) {
 	return resolveAST(f.expr, album)
 }
 

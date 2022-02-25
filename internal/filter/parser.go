@@ -1,4 +1,4 @@
-package search
+package filter
 
 import (
 	"fmt"
@@ -8,6 +8,9 @@ import (
 
 // Grammar
 //
+// program: statement EOF														;
+// statement: exprStm															;
+// exprStm: expression															;
 // expression: equality | equality (( "&" | "|" ) equality)*					;
 // equality: term ( ("==" | "!=" | "<" | "<=" | ">" | ">=" | "~") primary )*	;
 // term: VAR_NAME																;

@@ -17,7 +17,7 @@ var (
 	AlbumSearchError = errors.New("album search error")
 )
 
-type SearchEngine interface {
+type Filter interface {
 	Resolve(album entity.Album) (bool, error)
 }
 
@@ -28,8 +28,8 @@ type Query struct {
 	personalAlbums bool
 	// get shared albums.
 	sharedAlbums bool
-	// search engine
-	searchEngine SearchEngine
+	// filter
+	filter Filter
 	// album repo
 	albumRepo domain.Album
 	// media service
@@ -45,8 +45,8 @@ func (s *Service) Query() *Query {
 	}
 }
 
-func (q *Query) SearchEngine(searchEngine SearchEngine) *Query {
-	q.searchEngine = searchEngine
+func (q *Query) Filter(filter Filter) *Query {
+	q.filter = filter
 
 	return q
 }
@@ -143,23 +143,21 @@ func (q *Query) All(ctx context.Context, user entity.User) ([]entity.Album, int,
 	// put all the albums into a list and return them
 	albs := make([]entity.Album, 0, len(albums))
 	for _, a := range albums {
-		if q.searchEngine != nil {
-			found, err := q.searchEngine.Resolve(a)
+		if q.filterEngine != nil {
+			resolved, err := q.filterEngine.Resolve(a)
 			if err != nil {
 				logutil.GetDefaultLogger().WithError(err).WithField("album id", a.ID).Error("failed to resolve album")
 
 				continue
 			}
 
-			if found {
+			if resolved {
 				albs = append(albs, a)
 			}
 		} else {
 			albs = append(albs, a)
 		}
 	}
-
-	// filter albums
 
 	if q.sorter != nil {
 		q.sorter.Sort(albs)

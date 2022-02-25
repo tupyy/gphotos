@@ -1,4 +1,4 @@
-package search
+package filter
 
 type Lexer struct {
 	src     []byte

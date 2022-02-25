@@ -1,4 +1,4 @@
-package search
+package filter
 
 import (
 	"testing"
@@ -126,7 +126,7 @@ func TestFilterEngine(t *testing.T) {
 
 	for _, d := range data {
 		t.Run(d.expr, func(t *testing.T) {
-			filterEngine, err := NewSearchEngine(d.expr)
+			filterEngine, err := NewFilter(d.expr)
 			assert.Nil(t, err)
 
 			result, err := filterEngine.Resolve(d.album)

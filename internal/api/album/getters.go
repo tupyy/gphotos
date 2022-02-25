@@ -46,7 +46,7 @@ func GetAlbums(r *gin.RouterGroup, albumService *album.Service, usersService *us
 			SharedAlbums(reqParams.FetchSharedAlbums)
 
 		if reqParams.FilterExpression != "" {
-			searchEngine, err := search.NewSearchEngine(reqParams.FilterExpression)
+			filter, err := search.New(reqParams.FilterExpression)
 			if err != nil {
 				logger.WithError(err).Error("failed to create search engine")
 				common.AbortBadRequestWithJson(c, err, "filter expression not valid")
@@ -54,7 +54,7 @@ func GetAlbums(r *gin.RouterGroup, albumService *album.Service, usersService *us
 				return
 			}
 
-			q.SearchEngine(searchEngine)
+			q.Filter(filter)
 		}
 
 		// setup sort
