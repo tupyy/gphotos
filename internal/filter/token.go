@@ -1,4 +1,4 @@
-package search
+package filter
 
 type Token int
 
@@ -8,25 +8,29 @@ const (
 
 	AND
 	EQUALS
+	DIV
 	GTE
 	GREATER
 	LPAREN
 	LTE
 	LESS
 	OR
+	TILDA
 	NOT_EQUALS
 	RPAREN
 
 	// literal names as (name, description, location..)
 	VAR_NAME
 	STRING
+	DATE
+	REGEX // regex are defined as /regex/
 )
 
 var tokenNames = map[Token]string{
 	ILLEGAL:    "illegal",
 	EOL:        "EOL",
 	AND:        "&",
-	VAR_NAME:   "name",
+	DIV:        "/",
 	EQUALS:     "=",
 	GTE:        ">=",
 	GREATER:    ">",
@@ -34,9 +38,13 @@ var tokenNames = map[Token]string{
 	LTE:        "<=",
 	LESS:       "<",
 	OR:         "|",
+	TILDA:      "~",
 	RPAREN:     ")",
 	NOT_EQUALS: "!=",
+	VAR_NAME:   "name",
 	STRING:     "string",
+	DATE:       "date",
+	REGEX:      "regex",
 }
 
 func (t Token) String() string {

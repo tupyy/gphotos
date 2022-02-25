@@ -1,4 +1,4 @@
-package search
+package filter
 
 import (
 	"testing"
@@ -57,51 +57,76 @@ func TestFilterEngine(t *testing.T) {
 			hasError: true,
 		},
 		{
-			expr:     "date > '01/01/2022' & date < '01/03/2022'",
+			expr:     "date > 01/01/2022 & date < 01/03/2022",
 			album:    entity.Album{CreatedAt: createDate(2022, 04, 01)},
 			expected: false,
 		},
 		{
-			expr:     "date > '11/01/2021' & date < '16/11/2021'",
+			expr:     "date > 11/01/2021 & date < 16/11/2021",
 			album:    entity.Album{CreatedAt: createDate(2021, 11, 15)},
 			expected: true,
 		},
 		{
-			expr:     "date > '01/01/2022' & date < '01/03/2022'",
+			expr:     "date > 01/01/2022 & date < 01/03/2022",
 			album:    entity.Album{CreatedAt: createDate(2022, 02, 01)},
 			expected: true,
 		},
 		{
-			expr:     "date < '01/03/2022'",
+			expr:     "date < 01/03/2022",
 			album:    entity.Album{CreatedAt: createDate(2022, 02, 01)},
 			expected: true,
 		},
 		{
-			expr:     "date = '01/02/2022'",
+			expr:     "date = 01/02/2022",
 			album:    entity.Album{CreatedAt: createDate(2022, 02, 01)},
 			expected: true,
 		},
 		{
-			expr:     "date != '01/02/2022'",
+			expr:     "date != 01/02/2022",
 			album:    entity.Album{CreatedAt: createDate(2022, 02, 02)},
 			expected: true,
 		},
 		{
-			expr:     "name = 'titi' & date != '01/02/2022'",
+			expr:     "name = 'titi' & date != 01/02/2022",
 			album:    entity.Album{Name: "titi", CreatedAt: createDate(2022, 02, 02)},
 			expected: true,
 		},
 		{
-			expr:     "blabla = 'titi' & date != '01/02/2022'",
+			expr:     "blabla = 'titi' & date != 01/02/2022",
 			album:    entity.Album{Name: "titi", CreatedAt: createDate(2022, 02, 02)},
 			expected: false,
 			hasError: true,
+		},
+		{
+			expr:     "name = 'titi' & (date != 01/02/2022)",
+			album:    entity.Album{Name: "titi", CreatedAt: createDate(2022, 02, 02)},
+			expected: true,
+		},
+		{
+			expr:     "(name = 'titi' & date != 01/02/2022) | location = 'tata'",
+			album:    entity.Album{Name: "titi", CreatedAt: createDate(2022, 02, 02)},
+			expected: true,
+		},
+		{
+			expr:     "(name = 'titi' & date != 01/02/2022) | location = 'tata'",
+			album:    entity.Album{Name: "toto", Location: "tata", CreatedAt: createDate(2022, 02, 02)},
+			expected: true,
+		},
+		{
+			expr:     "location ~ /t.t./",
+			album:    entity.Album{Name: "toto", Location: "tata", CreatedAt: createDate(2022, 02, 02)},
+			expected: true,
+		},
+		{
+			expr:     "location ~ /t[a-z]{1}t./",
+			album:    entity.Album{Name: "toto", Location: "tata", CreatedAt: createDate(2022, 02, 02)},
+			expected: true,
 		},
 	}
 
 	for _, d := range data {
 		t.Run(d.expr, func(t *testing.T) {
-			filterEngine, err := NewSearchEngine(d.expr)
+			filterEngine, err := NewFilter(d.expr)
 			assert.Nil(t, err)
 
 			result, err := filterEngine.Resolve(d.album)

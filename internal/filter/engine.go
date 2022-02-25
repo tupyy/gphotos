@@ -1,10 +1,9 @@
-package search
+package filter
 
 import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/tupyy/gophoto/internal/entity"
 )
@@ -14,40 +13,35 @@ var (
 	WrongOpError = errors.New("wrong op")
 	// FieldNotFoundError means the keyword used in filter expression is not a field of the album.
 	FieldNotFoundError = errors.New("album field not found")
-	// DateParseError means the value of the date variable cannot be parsed.
-	DateParseError = errors.New("date parse error")
-
-	// accepted date time layouts
-	dateLayouts = []string{"02/Jan/2006", "02/01/2006"}
 )
 
-type SearchEngine struct {
-	expr *BinaryExpr
+type Filter struct {
+	expr *binaryExpr
 }
 
-func NewSearchEngine(filterExpr string) (*SearchEngine, error) {
-	expr, err := parseSearchExpression([]byte(filterExpr))
+func New(filterExpr string) (*Filter, error) {
+	expr, err := parse([]byte(filterExpr))
 	if err != nil {
 		return nil, err
 	}
 
-	return &SearchEngine{expr}, nil
+	return &Filter{expr}, nil
 }
 
-// Resolve tries to resolve the album against the search expression.
+// Resolve tries to resolve the album against the filter expression.
 // Returns false if the album does not pass the expression.
-func (f *SearchEngine) Resolve(album entity.Album) (bool, error) {
+func (f *Filter) Resolve(album entity.Album) (bool, error) {
 	return resolveAST(f.expr, album)
 }
 
-func resolveAST(rootExpr *BinaryExpr, album entity.Album) (bool, error) {
+func resolveAST(rootExpr *binaryExpr, album entity.Album) (bool, error) {
 	var (
 		leftResult  bool
 		rightResult bool
 		err         error
 	)
 
-	left, hasLeft := rootExpr.Left.(*BinaryExpr)
+	left, hasLeft := rootExpr.Left.(*binaryExpr)
 	if hasLeft {
 		leftResult, err = resolveAST(left, album)
 	} else {
@@ -58,7 +52,7 @@ func resolveAST(rootExpr *BinaryExpr, album entity.Album) (bool, error) {
 		return false, err
 	}
 
-	right, hasRight := rootExpr.Right.(*BinaryExpr)
+	right, hasRight := rootExpr.Right.(*binaryExpr)
 	if hasRight {
 		rightResult, err = resolveAST(right, album)
 	} else {
@@ -83,8 +77,8 @@ func resolveAST(rootExpr *BinaryExpr, album entity.Album) (bool, error) {
 
 }
 
-func resolveExpr(expr *BinaryExpr, album entity.Album) (bool, error) {
-	variable := expr.Left.(*VarExpr)
+func resolveExpr(expr *binaryExpr, album entity.Album) (bool, error) {
+	variable := expr.Left.(*varExpr)
 
 	// if it is a date, try to parse the value
 	switch variable.Name {
@@ -97,41 +91,31 @@ func resolveExpr(expr *BinaryExpr, album entity.Album) (bool, error) {
 	}
 }
 
-func parseTime(date string) (time.Time, error) {
-	for _, layout := range dateLayouts {
-		t, err := time.Parse(layout, date)
-		if err == nil {
-			return t, nil
-		}
-	}
-
-	return time.Time{}, DateParseError
-}
-
-func resolveDate(expr *BinaryExpr, album entity.Album) (bool, error) {
-	value := expr.Right.(*StrExpr)
-
-	t, err := parseTime(value.Value)
-	if err != nil {
-		return false, fmt.Errorf("%w accepted formats are: 02/Jan/2006 or 02/01/2006. got: %s", DateParseError, value.Value)
+func resolveDate(expr *binaryExpr, album entity.Album) (bool, error) {
+	dateExpr, ok := expr.Right.(*dateExpr)
+	if !ok {
+		return false, fmt.Errorf("expect date got '%s'", expr.Right.String())
 	}
 
 	switch expr.Op {
 	case GREATER, GTE:
-		return album.CreatedAt.After(t), nil
+		return album.CreatedAt.After(dateExpr.Date), nil
 	case LTE, LESS:
-		return album.CreatedAt.Before(t), nil
+		return album.CreatedAt.Before(dateExpr.Date), nil
 	case EQUALS:
-		return t.Day() == album.CreatedAt.Day() && t.Month() == album.CreatedAt.Month() && t.Year() == album.CreatedAt.Year(), nil
+		return dateExpr.Date.Day() == album.CreatedAt.Day() && dateExpr.Date.Month() == album.CreatedAt.Month() && dateExpr.Date.Year() == album.CreatedAt.Year(), nil
 	case NOT_EQUALS:
-		return t.Day() != album.CreatedAt.Day() || t.Month() != album.CreatedAt.Month() || t.Year() != album.CreatedAt.Year(), nil
+		return dateExpr.Date.Day() != album.CreatedAt.Day() || dateExpr.Date.Month() != album.CreatedAt.Month() || dateExpr.Date.Year() != album.CreatedAt.Year(), nil
 	default:
 		return false, WrongOpError
 	}
 }
 
-func resolveTags(expr *BinaryExpr, album entity.Album) (bool, error) {
-	value := expr.Right.(*StrExpr)
+func resolveTags(expr *binaryExpr, album entity.Album) (bool, error) {
+	value, ok := expr.Right.(*strExpr)
+	if !ok {
+		return false, fmt.Errorf("expect string got '%s'", expr.Right.String())
+	}
 
 	var tags string
 	for _, t := range album.Tags {
@@ -148,10 +132,9 @@ func resolveTags(expr *BinaryExpr, album entity.Album) (bool, error) {
 	return false, fmt.Errorf("%w tag comparison cannot have something else than '=' or '!='.got '%s'", WrongOpError, expr.Op)
 }
 
-func resolveCommonField(expr *BinaryExpr, album entity.Album) (bool, error) {
+func resolveCommonField(expr *binaryExpr, album entity.Album) (bool, error) {
 	var varValue string
-	variable := expr.Left.(*VarExpr)
-	value := expr.Right.(*StrExpr)
+	variable := expr.Left.(*varExpr)
 
 	switch variable.Name {
 	case "name":
@@ -162,6 +145,21 @@ func resolveCommonField(expr *BinaryExpr, album entity.Album) (bool, error) {
 		varValue = album.Location
 	default:
 		return false, fmt.Errorf("%w unknown field %s", FieldNotFoundError, variable.Name)
+	}
+
+	if expr.Op == TILDA {
+		regex, ok := expr.Right.(*regexExpr)
+		if !ok {
+			return false, fmt.Errorf("expected regex got '%s'", expr.Right.String())
+		}
+
+		return regex.Regex.MatchString(varValue), nil
+	}
+
+	// we expect a string here.
+	value, ok := expr.Right.(*strExpr)
+	if !ok {
+		return false, fmt.Errorf("expect string got '%s'", expr.Right.String())
 	}
 
 	switch expr.Op {
