@@ -49,7 +49,7 @@ func GetAlbums(r *gin.RouterGroup, albumService *album.Service, usersService *us
 			filter, err := filter.New(reqParams.FilterExpression)
 			if err != nil {
 				logger.WithError(err).Error("failed to create search engine")
-				common.AbortBadRequestWithJson(c, err, "filter expression not valid")
+				common.AbortBadRequestWithJson(c, err, err.Error())
 
 				return
 			}

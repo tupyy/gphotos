@@ -6,7 +6,9 @@ const defaultPageSize = 20;
 let store = {
     offset: 0,
     limit: defaultPageSize,
-    countAlbums: 0,
+    count: 0,
+    albums: [],
+    username: ""
 }
 
 let queryParams = {
@@ -60,42 +62,54 @@ const init = () => {
 const search = () => {
     queryParams.searchExpression = $("#searchBar").val();
 
-    fetch();
+    fetch().then(data => {
+        store.albums = [];
 
-    store.albums = [];
+        clearAlbums();
+        clearPagination();
 
-    clearAlbums();
-    clearPagination();
+        store.albums = data.albums;
+        store.count = data.count;
 
-    render();
+        render();
+    })
 }
 
 const fetch = () => {
     showSpinner($("#albums"),true);
     $("#count_albums").parent().hide();
 
-    clearAlbums();
 
+    let fetchPromise = $.Deferred();
     axios.get(queryParams.buildRequestURL(baseURL))
         .then(response => {
+            let data = {};
 
-            store.data = response.data;
-            store.albums = response.data.albums;
-            store.username = response.data.username;
-            store.totalAlbums = response.data.count;
+            data.albums = response.data.albums;
+            data.username = response.data.username;
+            data.count = response.data.count;
 
-            render();
+            fetchPromise.resolve(data);
 
         })
         .catch(e => {
-            console.log(e);
+            $.alert('Error fetching albums: ' + e.response.data.message, {
+                closeTime: 2000,
+                autoClose: true,
+                position: ['top-left'],
+                withTime: false,
+                type: 'error',
+                isOnly: false
+            });
+
+            fetchPromise.fail();
         })
         .then(() => {
             showSpinner($("#albums"), false);
             $("#count_albums").parent().show();
-
-            bindToCardOwner();
         });
+
+    return fetchPromise
 }
 
 
@@ -105,7 +119,9 @@ let render = () => {
     });
     
     $("#count_albums").html(store.albums.length);
-    $("#pagination").html(renderPagination(store.limit,store.offset, store.totalAlbums));
+    $("#pagination").html(renderPagination(store.limit,store.offset, store.count));
+
+    bindToCardOwner();
 }
 
 let renderAlbum = (album) => {
@@ -292,14 +308,18 @@ const doPagination = (increase) => {
         store.offset -= store.limit;
     }
 
-    store.albums = [];
 
-    fetch();
+    fetch().then(data => {
+        store.albums = [];
 
-    clearAlbums();
-    clearPagination();
+        clearAlbums();
+        clearPagination();
 
-    render();
+        store.albums = data.albums;
+        store.count = data.count;
+
+        render();
+    })
 }
 
 const gotoPage = (page) => {
@@ -311,12 +331,17 @@ const gotoPage = (page) => {
     store.offset = defaultPageSize * (page-1);
     store.albums = [];
 
-    fetch();
+    fetch().then(data => {
+        store.albums = [];
 
-    clearAlbums();
-    clearPagination();
+        clearAlbums();
+        clearPagination();
 
-    render();
+        store.albums = data.albums;
+        store.count = data.count;
+
+        render();
+    })
 }
 
 const bindToEvents = () => {
@@ -493,9 +518,12 @@ $(() => {
     init();
 
     // get albums from server
-    fetch();
-    
-    // bind to queryParamss controls
-    bindToEvents();
+    fetch().then(data => {
+        store.albums = data.albums;
+        store.count = data.count;
+
+        render();
+        bindToEvents();    
+    });
 
 });
