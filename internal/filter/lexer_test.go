@@ -28,7 +28,7 @@ func TestTokens(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.input, func(t *testing.T) {
-			l := NewLexer([]byte(test.input))
+			l := newLexer([]byte(test.input))
 
 			tokens := []string{}
 			for {
@@ -61,7 +61,7 @@ func TestValues(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.input, func(t *testing.T) {
-			l := NewLexer([]byte(test.input))
+			l := newLexer([]byte(test.input))
 
 			tokens := []string{}
 			for {
@@ -122,7 +122,7 @@ func TestErrors(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.input, func(t *testing.T) {
-			l := NewLexer([]byte(test.input))
+			l := newLexer([]byte(test.input))
 
 			values := []string{}
 			for {

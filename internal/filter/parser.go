@@ -1,16 +1,5 @@
-package filter
-
-import (
-	"fmt"
-	"regexp"
-	"time"
-)
-
 // Grammar
 //
-// program: statement EOF														;
-// statement: exprStm															;
-// exprStm: expression															;
 // expression: equality | equality (( "&" | "|" ) equality)*					;
 // equality: term ( ("==" | "!=" | "<" | "<=" | ">" | ">=" | "~") primary )*	;
 // term: VAR_NAME																;
@@ -19,8 +8,17 @@ import (
 // Note: to make it easy for user to enter expressions "&" and "|" are equivalent with "&&" and "||"
 // Date has only one format accepted: 01/02/2002 ( 02 -> month )
 // Regex format is /regex/ and it has to be Go regex.
+//
 
-// ParseError (actually *ParseError) is the type of error returned by ParseSearchExpression.
+package filter
+
+import (
+	"fmt"
+	"regexp"
+	"time"
+)
+
+// ParseError (actually *ParseError) is the type of error returned by parse.
 type ParseError struct {
 	// Source line/column position where the error occurred.
 	Position int
@@ -28,37 +26,33 @@ type ParseError struct {
 	Message string
 }
 
-// Error returns a formatted version of the error, including the line
-// and column numbers.
+// Error returns a formatted version of the error, including the line number.
 func (e *ParseError) Error() string {
 	return fmt.Sprintf("parse error at %d: %s", e.Position, e.Message)
 }
 
 type parser struct {
 	// Lexer instance and current token values
-	lexer *Lexer
+	lexer *lexer
 	pos   int    // position of last token (tok)
 	tok   Token  // last lexed token
 	val   string // string value of last token (or "")
 }
 
-func parse(src []byte) (searchExpr *binaryExpr, err error) {
+func parse(src []byte) (filterExpr *binaryExpr, err error) {
 	defer func() {
-		// The parser uses panic with a *ParseError to signal parsing
-		// errors internally, and they're caught here. This
-		// significantly simplifies the recursive descent calls as
-		// we don't have to check errors everywhere.
 		if r := recover(); r != nil {
 			// Convert to ParseError or re-panic
 			err = r.(*ParseError)
 		}
 	}()
-	lexer := NewLexer(src)
+
+	lexer := newLexer(src)
 	p := parser{lexer: lexer}
 	p.next() // initialize p.tok
 
 	// Parse into abstract syntax tree
-	searchExpr = p.expression().(*binaryExpr)
+	filterExpr = p.expression().(*binaryExpr)
 
 	return
 }

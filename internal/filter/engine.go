@@ -41,8 +41,7 @@ func resolveAST(rootExpr *binaryExpr, album entity.Album) (bool, error) {
 		err         error
 	)
 
-	left, hasLeft := rootExpr.Left.(*binaryExpr)
-	if hasLeft {
+	if left, ok := rootExpr.Left.(*binaryExpr); ok {
 		leftResult, err = resolveAST(left, album)
 	} else {
 		leftResult, err = resolveExpr(rootExpr, album)
@@ -52,8 +51,7 @@ func resolveAST(rootExpr *binaryExpr, album entity.Album) (bool, error) {
 		return false, err
 	}
 
-	right, hasRight := rootExpr.Right.(*binaryExpr)
-	if hasRight {
+	if right, ok := rootExpr.Right.(*binaryExpr); ok {
 		rightResult, err = resolveAST(right, album)
 	} else {
 		rightResult, err = resolveExpr(rootExpr, album)

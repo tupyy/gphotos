@@ -1,6 +1,6 @@
 package filter
 
-type Lexer struct {
+type lexer struct {
 	src     []byte
 	ch      byte
 	offset  int
@@ -8,14 +8,14 @@ type Lexer struct {
 	nextPos int
 }
 
-func NewLexer(src []byte) *Lexer {
-	l := &Lexer{src: src}
+func newLexer(src []byte) *lexer {
+	l := &lexer{src: src}
 	l.next()
 
 	return l
 }
 
-func (l *Lexer) Scan() (int, Token, string) {
+func (l *lexer) Scan() (int, Token, string) {
 	for l.ch == ' ' || l.ch == '\t' {
 		l.next()
 	}
@@ -152,7 +152,7 @@ func (l *Lexer) Scan() (int, Token, string) {
 }
 
 // Load the next character into l.ch (or 0 on end of input) and update line position.
-func (l *Lexer) next() {
+func (l *lexer) next() {
 	l.pos = l.nextPos
 	if l.offset >= len(l.src) {
 		// For last character, move offset 1 past the end as it
