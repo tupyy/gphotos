@@ -48,7 +48,7 @@ func GetAlbums(r *gin.RouterGroup, albumService *album.Service, usersService *us
 		if reqParams.FilterExpression != "" {
 			filter, err := filter.New(reqParams.FilterExpression)
 			if err != nil {
-				logger.WithError(err).Error("failed to create search engine")
+				logger.WithError(err).Error("failed to create filter engine")
 				common.AbortBadRequestWithJson(c, err, err.Error())
 
 				return
@@ -69,6 +69,7 @@ func GetAlbums(r *gin.RouterGroup, albumService *album.Service, usersService *us
 			q.Sort(album.SortByDate, album.ReverseOrder)
 		}
 
+		// paginate
 		if len(c.Query("offset")) > 0 {
 			if o, err := strconv.Atoi(c.Query("offset")); err == nil {
 				q.Offset(o)
@@ -198,6 +199,7 @@ func bindRequestParams(c *gin.Context) requestParams {
 		}
 	}
 
+	// the filter expression is encoded in base64 by the front.
 	if len(c.Query("filter")) > 0 {
 		decodedStr, err := base64.StdEncoding.DecodeString(c.Query("filter"))
 		if err != nil {
