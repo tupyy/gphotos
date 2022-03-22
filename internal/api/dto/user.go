@@ -12,12 +12,12 @@ import (
 // User is a simplified version of user to be used in templates.
 // The username is encrypted.
 type User struct {
-	ID          string
-	EncryptedID string
-	Username    string
-	Name        string
-	Role        string
-	CanShare    bool
+	ID          string `json:"-"`
+	EncryptedID string `json:"id"`
+	Username    string `json:"username"`
+	Name        string `json:"name"`
+	Role        string `json:"role"`
+	CanShare    bool   `json:"canShare"`
 }
 
 func NewUserDTO(u entity.User) (User, error) {

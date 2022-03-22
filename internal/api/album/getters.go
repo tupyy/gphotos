@@ -3,7 +3,6 @@ package album
 import (
 	"context"
 	"encoding/base64"
-	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -23,7 +22,7 @@ import (
 )
 
 func GetAlbums(r *gin.RouterGroup, albumService *album.Service, usersService *users.Service) {
-	r.GET("/api/albums", func(c *gin.Context) {
+	r.GET("/api/v1/albums", func(c *gin.Context) {
 		s, _ := c.Get("sessionData")
 		session := s.(entity.Session)
 
@@ -90,10 +89,8 @@ func GetAlbums(r *gin.RouterGroup, albumService *album.Service, usersService *us
 		}
 
 		c.JSON(http.StatusOK, gin.H{
-			"user_role": session.User.Role.String(),
-			"username":  fmt.Sprintf("%s %s", session.User.FirstName, session.User.LastName),
-			"albums":    dto.NewAlbumDTOs(albums, users),
-			"count":     count,
+			"albums": dto.NewAlbumDTOs(albums, users),
+			"count":  count,
 		})
 
 		return

@@ -6,6 +6,7 @@ import (
 	"github.com/tupyy/gophoto/internal/api/index"
 	"github.com/tupyy/gophoto/internal/api/media"
 	"github.com/tupyy/gophoto/internal/api/tag"
+	"github.com/tupyy/gophoto/internal/api/user"
 	albumService "github.com/tupyy/gophoto/internal/services/album"
 	mediaService "github.com/tupyy/gophoto/internal/services/media"
 	tagService "github.com/tupyy/gophoto/internal/services/tag"
@@ -55,4 +56,8 @@ func RegisterTagHandler(privateGroup *gin.RouterGroup, as *albumService.Service,
 	tag.Associate(privateGroup, as, t)
 
 	logutil.GetDefaultLogger().Info("api tag registered")
+}
+
+func RegisterUserManagementHandler(privateGroup *gin.RouterGroup) {
+	user.GetAccount(privateGroup)
 }

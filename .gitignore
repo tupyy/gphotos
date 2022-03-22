@@ -7,3 +7,4 @@ tools/
 .vimspector.json
 resources/prod.env
 resources/key.bin
+node_modules/

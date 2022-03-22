@@ -2,6 +2,7 @@ package dto
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/entity"
@@ -119,7 +120,7 @@ func NewAlbumDTO(a entity.Album, owner entity.User) (Album, error) {
 	return Album{
 		ID:          encryptedID,
 		Name:        a.Name,
-		Date:        a.CreatedAt.Format("2 January 2006"),
+		Date:        a.CreatedAt.Format(time.RFC3339),
 		Location:    a.Location,
 		Description: a.Description,
 		Owner:       ownerName,
