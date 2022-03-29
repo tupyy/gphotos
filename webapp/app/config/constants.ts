@@ -17,4 +17,5 @@ export const ALBUM_PERMISSIONS = {
   DELETE: 'album.delete',
 };
 
-const isoDateFormat = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d*)?$/;
+export const DATE_FORMAT = "YYYY-MM-DDTHH:mm:SSZ";
+export const ALBUM_DATE_FORMAT = "DDD-MM-YYYY";

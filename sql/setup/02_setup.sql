@@ -40,7 +40,7 @@ CREATE INDEX user_id_idx ON album_user_permissions  (user_id);
 
 CREATE TABLE album_group_permissions (
     group_name TEXT NOT NULL,
-    album_id SERIAL REFERENCES album(id) ON DELETEE CASCADE,
+    album_id SERIAL REFERENCES album(id) ON DELETE CASCADE,
     permissions permission_id[] NOT NULL,
     CONSTRAINT album_group_permissions_pk PRIMARY KEY (
         group_name,
