@@ -189,9 +189,9 @@ GEN_CMD=$(TOOLS_DIR)/gen --sqltype=postgres \
 generate.models:
 	sh -c '$(GEN_CMD) --connstr "$(BASE_CONNSTR)/gophoto?sslmode=disable"  --model=models --database gophoto' 						# Generate models for the DB tables
 
-######################
-# Include section    #
-######################
+#####################
+# Include section   #
+#####################
 
 # include custom targets and variable
 -include ./custom.mk
