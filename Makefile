@@ -63,7 +63,7 @@ IMAGE_TAG=$(VERSION)-$(GIT_COMMIT)
 IMAGE_NAME=gophoto
 NAME=gophoto
 
-.PHONY: build.prepare build.vendor build.vendor.full build.docker build.get.imagename build.get.tag
+.PHONY: build.prepare build.vendor build.vendor.full build.docker build.get.imagename build.get.tag build.swagger
 
 #help build.prepare: prepare target/ folder
 build.prepare:
@@ -97,6 +97,12 @@ build.get.imagename:
 build.get.tag:
 	@echo -n $(IMAGE_TAG)
 
+#help build.swagger: change the version of the swagger
+build.swagger: build.prepare
+	cp swagger.yaml $(CURDIR)/target/swagger.yaml
+	sed "s/#VERSION#/$(VERSION)/g" -i $(CURDIR)/target/swagger.yaml
+	$(TOOLS_DIR)/swagger generate server -f $(CURDIR)/target/swagger.yaml --name=$(NAME)
+	$(TOOLS_DIR)/swagger generate client -f $(CURDIR)/target/swagger.yaml --name=$(NAME)
 
 #####################
 # Check targets     #
