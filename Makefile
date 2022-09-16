@@ -98,11 +98,10 @@ build.get.tag:
 	@echo -n $(IMAGE_TAG)
 
 #help build.swagger: change the version of the swagger
-build.swagger: build.prepare
-	cp swagger.yaml $(CURDIR)/target/swagger.yaml
-	sed "s/#VERSION#/$(VERSION)/g" -i $(CURDIR)/target/swagger.yaml
-	$(TOOLS_DIR)/swagger generate server -f $(CURDIR)/target/swagger.yaml --name=$(NAME)
-	$(TOOLS_DIR)/swagger generate client -f $(CURDIR)/target/swagger.yaml --name=$(NAME)
+generate.openapi: build.prepare
+	cp openapi.yaml $(CURDIR)/target/openapi.yaml
+	sed "s/#VERSION#/$(VERSION)/g" -i $(CURDIR)/target/openapi.yaml
+	$(TOOLS_DIR)/oapi-codegen -generate gin $(CURDIR)/target/openapi.yaml > gphoto.gen.go
 
 #####################
 # Check targets     #

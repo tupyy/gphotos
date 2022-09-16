@@ -1,0 +1,4 @@
+package: v1
+generate:
+  models: true
+output: api/v1/models.gen.go

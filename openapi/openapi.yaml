@@ -1,0 +1,420 @@
+openapi: 3.0.1
+info:
+  title: gphotos
+  version: '#VERSION#'
+servers:
+- url: /
+paths:
+  /api/gphotos/v1:
+    get:
+      tags:
+      - Versions
+      description: get inforamtion about available versions
+      operationId: getVersionMetadata
+      responses:
+        200:
+          description: version metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionMetadata'
+        401:
+          description: Not authenticated
+          content: {}
+        500:
+          description: unexpected error occured
+          content: {}
+  /api/gphotos/v1/auth/callback:
+    get:
+      tags:
+      - Auth
+      description: callback for oidc authentication
+      parameters:
+      - name: code
+        in: query
+        description: oidc token
+        schema:
+          type: string
+      - name: state
+        in: query
+        description: oidc inital state
+        schema:
+          type: string
+      responses:
+        200:
+          description: authenticated
+          headers:
+            set-cookie:
+              description: cookie
+              schema:
+                type: string
+          content: {}
+        400:
+          description: bad request
+          content: {}
+        500:
+          description: unexpected error occured
+          content: {}
+  /api/gphotos/v1/albums:
+    get:
+      tags:
+      - Albums
+      description: get all albums owned by or shared with the current logged user
+      operationId: getAlbums
+      parameters:
+      - name: cookie
+        in: header
+        description: session cookie
+        schema:
+          type: string
+      responses:
+        200:
+          description: list of albums owned by or shared with logged user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Albums'
+        401:
+          description: Not authenticated.
+          content: {}
+        403:
+          description: Forbidden.
+          content: {}
+        500:
+          description: Internal error.
+          content: {}
+        503:
+          description: Not available.
+          content: {}
+  /api/gphotos/v1/albums/users/{user_id}:
+    get:
+      tags:
+      - Albums
+      description: get all user's album shared with the current logger user
+      operationId: getAlbumsByUser
+      parameters:
+      - name: user_id
+        in: path
+        description: id of the album's owner
+        required: true
+        schema:
+          type: string
+      - name: cookie
+        in: header
+        description: session cookie
+        schema:
+          type: string
+      responses:
+        200:
+          description: list of album shard by 'user_id' with logged user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserAlbums'
+        401:
+          description: Not authenticated.
+          content: {}
+        403:
+          description: Forbidden.
+          content: {}
+        500:
+          description: Internal error.
+          content: {}
+        503:
+          description: Not available.
+          content: {}
+  /api/gphotos/v1/albums/groups/{group_id}:
+    get:
+      tags:
+      - Albums
+      description: get all user's album shared with the current logger user
+      operationId: getAlbumsByGroup
+      parameters:
+      - name: group_id
+        in: path
+        description: id of the group
+        required: true
+        schema:
+          type: string
+      - name: cookie
+        in: header
+        description: session cookie
+        schema:
+          type: string
+      responses:
+        200:
+          description: list of album shared by 'group_id' with logged user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserAlbums'
+        401:
+          description: Not authenticated.
+          content: {}
+        403:
+          description: Forbidden.
+          content: {}
+        500:
+          description: Internal error.
+          content: {}
+        503:
+          description: Not available.
+          content: {}
+  /api/gphotos/v1/albums/{album_id}/permissions:
+    get:
+      tags:
+      - Albums
+      description: retrieve the list of user and group permissions
+      operationId: getAlbumPermissions
+      parameters:
+      - name: album_id
+        in: path
+        description: id of the album
+        required: true
+        schema:
+          type: string
+      - name: cookie
+        in: header
+        description: session cookie
+        schema:
+          type: string
+      responses:
+        200:
+          description: retrieve the list of user and group permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlbumPermissions'
+        401:
+          description: Not authenticated.
+          content: {}
+        403:
+          description: Forbidden.
+          content: {}
+        500:
+          description: Internal error.
+          content: {}
+        503:
+          description: Not available.
+          content: {}
+components:
+  schemas:
+    ObjectReference:
+      required:
+      - href
+      - id
+      - kind
+      type: object
+      properties:
+        id:
+          type: string
+        kind:
+          type: string
+        href:
+          type: string
+    VersionMetadata:
+      allOf:
+      - $ref: '#/components/schemas/ObjectReference'
+      - type: object
+        properties:
+          collections:
+            type: array
+            items:
+              type: object
+              allOf:
+                - $ref: '#/components/schemas/ObjectReference'
+    UserPermissions:
+      required:
+      - permissions
+      - user
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        permissions:
+          type: array
+          items:
+            type: string
+    GroupPermissions:
+      required:
+      - group
+      - permissions
+      type: object
+      properties:
+        group:
+          $ref: '#/components/schemas/ObjectReference'
+        permissions:
+          type: array
+          items:
+            type: string
+    Tag:
+      allOf:
+      - $ref: '#/components/schemas/ObjectReference'
+      - required:
+        - name
+        - user_id
+        type: object
+        properties:
+          user_id:
+            type: string
+            description: tag's owner id
+          name:
+            type: string
+            description: name of the tag
+          color:
+            type: string
+            description: color of the tag in hex format
+    Tags:
+      allOf:
+      - $ref: '#/components/schemas/ObjectReference'
+      - type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/Tag'
+          page:
+            type: integer
+            description: number of the page
+            format: int32
+          size:
+            type: integer
+            description: number of album in a page
+            format: int32
+          total:
+            type: integer
+            format: int32
+    Photo:
+      allOf:
+      - $ref: '#/components/schemas/ObjectReference'
+      - type: object
+        properties:
+          filename:
+            type: string
+            description: name of the file
+          bucket:
+            type: string
+            description: bucket where the photo is stored
+          thumbnail:
+            type: string
+            description: path to the thumbnail of the photo
+    Photos:
+      type: array
+      items:
+        $ref: '#/components/schemas/Photo'
+    Album:
+      allOf:
+      - $ref: '#/components/schemas/ObjectReference'
+      - required:
+        - bucket
+        - created_at
+        - name
+        type: object
+        properties:
+          name:
+            type: string
+            description: name of the album
+          created_at:
+            type: integer
+            description: creation date in unix timestamp
+            format: int64
+          description:
+            type: string
+            description: description of the album
+          location:
+            type: string
+            description: location of the album
+          bucket:
+            type: string
+            description: path of the bucket where media is stored
+          thumbnail:
+            type: string
+            description: url of the thumbnail of the album
+          tags:
+            type: array
+            items:
+              $ref: '#/components/schemas/Tag'
+    UserAlbum:
+      allOf:
+      - $ref: '#/components/schemas/Album'
+      - type: object
+        properties:
+          owner:
+            $ref: '#/components/schemas/User'
+    AlbumPermissions:
+      type: object
+      properties:
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserPermissions'
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/GroupPermissions'
+    Albums:
+      type: object
+      properties:
+        albums:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserAlbum'
+        page:
+          type: integer
+          description: number of the page
+          format: int32
+        size:
+          type: integer
+          description: number of album in a page
+          format: int32
+        total:
+          type: integer
+          format: int32
+    UserAlbums:
+      type: object
+      properties:
+        albums:
+          type: array
+          items:
+            $ref: '#/components/schemas/Album'
+        page:
+          type: integer
+          description: number of the page
+          format: int32
+        size:
+          type: integer
+          description: number of album in a page
+          format: int32
+        total:
+          type: integer
+          format: int32
+    User:
+      allOf:
+      - $ref: '#/components/schemas/ObjectReference'
+      - type: object
+        properties:
+          name:
+            type: string
+            description: name of the user
+          surname:
+            type: string
+            description: surname of the user
+          user_id:
+            type: string
+            description: user_od
+          groups:
+            type: array
+            items:
+              $ref: '#/components/schemas/ObjectReference'
+    Group:
+      allOf:
+      - $ref: '#/components/schemas/ObjectReference'
+      - type: object
+        properties:
+          name:
+            type: string
+            description: name of the group
+          members:
+            type: array
+            items:
+              $ref: '#/components/schemas/ObjectReference'

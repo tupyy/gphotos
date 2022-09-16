@@ -25,6 +25,7 @@ import (
 	"github.com/minio/minio-go/v7"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	v1 "github.com/tupyy/gophoto/api/v1"
 	"github.com/tupyy/gophoto/internal/api"
 	"github.com/tupyy/gophoto/internal/auth"
 	"github.com/tupyy/gophoto/internal/conf"
@@ -35,6 +36,7 @@ import (
 	"github.com/tupyy/gophoto/internal/domain/postgres/tag"
 	"github.com/tupyy/gophoto/internal/domain/postgres/user"
 	"github.com/tupyy/gophoto/internal/entity"
+	"github.com/tupyy/gophoto/internal/handlers"
 	albumService "github.com/tupyy/gophoto/internal/services/album"
 	"github.com/tupyy/gophoto/internal/services/media"
 	tagService "github.com/tupyy/gophoto/internal/services/tag"
@@ -43,7 +45,7 @@ import (
 	"github.com/tupyy/gophoto/utils/minioclient"
 	"github.com/tupyy/gophoto/utils/pgclient"
 
-	router "github.com/tupyy/gophoto/internal/routes"
+	router "github.com/tupyy/gophoto/internal/server"
 )
 
 // serveCmd represents the serve command
@@ -86,16 +88,7 @@ var serveCmd = &cobra.Command{
 		}
 		logutil.GetDefaultLogger().Info("repositories created")
 
-		// create services
-		mediaService := media.New(repos[domain.MinioRepoName].(domain.Store))
-
-		albumRepo := repos[domain.AlbumRepoName].(domain.Album)
-		tagRepo := repos[domain.TagRepoName].(domain.Tag)
-
-		albumService := albumService.New(albumRepo, mediaService)
-		usersService := usersService.New(repos)
-		tagService := tagService.New(tagRepo)
-
+		services := createServices(repos)
 		logutil.GetDefaultLogger().Info("services created")
 
 		// create keycloak
@@ -106,15 +99,11 @@ var serveCmd = &cobra.Command{
 
 		api.Logout(r.PrivateGroup, keycloakAuthenticator)
 
-		api.RegisterIndexHandler(r.PrivateGroup, usersService)
-		api.RegisterAlbumHandler(r.PrivateGroup, albumService, usersService, tagService)
-		api.RegisterMediaHandler(r.PrivateGroup, albumService, mediaService)
-		api.RegisterTagHandler(r.PrivateGroup, albumService, tagService)
+		server := handlers.NewServer(services)
+		v1.RegisterHandlers(r.PrivateGroup, server)
 
 		// run server
 		r.Run()
-
-		// TODO shutdown
 	},
 }
 
@@ -171,4 +160,24 @@ func createRepos(client pgclient.Client, mclient *minio.Client) (domain.Reposito
 	repos[domain.MinioRepoName] = minioCache
 
 	return repos, nil
+}
+
+func createServices(repos domain.Repositories) map[string]interface{} {
+	services := make(map[string]interface{})
+	// create services
+	mediaService := media.New(repos[domain.MinioRepoName].(domain.Store))
+	services["media"] = mediaService
+
+	albumRepo := repos[domain.AlbumRepoName].(domain.Album)
+	tagRepo := repos[domain.TagRepoName].(domain.Tag)
+
+	albumService := albumService.New(albumRepo, mediaService)
+	usersService := usersService.New(repos)
+	tagService := tagService.New(tagRepo)
+
+	services["album"] = albumService
+	services["user"] = usersService
+	services["tag"] = tagService
+
+	return services
 }
