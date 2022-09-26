@@ -7,7 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/tupyy/gophoto/internal/domain"
 	"github.com/tupyy/gophoto/internal/entity"
-	"github.com/tupyy/gophoto/utils/logutil"
+	"github.com/tupyy/gophoto/internal/utils/logutil"
 )
 
 type Service struct {

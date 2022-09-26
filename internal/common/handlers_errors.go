@@ -7,7 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/tupyy/gophoto/internal/entity"
-	"github.com/tupyy/gophoto/utils/logutil"
+	"github.com/tupyy/gophoto/internal/utils/logutil"
 )
 
 var (

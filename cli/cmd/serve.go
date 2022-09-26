@@ -26,7 +26,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	v1 "github.com/tupyy/gophoto/api/v1"
-	"github.com/tupyy/gophoto/internal/api"
 	"github.com/tupyy/gophoto/internal/auth"
 	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/domain"
@@ -37,15 +36,14 @@ import (
 	"github.com/tupyy/gophoto/internal/domain/postgres/user"
 	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/internal/handlers"
+	"github.com/tupyy/gophoto/internal/router"
 	albumService "github.com/tupyy/gophoto/internal/services/album"
 	"github.com/tupyy/gophoto/internal/services/media"
 	tagService "github.com/tupyy/gophoto/internal/services/tag"
 	usersService "github.com/tupyy/gophoto/internal/services/users"
-	"github.com/tupyy/gophoto/utils/logutil"
-	"github.com/tupyy/gophoto/utils/minioclient"
-	"github.com/tupyy/gophoto/utils/pgclient"
-
-	router "github.com/tupyy/gophoto/internal/server"
+	"github.com/tupyy/gophoto/internal/utils/logutil"
+	"github.com/tupyy/gophoto/internal/utils/minioclient"
+	"github.com/tupyy/gophoto/internal/utils/pgclient"
 )
 
 // serveCmd represents the serve command
@@ -97,7 +95,7 @@ var serveCmd = &cobra.Command{
 		// create new router
 		r := router.NewRouter(store, keycloakAuthenticator)
 
-		api.Logout(r.PrivateGroup, keycloakAuthenticator)
+		//api.Logout(r.PrivateGroup, keycloakAuthenticator)
 
 		server := handlers.NewServer(services)
 		v1.RegisterHandlers(r.PrivateGroup, server)

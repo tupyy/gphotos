@@ -1,6 +1,7 @@
 package router
 
 import (
+	"net/http"
 	"net/url"
 
 	"github.com/gin-contrib/sessions"
@@ -27,8 +28,13 @@ func NewRouter(store sessions.Store, authenticator auth.Authenticator) *PhotoRou
 		r.Static("/static", conf.GetStaticsFolder())
 	}
 
+	r.LoadHTMLFiles("static/index.html")
+
 	// setup authentication for the priate group.
 	private := r.Group("/", authenticator.AuthMiddleware())
+	private.GET("/", func(ctx *gin.Context) {
+		ctx.HTML(http.StatusOK, "index.html", gin.H{})
+	})
 
 	// create a public group.
 	public := r.Group("/public")

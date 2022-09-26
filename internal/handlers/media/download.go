@@ -1,194 +1,194 @@
 package media
 
-import (
-	"context"
-	"errors"
-	"io"
-	"net/http"
-	"strconv"
+// import (
+// 	"context"
+// 	"errors"
+// 	"io"
+// 	"net/http"
+// 	"strconv"
 
-	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
-	"github.com/tupyy/gophoto/internal/api/utils"
-	"github.com/tupyy/gophoto/internal/common"
-	"github.com/tupyy/gophoto/internal/entity"
-	"github.com/tupyy/gophoto/internal/services/album"
-	"github.com/tupyy/gophoto/internal/services/media"
-	"github.com/tupyy/gophoto/internal/services/permissions"
-	"github.com/tupyy/gophoto/utils/logutil"
-)
+// 	"github.com/gin-gonic/gin"
+// 	"github.com/sirupsen/logrus"
+// 	"github.com/tupyy/gophoto/internal/api/utils"
+// 	"github.com/tupyy/gophoto/internal/common"
+// 	"github.com/tupyy/gophoto/internal/entity"
+// 	"github.com/tupyy/gophoto/internal/services/album"
+// 	"github.com/tupyy/gophoto/internal/services/media"
+// 	"github.com/tupyy/gophoto/internal/services/permissions"
+// 	"github.com/tupyy/gophoto/utils/logutil"
+// )
 
-func GetAlbumMedia(r *gin.RouterGroup, albumService *album.Service, mediaService *media.Service) {
-	r.GET("/api/albums/:id/album/media", utils.ParseAlbumIDHandler, func(c *gin.Context) {
-		s, _ := c.Get("sessionData")
-		session := s.(entity.Session)
+// func GetAlbumMedia(r *gin.RouterGroup, albumService *album.Service, mediaService *media.Service) {
+// 	r.GET("/api/albums/:id/album/media", utils.ParseAlbumIDHandler, func(c *gin.Context) {
+// 		s, _ := c.Get("sessionData")
+// 		session := s.(entity.Session)
 
-		ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
-		logger := logutil.GetLogger(ctx)
+// 		ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
+// 		logger := logutil.GetLogger(ctx)
 
-		album, err := albumService.Query().First(ctx, int32(c.GetInt("id")))
-		if err != nil {
-			common.AbortNotFound(c, err, "download media")
+// 		album, err := albumService.Query().First(ctx, int32(c.GetInt("id")))
+// 		if err != nil {
+// 			common.AbortNotFound(c, err, "download media")
 
-			return
-		}
+// 			return
+// 		}
 
-		// check permissions to this album
-		ats := permissions.NewAlbumPermissionService()
-		hasPermission := ats.Policy(permissions.OwnerPolicy{}).
-			Policy(permissions.UserPermissionPolicy{Permission: entity.PermissionReadAlbum}).
-			Policy(permissions.GroupPermissionPolicy{Permission: entity.PermissionReadAlbum}).
-			Strategy(permissions.AtLeastOneStrategy).
-			Resolve(album, session.User)
+// 		// check permissions to this album
+// 		ats := permissions.NewAlbumPermissionService()
+// 		hasPermission := ats.Policy(permissions.OwnerPolicy{}).
+// 			Policy(permissions.UserPermissionPolicy{Permission: entity.PermissionReadAlbum}).
+// 			Policy(permissions.GroupPermissionPolicy{Permission: entity.PermissionReadAlbum}).
+// 			Strategy(permissions.AtLeastOneStrategy).
+// 			Resolve(album, session.User)
 
-		if !hasPermission {
-			logger.WithFields(logrus.Fields{
-				"album_id": album.ID,
-				"user_id":  session.User.ID,
-			}).Error("user has no permissions to read media")
+// 		if !hasPermission {
+// 			logger.WithFields(logrus.Fields{
+// 				"album_id": album.ID,
+// 				"user_id":  session.User.ID,
+// 			}).Error("user has no permissions to read media")
 
-			common.AbortForbiddenWithJson(c, errors.New("user has no permission to read media"), "")
+// 			common.AbortForbiddenWithJson(c, errors.New("user has no permission to read media"), "")
 
-			return
-		}
+// 			return
+// 		}
 
-		media, err := mediaService.ListBucket(ctx, album.Bucket)
-		if err != nil {
-			logger.WithFields(logrus.Fields{
-				"album_id": album.ID,
-				"bucket":   album.Bucket,
-			}).Error("failed to get media")
+// 		media, err := mediaService.ListBucket(ctx, album.Bucket)
+// 		if err != nil {
+// 			logger.WithFields(logrus.Fields{
+// 				"album_id": album.ID,
+// 				"bucket":   album.Bucket,
+// 			}).Error("failed to get media")
 
-		}
+// 		}
 
-		c.JSON(http.StatusOK, media)
+// 		c.JSON(http.StatusOK, media)
 
-		return
+// 		return
 
-	})
-}
+// 	})
+// }
 
-func DownloadMedia(r *gin.RouterGroup, albumService *album.Service, mediaService *media.Service) {
-	r.GET("/api/albums/:id/album/:media/media", utils.ParseAlbumIDHandler, parseMediaFilenameHandler, func(c *gin.Context) {
-		s, _ := c.Get("sessionData")
-		session := s.(entity.Session)
+// func DownloadMedia(r *gin.RouterGroup, albumService *album.Service, mediaService *media.Service) {
+// 	r.GET("/api/albums/:id/album/:media/media", utils.ParseAlbumIDHandler, parseMediaFilenameHandler, func(c *gin.Context) {
+// 		s, _ := c.Get("sessionData")
+// 		session := s.(entity.Session)
 
-		ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
-		logger := logutil.GetLogger(ctx)
+// 		ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
+// 		logger := logutil.GetLogger(ctx)
 
-		album, err := albumService.Query().First(ctx, int32(c.GetInt("id")))
-		if err != nil {
-			common.AbortNotFound(c, err, "download media")
+// 		album, err := albumService.Query().First(ctx, int32(c.GetInt("id")))
+// 		if err != nil {
+// 			common.AbortNotFound(c, err, "download media")
 
-			return
-		}
+// 			return
+// 		}
 
-		// check permissions to this album
-		ats := permissions.NewAlbumPermissionService()
-		hasPermission := ats.Policy(permissions.OwnerPolicy{}).
-			Policy(permissions.UserPermissionPolicy{Permission: entity.PermissionReadAlbum}).
-			Policy(permissions.GroupPermissionPolicy{Permission: entity.PermissionReadAlbum}).
-			Strategy(permissions.AtLeastOneStrategy).
-			Resolve(album, session.User)
+// 		// check permissions to this album
+// 		ats := permissions.NewAlbumPermissionService()
+// 		hasPermission := ats.Policy(permissions.OwnerPolicy{}).
+// 			Policy(permissions.UserPermissionPolicy{Permission: entity.PermissionReadAlbum}).
+// 			Policy(permissions.GroupPermissionPolicy{Permission: entity.PermissionReadAlbum}).
+// 			Strategy(permissions.AtLeastOneStrategy).
+// 			Resolve(album, session.User)
 
-		if !hasPermission {
-			logger.WithFields(logrus.Fields{
-				"album_id": album.ID,
-				"user_id":  session.User.ID,
-			}).Error("user has no permissions to read media")
+// 		if !hasPermission {
+// 			logger.WithFields(logrus.Fields{
+// 				"album_id": album.ID,
+// 				"user_id":  session.User.ID,
+// 			}).Error("user has no permissions to read media")
 
-			common.AbortForbidden(c, errors.New("user has no permission to read media"), "")
+// 			common.AbortForbidden(c, errors.New("user has no permission to read media"), "")
 
-			return
-		}
+// 			return
+// 		}
 
-		r, _, err := mediaService.GetPhoto(ctx, album.Bucket, c.GetString("media"))
-		if err != nil {
-			logger.WithFields(logrus.Fields{
-				"album_id": album.ID,
-				"media":    c.GetString("media"),
-			}).WithError(err).Error("failed to open media")
+// 		r, _, err := mediaService.GetPhoto(ctx, album.Bucket, c.GetString("media"))
+// 		if err != nil {
+// 			logger.WithFields(logrus.Fields{
+// 				"album_id": album.ID,
+// 				"media":    c.GetString("media"),
+// 			}).WithError(err).Error("failed to open media")
 
-			common.AbortInternalError(c)
+// 			common.AbortInternalError(c)
 
-			return
-		}
+// 			return
+// 		}
 
-		fileContent, err := io.ReadAll(r)
-		if err != nil {
-			logger.WithFields(logrus.Fields{
-				"album_id": album.ID,
-				"media":    c.GetString("media"),
-			}).WithError(err).Error("failed to read from media")
-			common.AbortInternalError(c)
+// 		fileContent, err := io.ReadAll(r)
+// 		if err != nil {
+// 			logger.WithFields(logrus.Fields{
+// 				"album_id": album.ID,
+// 				"media":    c.GetString("media"),
+// 			}).WithError(err).Error("failed to read from media")
+// 			common.AbortInternalError(c)
 
-			return
-		}
+// 			return
+// 		}
 
-		w := c.Writer
-		w.Header().Set("Content-Type", "image/jpeg")
-		w.Header().Set("Content-Length", strconv.Itoa(len(fileContent)))
+// 		w := c.Writer
+// 		w.Header().Set("Content-Type", "image/jpeg")
+// 		w.Header().Set("Content-Length", strconv.Itoa(len(fileContent)))
 
-		if _, err := w.Write(fileContent); err != nil {
-			logger.WithFields(logrus.Fields{
-				"album_id": album.ID,
-				"media":    c.GetString("media"),
-			}).WithError(err).Error("failed to write media")
-			common.AbortInternalError(c)
+// 		if _, err := w.Write(fileContent); err != nil {
+// 			logger.WithFields(logrus.Fields{
+// 				"album_id": album.ID,
+// 				"media":    c.GetString("media"),
+// 			}).WithError(err).Error("failed to write media")
+// 			common.AbortInternalError(c)
 
-			return
-		}
+// 			return
+// 		}
 
-		return
-	})
-}
+// 		return
+// 	})
+// }
 
-func DeleteMedia(r *gin.RouterGroup, albumService *album.Service, mediaService *media.Service) {
-	r.DELETE("/api/albums/:id/album/:media/media", utils.ParseAlbumIDHandler, parseMediaFilenameHandler, func(c *gin.Context) {
-		s, _ := c.Get("sessionData")
-		session := s.(entity.Session)
+// func DeleteMedia(r *gin.RouterGroup, albumService *album.Service, mediaService *media.Service) {
+// 	r.DELETE("/api/albums/:id/album/:media/media", utils.ParseAlbumIDHandler, parseMediaFilenameHandler, func(c *gin.Context) {
+// 		s, _ := c.Get("sessionData")
+// 		session := s.(entity.Session)
 
-		ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
-		logger := logutil.GetLogger(ctx)
+// 		ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
+// 		logger := logutil.GetLogger(ctx)
 
-		album, err := albumService.Query().First(ctx, int32(c.GetInt("id")))
-		if err != nil {
-			common.AbortNotFound(c, err, "delete media")
+// 		album, err := albumService.Query().First(ctx, int32(c.GetInt("id")))
+// 		if err != nil {
+// 			common.AbortNotFound(c, err, "delete media")
 
-			return
-		}
+// 			return
+// 		}
 
-		// check permissions to this album
-		ats := permissions.NewAlbumPermissionService()
-		hasPermission := ats.Policy(permissions.OwnerPolicy{}).
-			Policy(permissions.UserPermissionPolicy{Permission: entity.PermissionWriteAlbum}).
-			Policy(permissions.GroupPermissionPolicy{Permission: entity.PermissionWriteAlbum}).
-			Strategy(permissions.AtLeastOneStrategy).
-			Resolve(album, session.User)
+// 		// check permissions to this album
+// 		ats := permissions.NewAlbumPermissionService()
+// 		hasPermission := ats.Policy(permissions.OwnerPolicy{}).
+// 			Policy(permissions.UserPermissionPolicy{Permission: entity.PermissionWriteAlbum}).
+// 			Policy(permissions.GroupPermissionPolicy{Permission: entity.PermissionWriteAlbum}).
+// 			Strategy(permissions.AtLeastOneStrategy).
+// 			Resolve(album, session.User)
 
-		if !hasPermission {
-			logger.WithFields(logrus.Fields{
-				"album_id": album.ID,
-				"user_id":  session.User.ID,
-			}).Error("user has no permissions to delete media")
+// 		if !hasPermission {
+// 			logger.WithFields(logrus.Fields{
+// 				"album_id": album.ID,
+// 				"user_id":  session.User.ID,
+// 			}).Error("user has no permissions to delete media")
 
-			common.AbortForbidden(c, errors.New("user has no permission to read media"), "")
+// 			common.AbortForbidden(c, errors.New("user has no permission to read media"), "")
 
-			return
-		}
+// 			return
+// 		}
 
-		err = mediaService.Delete(ctx, album.Bucket, c.GetString("media"))
-		if err != nil {
-			logger.WithFields(logrus.Fields{
-				"album_id": album.ID,
-				"media":    c.GetString("media"),
-			}).WithError(err).Error("failed to remove media")
+// 		err = mediaService.Delete(ctx, album.Bucket, c.GetString("media"))
+// 		if err != nil {
+// 			logger.WithFields(logrus.Fields{
+// 				"album_id": album.ID,
+// 				"media":    c.GetString("media"),
+// 			}).WithError(err).Error("failed to remove media")
 
-			common.AbortInternalError(c)
+// 			common.AbortInternalError(c)
 
-			return
-		}
+// 			return
+// 		}
 
-		return
-	})
-}
+// 		return
+// 	})
+// }

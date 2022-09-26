@@ -97,12 +97,6 @@ build.get.imagename:
 build.get.tag:
 	@echo -n $(IMAGE_TAG)
 
-#help build.swagger: change the version of the swagger
-generate.openapi: build.prepare
-	cp openapi.yaml $(CURDIR)/target/openapi.yaml
-	sed "s/#VERSION#/$(VERSION)/g" -i $(CURDIR)/target/openapi.yaml
-	$(TOOLS_DIR)/oapi-codegen -generate gin $(CURDIR)/target/openapi.yaml > gphoto.gen.go
-
 #####################
 # Check targets     #
 #####################
@@ -188,7 +182,12 @@ GEN_CMD=$(TOOLS_DIR)/gen --sqltype=postgres \
 	--module=github.com/tupyy/gophoto/internal/domain \
 	--gorm --no-json --no-xml --overwrite --mapping tools/mappings.json
 
-.PHONY: generate.models
+.PHONY: generate.openapi generate.models
+
+#help generate.openapi: generate server and model from openapi.yaml
+generate.openapi:
+	$(TOOLS_DIR)/oapi-codegen --config openapi/server.cfg.yaml openapi/openapi.yaml
+	$(TOOLS_DIR)/oapi-codegen --config openapi/models.cfg.yaml openapi/openapi.yaml
 
 #help generate.models: generate models for the gophoto database
 generate.models:

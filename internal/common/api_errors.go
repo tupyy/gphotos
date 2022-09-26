@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/tupyy/gophoto/utils/logutil"
+	"github.com/tupyy/gophoto/internal/utils/logutil"
 )
 
 type jsonError struct {

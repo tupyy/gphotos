@@ -149,8 +149,23 @@ type VersionMetadata struct {
 
 // GetAlbumsParams defines parameters for GetAlbums.
 type GetAlbumsParams struct {
-	// session cookie
-	Cookie *string `json:"cookie,omitempty"`
+	// sort mode
+	Sort *string `form:"sort,omitempty" json:"sort,omitempty"`
+
+	// page offset
+	Offset *int32 `form:"offset,omitempty" json:"offset,omitempty"`
+
+	// total number of albums to return
+	Limit *int32 `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// filter expression
+	Filter *string `form:"filter,omitempty" json:"filter,omitempty"`
+
+	// fetch personal albums
+	Personal *bool `form:"personal,omitempty" json:"personal,omitempty"`
+
+	// return shared albums
+	Shared *bool `form:"shared,omitempty" json:"shared,omitempty"`
 }
 
 // GetAlbumsByGroupParams defines parameters for GetAlbumsByGroup.

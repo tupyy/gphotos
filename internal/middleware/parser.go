@@ -6,12 +6,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/tupyy/gophoto/internal/conf"
-	"github.com/tupyy/gophoto/utils/encryption"
-	"github.com/tupyy/gophoto/utils/logutil"
+	"github.com/tupyy/gophoto/internal/utils/encryption"
+	"github.com/tupyy/gophoto/internal/utils/logutil"
 )
 
 // AlbumIDMiddleware decrypt the album id passes as parameters and set the id in the context.
-func AlbumIDMiddleware (c *gin.Context) {
+func AlbumIDMiddleware(c *gin.Context) {
 	logger := logutil.GetLogger(c)
 
 	// decrypt album id

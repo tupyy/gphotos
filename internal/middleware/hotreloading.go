@@ -8,8 +8,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"github.com/tupyy/gophoto/internal/conf"
+	"github.com/tupyy/gophoto/internal/utils/logutil"
 	"github.com/tupyy/gophoto/templates/funcs"
-	"github.com/tupyy/gophoto/utils/logutil"
 )
 
 func HotReloading(r *gin.Engine) gin.HandlerFunc {

@@ -7,7 +7,7 @@ KEYCLOAK_ADMIN_URL: http://localhost:9000
 KEYCLOAK_AUTH_URL: http://localhost:9000
 KEYCLOAK_REALM: gophotos
 KEYCLOAK_ADMIN_USERNAME: admin-cli
-KEYCLOAK_ADMIN_PWD: 23dfa683-b9f4-417a-8808-6df36b67792f
+KEYCLOAK_ADMIN_PWD: e56e7500-1c16-4055-adaf-7dbefc4e0f0e
 
 POSTGRESQL_HOST: localhost
 POSTGRESQL_PORT: 5432
@@ -24,5 +24,5 @@ SECRET_KEY: secret
 AUTH_CALLBACK_URL: http://localhost:8080/auth/callback/
 ENCRYPTION_KEY: dc30f5df5b104d1285114fc1
 
-TEMPLATE_FOLDER: /home/cosmin/projects/perso/gphotos/templates
-STATICS_FOLDER: /home/cosmin/projects/perso/gphotos/assets
+TEMPLATE_FOLDER: /home/cosmin/projects/gphotos/templates
+STATICS_FOLDER: /home/cosmin/projects/gphotos/static

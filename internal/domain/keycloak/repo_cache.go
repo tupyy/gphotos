@@ -11,7 +11,7 @@ import (
 	"github.com/tupyy/gophoto/internal/domain"
 	userFilters "github.com/tupyy/gophoto/internal/domain/filters/user"
 	"github.com/tupyy/gophoto/internal/entity"
-	"github.com/tupyy/gophoto/utils/logutil"
+	"github.com/tupyy/gophoto/internal/utils/logutil"
 )
 
 const (

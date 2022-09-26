@@ -7,7 +7,7 @@ import (
 
 	"github.com/tupyy/gophoto/internal/domain/models"
 	"github.com/tupyy/gophoto/internal/entity"
-	"github.com/tupyy/gophoto/utils/logutil"
+	"github.com/tupyy/gophoto/internal/utils/logutil"
 )
 
 // custom struct to map the join

@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Nerzal/gocloak/v8"
-	keycloak "github.com/Nerzal/gocloak/v8"
+	"github.com/Nerzal/gocloak/v11"
+	keycloak "github.com/Nerzal/gocloak/v11"
 	"github.com/pkg/errors"
 	"github.com/tupyy/gophoto/internal/conf"
 	userFilters "github.com/tupyy/gophoto/internal/domain/filters/user"
 	"github.com/tupyy/gophoto/internal/entity"
-	"github.com/tupyy/gophoto/utils/logutil"
+	"github.com/tupyy/gophoto/internal/utils/logutil"
 )
 
 const (
@@ -27,7 +27,7 @@ type KeycloakRepo struct {
 
 func New(ctx context.Context, c conf.KeycloakConfig) (*KeycloakRepo, error) {
 	client := gocloak.NewClient(c.AdminURL)
-	token, err := client.LoginClient(ctx, c.AdminUsername, c.AdminPwd, masterRealm)
+	token, err := client.LoginClient(ctx, c.AdminUsername, c.AdminPwd, "gophotos")
 	if err != nil {
 		return nil, err
 	}

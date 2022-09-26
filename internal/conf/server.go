@@ -5,8 +5,8 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"github.com/tupyy/gophoto/utils/logutil"
-	postgres "github.com/tupyy/gophoto/utils/pgclient"
+	"github.com/tupyy/gophoto/internal/utils/logutil"
+	postgres "github.com/tupyy/gophoto/internal/utils/pgclient"
 )
 
 const (

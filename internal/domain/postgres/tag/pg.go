@@ -5,7 +5,7 @@ import (
 
 	"github.com/tupyy/gophoto/internal/domain/models"
 	"github.com/tupyy/gophoto/internal/entity"
-	"github.com/tupyy/gophoto/utils/pgclient"
+	"github.com/tupyy/gophoto/internal/utils/pgclient"
 	"gorm.io/gorm"
 )
 

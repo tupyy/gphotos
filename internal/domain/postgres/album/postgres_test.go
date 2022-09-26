@@ -14,8 +14,8 @@ import (
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/tupyy/gophoto/internal/domain/postgres/album"
 	"github.com/tupyy/gophoto/internal/entity"
-	"github.com/tupyy/gophoto/utils/pgclient"
-	"github.com/tupyy/gophoto/utils/pgtestcontainer"
+	"github.com/tupyy/gophoto/internal/utils/pgclient"
+	"github.com/tupyy/gophoto/internal/utils/pgtestcontainer"
 )
 
 const (

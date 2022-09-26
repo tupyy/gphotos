@@ -1,7 +1,7 @@
 package keycloak
 
 import (
-	keycloak "github.com/Nerzal/gocloak/v8"
+	keycloak "github.com/Nerzal/gocloak/v11"
 	"github.com/tupyy/gophoto/internal/entity"
 )
 

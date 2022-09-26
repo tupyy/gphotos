@@ -10,7 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 	testcontainers "github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
-	"github.com/tupyy/gophoto/utils/pgclient"
+	"github.com/tupyy/gophoto/internal/utils/pgclient"
 )
 
 const (

@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/BurntSushi/toml v1.0.0
+	github.com/Nerzal/gocloak/v11 v11.2.0
 	github.com/Nerzal/gocloak/v8 v8.5.0
 	github.com/coreos/go-oidc/v3 v3.0.0
 	github.com/deepmap/oapi-codegen v1.11.0
@@ -16,7 +17,6 @@ require (
 	github.com/gin-gonic/gin v1.7.7
 	github.com/go-playground/validator/v10 v10.11.0
 	github.com/google/uuid v1.3.0
-	github.com/gorilla/csrf v1.7.0
 	github.com/guregu/null v4.0.0+incompatible
 	github.com/jackc/pgconn v1.8.1
 	github.com/jackc/pgx/v4 v4.11.0
@@ -68,11 +68,13 @@ require (
 	github.com/go-openapi/validate v0.22.0 // indirect
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
-	github.com/go-resty/resty/v2 v2.3.0 // indirect
+	github.com/go-resty/resty/v2 v2.7.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/golang-jwt/jwt/v4 v4.4.1 // indirect
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/gorilla/context v1.1.1 // indirect
+	github.com/gorilla/csrf v1.7.0 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/gorilla/securecookie v1.1.1 // indirect
 	github.com/gorilla/sessions v1.1.3 // indirect
@@ -117,7 +119,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/quasoft/memstore v0.0.0-20180925164028-84a050167438 // indirect
 	github.com/rs/xid v1.3.0 // indirect
-	github.com/segmentio/ksuid v1.0.3 // indirect
+	github.com/segmentio/ksuid v1.0.4 // indirect
 	github.com/spf13/afero v1.2.2 // indirect
 	github.com/spf13/cast v1.3.0 // indirect
 	github.com/spf13/jwalterweatherman v1.0.0 // indirect

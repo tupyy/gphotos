@@ -62,11 +62,38 @@ paths:
       description: get all albums owned by or shared with the current logged user
       operationId: getAlbums
       parameters:
-      - name: cookie
-        in: header
-        description: session cookie
+      - name: sort
+        in: query
+        description: sort mode
         schema:
           type: string
+      - name: offset
+        in: query
+        description: page offset
+        schema:
+          type: integer
+          format: int32
+      - name: limit
+        in: query
+        description: total number of albums to return
+        schema:
+          type: integer
+          format: int32
+      - name: filter
+        in: query
+        description: filter expression
+        schema:
+          type: string
+      - name: personal
+        in: query
+        description: fetch personal albums
+        schema:
+          type: boolean
+      - name: shared
+        in: query
+        description: return shared albums
+        schema:
+          type: boolean
       responses:
         200:
           description: list of albums owned by or shared with logged user

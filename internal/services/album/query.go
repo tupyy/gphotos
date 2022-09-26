@@ -9,7 +9,7 @@ import (
 	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/internal/services"
 	"github.com/tupyy/gophoto/internal/services/media"
-	"github.com/tupyy/gophoto/utils/logutil"
+	"github.com/tupyy/gophoto/internal/utils/logutil"
 )
 
 var (

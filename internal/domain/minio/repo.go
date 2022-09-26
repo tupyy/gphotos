@@ -10,7 +10,7 @@ import (
 
 	"github.com/minio/minio-go/v7"
 	"github.com/tupyy/gophoto/internal/entity"
-	"github.com/tupyy/gophoto/utils/logutil"
+	"github.com/tupyy/gophoto/internal/utils/logutil"
 )
 
 // this format depends on exif extract library
