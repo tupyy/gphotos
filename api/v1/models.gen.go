@@ -21,8 +21,20 @@ type Album struct {
 	Location *string `json:"location,omitempty"`
 
 	// name of the album
-	Name string `json:"name"`
-	Tags *[]Tag `json:"tags,omitempty"`
+	Name        string           `json:"name"`
+	Owner       *ObjectReference `json:"owner,omitempty"`
+	Permissions *struct {
+		Href *string `json:"href,omitempty"`
+		Kind *string `json:"kind,omitempty"`
+	} `json:"permissions,omitempty"`
+	Photos *struct {
+		Href *string `json:"href,omitempty"`
+		Kind *string `json:"kind,omitempty"`
+	} `json:"photos,omitempty"`
+	Tags *struct {
+		Href *string `json:"href,omitempty"`
+		Kind *string `json:"kind,omitempty"`
+	} `json:"tags,omitempty"`
 
 	// url of the thumbnail of the album
 	Thumbnail *string `json:"thumbnail,omitempty"`
@@ -30,13 +42,14 @@ type Album struct {
 
 // AlbumPermissions defines model for AlbumPermissions.
 type AlbumPermissions struct {
+	Album  *ObjectReference    `json:"album,omitempty"`
 	Groups *[]GroupPermissions `json:"groups,omitempty"`
 	Users  *[]UserPermissions  `json:"users,omitempty"`
 }
 
 // Albums defines model for Albums.
 type Albums struct {
-	Albums *[]UserAlbum `json:"albums,omitempty"`
+	Albums *[]Album `json:"albums,omitempty"`
 
 	// number of the page
 	Page *int32 `json:"page,omitempty"`
@@ -59,80 +72,31 @@ type ObjectReference struct {
 	Kind string `json:"kind"`
 }
 
-// Tag defines model for Tag.
-type Tag struct {
-	// color of the tag in hex format
-	Color *string `json:"color,omitempty"`
-	Href  string  `json:"href"`
-	Id    string  `json:"id"`
-	Kind  string  `json:"kind"`
+// Photo defines model for Photo.
+type Photo struct {
+	// bucket where the photo is stored
+	Bucket *string `json:"bucket,omitempty"`
 
-	// name of the tag
-	Name string `json:"name"`
+	// name of the file
+	Filename *string `json:"filename,omitempty"`
+	Href     string  `json:"href"`
+	Id       string  `json:"id"`
+	Kind     string  `json:"kind"`
 
-	// tag's owner id
-	UserId string `json:"user_id"`
-}
-
-// User defines model for User.
-type User struct {
-	Groups *[]ObjectReference `json:"groups,omitempty"`
-	Href   string             `json:"href"`
-	Id     string             `json:"id"`
-	Kind   string             `json:"kind"`
-
-	// name of the user
-	Name *string `json:"name,omitempty"`
-
-	// surname of the user
-	Surname *string `json:"surname,omitempty"`
-
-	// user_od
-	UserId *string `json:"user_id,omitempty"`
-}
-
-// UserAlbum defines model for UserAlbum.
-type UserAlbum struct {
-	// path of the bucket where media is stored
-	Bucket string `json:"bucket"`
-
-	// creation date in unix timestamp
-	CreatedAt int64 `json:"created_at"`
-
-	// description of the album
-	Description *string `json:"description,omitempty"`
-	Href        string  `json:"href"`
-	Id          string  `json:"id"`
-	Kind        string  `json:"kind"`
-
-	// location of the album
-	Location *string `json:"location,omitempty"`
-
-	// name of the album
-	Name  string `json:"name"`
-	Owner *User  `json:"owner,omitempty"`
-	Tags  *[]Tag `json:"tags,omitempty"`
-
-	// url of the thumbnail of the album
+	// path to the thumbnail of the photo
 	Thumbnail *string `json:"thumbnail,omitempty"`
 }
 
-// UserAlbums defines model for UserAlbums.
-type UserAlbums struct {
-	Albums *[]Album `json:"albums,omitempty"`
-
-	// number of the page
-	Page *int32 `json:"page,omitempty"`
-
-	// number of album in a page
-	Size  *int32 `json:"size,omitempty"`
-	Total *int32 `json:"total,omitempty"`
+// Photos defines model for Photos.
+type Photos struct {
+	Album *ObjectReference `json:"album,omitempty"`
+	Items *[]Photo         `json:"items,omitempty"`
 }
 
 // UserPermissions defines model for UserPermissions.
 type UserPermissions struct {
-	Permissions []string `json:"permissions"`
-	User        User     `json:"user"`
+	Permissions []string        `json:"permissions"`
+	User        ObjectReference `json:"user"`
 }
 
 // VersionMetadata defines model for VersionMetadata.
@@ -166,31 +130,4 @@ type GetAlbumsParams struct {
 
 	// return shared albums
 	Shared *bool `form:"shared,omitempty" json:"shared,omitempty"`
-}
-
-// GetAlbumsByGroupParams defines parameters for GetAlbumsByGroup.
-type GetAlbumsByGroupParams struct {
-	// session cookie
-	Cookie *string `json:"cookie,omitempty"`
-}
-
-// GetAlbumsByUserParams defines parameters for GetAlbumsByUser.
-type GetAlbumsByUserParams struct {
-	// session cookie
-	Cookie *string `json:"cookie,omitempty"`
-}
-
-// GetAlbumPermissionsParams defines parameters for GetAlbumPermissions.
-type GetAlbumPermissionsParams struct {
-	// session cookie
-	Cookie *string `json:"cookie,omitempty"`
-}
-
-// GetApiGphotosV1AuthCallbackParams defines parameters for GetApiGphotosV1AuthCallback.
-type GetApiGphotosV1AuthCallbackParams struct {
-	// oidc token
-	Code *string `form:"code,omitempty" json:"code,omitempty"`
-
-	// oidc inital state
-	State *string `form:"state,omitempty" json:"state,omitempty"`
 }

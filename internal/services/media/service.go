@@ -9,11 +9,26 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/tupyy/gophoto/internal/domain"
 	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/internal/services/image"
 	"github.com/tupyy/gophoto/internal/utils/logutil"
 )
+
+// Store describe photo store operations
+type MediaRepository interface {
+	// GetFile returns a reader to file.
+	GetFile(ctx context.Context, bucket, filename string) (io.ReadSeeker, map[string]string, error)
+	// PutFile save a file to a bucket.
+	PutFile(ctx context.Context, bucket, filename string, size int64, r io.Reader, metadata map[string]string) error
+	// ListFiles list the content of a bucket
+	ListBucket(ctx context.Context, bucket string) ([]entity.Media, error)
+	// DeleteFile deletes a file from a bucket.
+	DeleteFile(ctx context.Context, bucket, filename string) error
+	// CreateBucket create a bucket.
+	CreateBucket(ctx context.Context, bucket string) error
+	// DeleteBucket removes bucket.
+	DeleteBucket(ctx context.Context, bucket string) error
+}
 
 type MediaType int
 
@@ -23,10 +38,10 @@ const (
 )
 
 type Service struct {
-	repo domain.Store
+	repo MediaRepository
 }
 
-func New(repo domain.Store) *Service {
+func New(repo MediaRepository) *Service {
 	return &Service{repo}
 }
 
@@ -113,7 +128,7 @@ func (s *Service) Delete(ctx context.Context, bucket, filename string) error {
 	return s.repo.DeleteFile(ctx, bucket, filename)
 }
 
-func processPhoto(ctx context.Context, repo domain.Store, bucket, filename string, r io.ReadSeeker) error {
+func processPhoto(ctx context.Context, repo MediaRepository, bucket, filename string, r io.ReadSeeker) error {
 	var imgBuffer bytes.Buffer
 
 	if err := image.Process(r, &imgBuffer); err != nil {
@@ -136,7 +151,7 @@ func processPhoto(ctx context.Context, repo domain.Store, bucket, filename strin
 	return nil
 }
 
-func createThumbnail(ctx context.Context, repo domain.Store, bucket, filename string, r io.ReadSeeker) error {
+func createThumbnail(ctx context.Context, repo MediaRepository, bucket, filename string, r io.ReadSeeker) error {
 	var imgThumbnailBuffer bytes.Buffer
 
 	if err := image.CreateThumbnail(r, &imgThumbnailBuffer); err != nil {

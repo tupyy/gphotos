@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/tupyy/gophoto/internal/domain"
 	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/internal/services"
 	"github.com/tupyy/gophoto/internal/services/media"
@@ -31,7 +30,7 @@ type Query struct {
 	// filter
 	filter Filter
 	// album repo
-	albumRepo domain.Album
+	albumRepo AlbumRepository
 	// media service
 	mediaService *media.Service
 	//album sorter

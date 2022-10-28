@@ -6,20 +6,41 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/tupyy/gophoto/internal/domain"
 	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/internal/services"
 	"github.com/tupyy/gophoto/internal/services/media"
 )
 
+// AlbumRepository is the interface to be implemented by transport layer.
+type AlbumRepository interface {
+	// Create creates an album.
+	Create(ctx context.Context, album entity.Album) (albumID int32, err error)
+	// Update an album.
+	Update(ctx context.Context, album entity.Album) error
+	// Delete removes an album from postgres.
+	Delete(ctx context.Context, id int32) error
+	// Get return all the albums.
+	Get(ctx context.Context) ([]entity.Album, error)
+	// GetByID return an album by id.
+	GetByID(ctx context.Context, id int32) (entity.Album, error)
+	// GetByOwner return all albums of a user for which he is the owner.
+	GetByOwnerID(ctx context.Context, ownerID string) ([]entity.Album, error)
+	// GetByUserID returns a list of albums for which the user has at least one permission set.
+	GetByUserID(ctx context.Context, userID string) ([]entity.Album, error)
+	// GetByGroup returns a list of albums for which the group has at least one permission.
+	GetByGroupName(ctx context.Context, groupName string) ([]entity.Album, error)
+	// GetByGroups returns a list of albums with at least one persmission for at least on group in the list.
+	GetByGroups(ctx context.Context, groups []string) ([]entity.Album, error)
+}
+
 const forbittenChar = "_$"
 
 type Service struct {
-	albumRepo    domain.Album
+	albumRepo    AlbumRepository
 	mediaService *media.Service
 }
 
-func New(albumRepo domain.Album, media *media.Service) *Service {
+func New(albumRepo AlbumRepository, media *media.Service) *Service {
 	return &Service{albumRepo, media}
 }
 

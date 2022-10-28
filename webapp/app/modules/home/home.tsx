@@ -1,31 +1,22 @@
 import { useAppDispatch, useAppSelector } from 'app/config/store';
 import { IAlbum } from 'app/shared/models/album.model';
-import { getAlbums } from 'app/shared/reducers/album-management';
 import React, {useEffect} from 'react';
+import {
+  EuiPage,
+  EuiPageSection,
+  EuiPageSidebar,
+  EuiPageBody,
+} from '@elastic/eui';
 
 export const Home = () => {
-  const dispatch = useAppDispatch();
-  const albumState = useAppSelector(state => state.albumManagement);
-
-  useEffect(() => {
-    dispatch(getAlbums());
-  }, []);
-
   return (
-    <div>
-      {albumState.loading 
-        ? (<div>Loading</div>)
-        : null
-      }
-      <ul>
-        {albumState.albums && !albumState.loading
-          ? albumState.albums.map((album: IAlbum, index) => (
-            <li key={index}>{album.name}</li>
-          ))
-          : null
-        }
-      </ul>
-    </div>
+    <EuiPage>
+      <EuiPageSidebar paddingSize="l">
+      </EuiPageSidebar>
+      <EuiPageBody paddingSize="none" panelled="true">
+        <EuiPageSection></EuiPageSection>
+      </EuiPageBody>
+    </EuiPage>
   );
 }
 

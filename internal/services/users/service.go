@@ -3,30 +3,48 @@ package users
 import (
 	"context"
 
-	"github.com/tupyy/gophoto/internal/domain"
 	"github.com/tupyy/gophoto/internal/domain/filters/user"
+	userFilters "github.com/tupyy/gophoto/internal/domain/filters/user"
 	"github.com/tupyy/gophoto/internal/entity"
 )
 
+type KeycloakRepository interface {
+	// Get returns all the users.
+	GetUsers(ctx context.Context, filters userFilters.Filters) ([]entity.User, error)
+	// GetByID return the user by id.
+	GetUserByID(ctx context.Context, id string) (entity.User, error)
+	// GetGroups returns all groups.
+	GetGroups(ctx context.Context) ([]entity.Group, error)
+}
+
+// Postgres repo to handler relationships between users
+type UserRespository interface {
+	GetRelatedUsers(ctx context.Context, user entity.User) (ids []string, err error)
+}
+
 type Service struct {
-	repos domain.Repositories
+	keycloakRepo KeycloakRepository
+	userRepo     UserRespository
 }
 
 type Query struct {
 	predicates   []Predicate
-	keycloakRepo domain.KeycloakRepo
-	userRepo     domain.User
+	keycloakRepo KeycloakRepository
+	userRepo     UserRespository
 }
 
-func New(repos domain.Repositories) *Service {
-	return &Service{repos}
+func New(keycloakRepo KeycloakRepository, userRepo UserRespository) *Service {
+	return &Service{
+		keycloakRepo: keycloakRepo,
+		userRepo:     userRepo,
+	}
 }
 
 func (s *Service) Query() *Query {
 	return &Query{
 		predicates:   []Predicate{},
-		keycloakRepo: s.repos[domain.KeycloakRepoName].(domain.KeycloakRepo),
-		userRepo:     s.repos[domain.UserRepoName].(domain.User),
+		keycloakRepo: s.keycloakRepo,
+		userRepo:     s.userRepo,
 	}
 }
 

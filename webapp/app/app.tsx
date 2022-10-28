@@ -1,25 +1,15 @@
 import React from 'react';
 import Home from './modules/home/home';
-import Header from './shared/layout/header/header';
-import {createTheme, ThemeProvider} from '@mui/material/styles';
-import Container from '@mui/material/Container';
-
-const darkTheme = createTheme({
-  palette: {
-    mode: 'dark',
-  },
-});
+import '@elastic/eui/dist/eui_theme_dark.css';
+import {BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 export const App = () => {
     return (
-      <ThemeProvider theme={darkTheme}>
-        <div>
-          <Header/>
-          <Container>
-            <Home/>
-          </Container>
-        </div>
-      </ThemeProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Home />} />
+        </Routes>
+      </Router>
     );
 };
 

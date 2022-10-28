@@ -35,10 +35,6 @@ func NewPostgresRepo(client pgclient.Client) (*AlbumPostgresRepo, error) {
 func (a *AlbumPostgresRepo) Create(ctx context.Context, album entity.Album) (albumID int32, err error) {
 	logger := logutil.GetDefaultLogger()
 
-	if err := album.Validate(); err != nil {
-		return -1, fmt.Errorf("%w cannot create album: %+v", repo.ErrCreateAlbum, err)
-	}
-
 	tx := a.db.WithContext(ctx).Begin()
 
 	m := toModel(album)
@@ -94,10 +90,6 @@ func (a *AlbumPostgresRepo) Update(ctx context.Context, album entity.Album) erro
 	var ca albumJoinRow
 
 	logger := logutil.GetDefaultLogger()
-
-	if err := album.Validate(); err != nil {
-		return fmt.Errorf("%w %+v album_id=%d", repo.ErrUpdateAlbum, err, album.ID)
-	}
 
 	tx := a.db.WithContext(ctx).Table("album").Where("id = ?", album.ID).First(&ca)
 	if tx.Error != nil {

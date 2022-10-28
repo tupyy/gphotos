@@ -10,11 +10,11 @@ type Album struct {
 	// ID - id of the album
 	ID int32
 	// Name - name of the album
-	Name string `validate:"required"`
+	Name string
 	// CreateAt - creation date
-	CreatedAt time.Time `validate:"required"`
+	CreatedAt time.Time
 	// OwnerID - owner-s id
-	OwnerID string `validate:"required"`
+	OwnerID string
 	// Description - description of the album
 	Description string
 	// Location - location of the album
@@ -35,14 +35,6 @@ type Album struct {
 	Videos []Media
 	// Tags - list of tags
 	Tags []Tag
-}
-
-func (a Album) Validate() error {
-	if err := validate.Struct(a); err != nil {
-		return fmt.Errorf("%w album not valid %v", ErrInvalidEntity, err)
-	}
-
-	return nil
 }
 
 func (a Album) String() string {

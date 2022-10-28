@@ -25,17 +25,16 @@ import (
 	"github.com/minio/minio-go/v7"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	v1 "github.com/tupyy/gophoto/api/v1"
+	apiv1 "github.com/tupyy/gophoto/api/v1"
+	internalApiv1 "github.com/tupyy/gophoto/internal/api/v1"
 	"github.com/tupyy/gophoto/internal/auth"
 	"github.com/tupyy/gophoto/internal/conf"
-	"github.com/tupyy/gophoto/internal/domain"
 	keycloakRepo "github.com/tupyy/gophoto/internal/domain/keycloak"
 	miniorepo "github.com/tupyy/gophoto/internal/domain/minio"
 	"github.com/tupyy/gophoto/internal/domain/postgres/album"
 	"github.com/tupyy/gophoto/internal/domain/postgres/tag"
 	"github.com/tupyy/gophoto/internal/domain/postgres/user"
 	"github.com/tupyy/gophoto/internal/entity"
-	"github.com/tupyy/gophoto/internal/handlers"
 	"github.com/tupyy/gophoto/internal/router"
 	albumService "github.com/tupyy/gophoto/internal/services/album"
 	"github.com/tupyy/gophoto/internal/services/media"
@@ -80,13 +79,10 @@ var serveCmd = &cobra.Command{
 		}
 		logutil.GetDefaultLogger().WithField("conf", conf.GetMinioConfig().String()).Info("connected at minio")
 
-		repos, err := createRepos(client, minioClient)
+		services, err := initServices(client, minioClient)
 		if err != nil {
 			panic(err)
 		}
-		logutil.GetDefaultLogger().Info("repositories created")
-
-		services := createServices(repos)
 		logutil.GetDefaultLogger().Info("services created")
 
 		// create keycloak
@@ -97,8 +93,8 @@ var serveCmd = &cobra.Command{
 
 		//api.Logout(r.PrivateGroup, keycloakAuthenticator)
 
-		server := handlers.NewServer(services)
-		v1.RegisterHandlers(r.PrivateGroup, server)
+		server := internalApiv1.NewServer(services)
+		apiv1.RegisterHandlers(r.PrivateGroup, server)
 
 		// run server
 		r.Run()
@@ -109,73 +105,51 @@ func init() {
 	rootCmd.AddCommand(serveCmd)
 }
 
-func createRepos(client pgclient.Client, mclient *minio.Client) (domain.Repositories, error) {
-	repos := make(domain.Repositories)
+func initServices(client pgclient.Client, mclient *minio.Client) (map[string]interface{}, error) {
+	services := make(map[string]interface{})
 
 	// create keycloak repo
 	kr, err := keycloakRepo.New(context.Background(), conf.GetKeycloakConfig())
 	if err != nil {
 		logutil.GetDefaultLogger().WithError(err).Warn("cannot create user repo")
 
-		return repos, err
+		return services, err
 	}
-
-	ttl, interval := conf.GetRepoCacheConfig()
-
-	repos[domain.KeycloakRepoName] = keycloakRepo.NewCacheRepo(kr, ttl, interval)
 
 	// create album repo
 	albumRepo, err := album.NewPostgresRepo(client)
 	if err != nil {
 		logutil.GetDefaultLogger().WithError(err).Warn("failed to create album repo")
 
-		return repos, err
+		return services, err
 	}
-	repos[domain.AlbumRepoName] = albumRepo
 
 	// create tag repo
 	tagRepo, err := tag.NewPostgresRepo(client)
 	if err != nil {
 		logutil.GetDefaultLogger().WithError(err).Warn("failed to create tag repo")
 
-		return repos, err
+		return services, err
 	}
-	repos[domain.TagRepoName] = tagRepo
-
 	// create user repo
 	userRepo, err := user.NewPostgresRepo(client)
 	if err != nil {
 		logutil.GetDefaultLogger().WithError(err).Warn("failed to create user pg repo")
 
-		return repos, err
+		return services, err
 	}
-
-	repos[domain.UserRepoName] = userRepo
 
 	// create minio repo
 	minioRepo := miniorepo.New(mclient)
-	minioCache := miniorepo.NewCacheRepo(minioRepo, ttl, interval)
-	repos[domain.MinioRepoName] = minioCache
-
-	return repos, nil
-}
-
-func createServices(repos domain.Repositories) map[string]interface{} {
-	services := make(map[string]interface{})
-	// create services
-	mediaService := media.New(repos[domain.MinioRepoName].(domain.Store))
-	services["media"] = mediaService
-
-	albumRepo := repos[domain.AlbumRepoName].(domain.Album)
-	tagRepo := repos[domain.TagRepoName].(domain.Tag)
+	mediaService := media.New(minioRepo)
 
 	albumService := albumService.New(albumRepo, mediaService)
-	usersService := usersService.New(repos)
+	usersService := usersService.New(kr, userRepo)
 	tagService := tagService.New(tagRepo)
 
 	services["album"] = albumService
 	services["user"] = usersService
 	services["tag"] = tagService
 
-	return services
+	return services, nil
 }
