@@ -101,7 +101,7 @@ func (a *AlbumPostgresRepo) Update(ctx context.Context, album entity.Album) erro
 		CreatedAt:   album.CreatedAt,
 		Description: album.Description,
 		Location:    album.Location,
-		OwnerID:     album.OwnerID,
+		Owner:       album.Owner,
 		Bucket:      album.Bucket,
 		Thumbnail:   album.Thumbnail,
 	}
@@ -233,7 +233,7 @@ func (a *AlbumPostgresRepo) GetByID(ctx context.Context, id int32) (entity.Album
 }
 
 // GetByOwnerID return all albums of an user.
-func (a *AlbumPostgresRepo) GetByOwnerID(ctx context.Context, ownerID string) ([]entity.Album, error) {
+func (a *AlbumPostgresRepo) GetByOwner(ctx context.Context, owner string) ([]entity.Album, error) {
 	var albums albumJoinRows
 
 	tagSubQuery := a.db.WithContext(ctx).Table("tag").
@@ -246,7 +246,7 @@ func (a *AlbumPostgresRepo) GetByOwnerID(ctx context.Context, ownerID string) ([
 		Joins("LEFT JOIN album_user_permissions ON (album.id = album_user_permissions.album_id)").
 		Joins("LEFT JOIN album_group_permissions ON (album.id = album_group_permissions.album_id)").
 		Joins("LEFT JOIN (?) as tags ON (tags.album_id = album.id)", tagSubQuery).
-		Where("album.owner_id = ?", ownerID)
+		Where("album.owner_id = ?", owner)
 
 	tx.Find(&albums)
 	if tx.Error != nil {
@@ -254,7 +254,7 @@ func (a *AlbumPostgresRepo) GetByOwnerID(ctx context.Context, ownerID string) ([
 	}
 
 	if len(albums) == 0 {
-		logutil.GetDefaultLogger().WithField("ownerID", ownerID).Warn("no album found by owner id")
+		logutil.GetDefaultLogger().WithField("owner", owner).Warn("no album found by owner id")
 
 		return []entity.Album{}, nil
 	}
@@ -265,7 +265,7 @@ func (a *AlbumPostgresRepo) GetByOwnerID(ctx context.Context, ownerID string) ([
 }
 
 // GetByUserID returns a list of albums for which the user has at one permission set.
-func (a *AlbumPostgresRepo) GetByUserID(ctx context.Context, userID string) ([]entity.Album, error) {
+func (a *AlbumPostgresRepo) GetByUser(ctx context.Context, username string) ([]entity.Album, error) {
 	var albums albumJoinRows
 
 	tagSubQuery := a.db.WithContext(ctx).Table("tag").
@@ -278,7 +278,7 @@ func (a *AlbumPostgresRepo) GetByUserID(ctx context.Context, userID string) ([]e
 		Joins("LEFT JOIN album_user_permissions ON (album.id = album_user_permissions.album_id)").
 		Joins("LEFT JOIN album_group_permissions ON (album.id = album_group_permissions.album_id)").
 		Joins("LEFT JOIN (?) as tags ON (tags.album_id = album.id)", tagSubQuery).
-		Where("album_user_permissions.user_id = ?", userID)
+		Where("album_user_permissions.user_id = ?", username)
 
 	tx.Find(&albums)
 	if tx.Error != nil {
@@ -286,7 +286,7 @@ func (a *AlbumPostgresRepo) GetByUserID(ctx context.Context, userID string) ([]e
 	}
 
 	if len(albums) == 0 {
-		logutil.GetDefaultLogger().WithField("userID", userID).Warn("no album found by user id")
+		logutil.GetDefaultLogger().WithField("username", username).Warn("no album found by user id")
 
 		return []entity.Album{}, nil
 	}

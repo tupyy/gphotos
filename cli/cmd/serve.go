@@ -22,6 +22,7 @@ import (
 	"fmt"
 
 	"github.com/gin-contrib/sessions/memstore"
+	"github.com/gin-gonic/gin"
 	"github.com/minio/minio-go/v7"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -63,7 +64,6 @@ var serveCmd = &cobra.Command{
 
 		// register sessionData
 		gob.Register(entity.Session{})
-		gob.Register(entity.Alert{})
 
 		// initialize postgres client
 		client, err := pgclient.NewClient(conf.GetPostgresConf())
@@ -79,25 +79,28 @@ var serveCmd = &cobra.Command{
 		}
 		logutil.GetDefaultLogger().WithField("conf", conf.GetMinioConfig().String()).Info("connected at minio")
 
-		services, err := initServices(client, minioClient)
-		if err != nil {
-			panic(err)
-		}
-		logutil.GetDefaultLogger().Info("services created")
-
-		// create keycloak
+		// create keycloak authenticator
 		keycloakAuthenticator := auth.NewKeyCloakAuthenticator(conf.GetKeycloakConfig(), conf.GetServerAuthCallback())
 
 		// create new router
-		r := router.NewRouter(store, keycloakAuthenticator)
+		engine := gin.New()
+		router.InitEngine(engine, store, keycloakAuthenticator)
 
 		//api.Logout(r.PrivateGroup, keycloakAuthenticator)
 
-		server := internalApiv1.NewServer(services)
-		apiv1.RegisterHandlers(r.PrivateGroup, server)
+		opt := apiv1.GinServerOptions{
+			Middlewares: make([]apiv1.MiddlewareFunc, 0),
+		}
+
+		server, err := createServer(client, minioClient)
+		if err != nil {
+			panic(err)
+		}
+
+		apiv1.RegisterHandlersWithOptions(engine, server, opt)
 
 		// run server
-		r.Run()
+		engine.Run(":8080")
 	},
 }
 
@@ -105,7 +108,7 @@ func init() {
 	rootCmd.AddCommand(serveCmd)
 }
 
-func initServices(client pgclient.Client, mclient *minio.Client) (map[string]interface{}, error) {
+func createServer(client pgclient.Client, mclient *minio.Client) (*internalApiv1.Server, error) {
 	services := make(map[string]interface{})
 
 	// create keycloak repo
@@ -113,7 +116,7 @@ func initServices(client pgclient.Client, mclient *minio.Client) (map[string]int
 	if err != nil {
 		logutil.GetDefaultLogger().WithError(err).Warn("cannot create user repo")
 
-		return services, err
+		return nil, err
 	}
 
 	// create album repo
@@ -121,7 +124,7 @@ func initServices(client pgclient.Client, mclient *minio.Client) (map[string]int
 	if err != nil {
 		logutil.GetDefaultLogger().WithError(err).Warn("failed to create album repo")
 
-		return services, err
+		return nil, err
 	}
 
 	// create tag repo
@@ -129,14 +132,14 @@ func initServices(client pgclient.Client, mclient *minio.Client) (map[string]int
 	if err != nil {
 		logutil.GetDefaultLogger().WithError(err).Warn("failed to create tag repo")
 
-		return services, err
+		return nil, err
 	}
 	// create user repo
 	userRepo, err := user.NewPostgresRepo(client)
 	if err != nil {
 		logutil.GetDefaultLogger().WithError(err).Warn("failed to create user pg repo")
 
-		return services, err
+		return nil, err
 	}
 
 	// create minio repo
@@ -151,5 +154,6 @@ func initServices(client pgclient.Client, mclient *minio.Client) (map[string]int
 	services["user"] = usersService
 	services["tag"] = tagService
 
-	return services, nil
+	server := internalApiv1.NewServer(albumService, usersService)
+	return server, nil
 }

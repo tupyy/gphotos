@@ -4,25 +4,16 @@ import (
 	"fmt"
 )
 
-type Role int
+type Role string
 
 const (
-	RoleUser Role = iota
-	RoleAdmin
-	RoleEditor
+	RoleUser   Role = "user"
+	RoleAdmin  Role = "admin"
+	RoleEditor Role = "editor"
 )
 
 func (r Role) String() string {
-	switch r {
-	case RoleAdmin:
-		return "admin"
-	case RoleUser:
-		return "user"
-	case RoleEditor:
-		return "editor"
-	}
-
-	return "unknown"
+	return string(r)
 }
 
 type User struct {

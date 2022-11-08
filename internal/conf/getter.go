@@ -11,7 +11,7 @@ import (
 
 // Below all the different keys used to configure this service.
 const (
-	prefix       = "GOPHOTO"
+	prefix       = "GPHOTOS"
 	logLevel     = "LOG_LEVEL"
 	logFormatter = "LOG_FORMATTER"
 

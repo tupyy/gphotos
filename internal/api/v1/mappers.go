@@ -9,35 +9,21 @@ import (
 	"github.com/tupyy/gophoto/internal/utils/encryption"
 )
 
-func mapAlbumToModel(album entity.Album, users []entity.User) (apiv1.Album, error) {
-	owner := entity.User{}
-	for _, user := range users {
-		if user.ID == album.OwnerID {
-			owner = user
-			break
-		}
-	}
-
+func mapAlbumToModel(album entity.Album) apiv1.Album {
 	gen := encryption.NewGenerator(conf.GetEncryptionKey())
-	encryptedID, err := gen.EncryptData(fmt.Sprintf("%d", album.ID))
-	if err != nil {
-		return apiv1.Album{}, err
-	}
+	encryptedID, _ := gen.EncryptData(fmt.Sprintf("%d", album.ID))
 
-	encryptedUsername, err := gen.EncryptData(owner.Username)
-	if err != nil {
-		return apiv1.Album{}, err
-	}
+	encryptedUsername, _ := gen.EncryptData(album.Owner)
 
 	model := apiv1.Album{
 		Id:          encryptedID,
 		Href:        fmt.Sprintf("/api/v1/albums/%s", encryptedID),
-		Kind:        "UserAlbum",
+		Kind:        "Album",
 		Bucket:      album.Bucket,
 		Name:        album.Name,
 		Description: &album.Description,
 		Location:    &album.Location,
-		CreatedAt:   album.CreatedAt.Unix(),
+		CreatedAt:   album.CreatedAt,
 		Thumbnail:   &album.Thumbnail,
 		Owner: &apiv1.ObjectReference{
 			Kind: "User",
@@ -46,5 +32,5 @@ func mapAlbumToModel(album entity.Album, users []entity.User) (apiv1.Album, erro
 		},
 	}
 
-	return model, nil
+	return model
 }

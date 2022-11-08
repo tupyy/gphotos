@@ -24,9 +24,9 @@ type AlbumRepository interface {
 	// GetByID return an album by id.
 	GetByID(ctx context.Context, id int32) (entity.Album, error)
 	// GetByOwner return all albums of a user for which he is the owner.
-	GetByOwnerID(ctx context.Context, ownerID string) ([]entity.Album, error)
+	GetByOwner(ctx context.Context, owner string) ([]entity.Album, error)
 	// GetByUserID returns a list of albums for which the user has at least one permission set.
-	GetByUserID(ctx context.Context, userID string) ([]entity.Album, error)
+	GetByUser(ctx context.Context, userName string) ([]entity.Album, error)
 	// GetByGroup returns a list of albums for which the group has at least one permission.
 	GetByGroupName(ctx context.Context, groupName string) ([]entity.Album, error)
 	// GetByGroups returns a list of albums with at least one persmission for at least on group in the list.

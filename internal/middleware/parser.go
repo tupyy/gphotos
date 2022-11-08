@@ -1,37 +1,26 @@
 package middleware
 
 import (
-	"net/http"
-	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/utils/encryption"
-	"github.com/tupyy/gophoto/internal/utils/logutil"
 )
 
 // AlbumIDMiddleware decrypt the album id passes as parameters and set the id in the context.
-func AlbumIDMiddleware(c *gin.Context) {
-	logger := logutil.GetLogger(c)
-
+func DecryptID(c *gin.Context) {
 	// decrypt album id
 	gen := encryption.NewGenerator(conf.GetEncryptionKey())
 
-	decryptedID, err := gen.DecryptData(c.Param("id"))
-	if err != nil {
-		logger.WithError(err).Error("cannot decrypt album id")
-		c.AbortWithError(http.StatusNotFound, err) // explicit return not found here
-
-		return
+	for _, param := range c.Params {
+		if strings.HasSuffix(param.Key, "id") {
+			decryptedID, err := gen.DecryptData(param.Value)
+			if err != nil {
+				c.Set(param.Key, param.Value)
+				continue
+			}
+			c.Set(param.Key, decryptedID)
+		}
 	}
-
-	id, err := strconv.Atoi(decryptedID)
-	if err != nil {
-		logger.WithError(err).WithField("id", decryptedID).Error("cannot parse album id")
-		c.AbortWithError(http.StatusNotFound, err)
-
-		return
-	}
-
-	c.Set("id", id)
 }

@@ -10,7 +10,7 @@ import (
 
 func TestPermissionResolver(t *testing.T) {
 	album := entity.Album{
-		OwnerID: "batman",
+		Owner: "batman",
 		UserPermissions: entity.Permissions{
 			"batman": {entity.PermissionReadAlbum, entity.PermissionEditAlbum},
 		},

@@ -7,19 +7,20 @@ import (
 )
 
 type Server struct {
-	services map[string]interface{}
+	albumService *album.Service
+	userService  *users.Service
 }
 
-func NewServer(services map[string]interface{}) *Server {
-	return &Server{services: services}
+func NewServer(a *album.Service, u *users.Service) *Server {
+	return &Server{a, u}
 }
 
-func (server *Server) GetAlbumService() album.Service {
-	return server.services["album"].(album.Service)
+func (server *Server) GetAlbumService() *album.Service {
+	return server.albumService
 }
 
-func (server *Server) GetUserService() users.Service {
-	return server.services["user"].(users.Service)
+func (server *Server) GetUserService() *users.Service {
+	return server.userService
 }
 
 // (GET /api/gphotos/v1)

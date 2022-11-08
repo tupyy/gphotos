@@ -14,6 +14,7 @@ const (
 	authCallbackURL = "AUTH_CALLBACK_URL"
 	secretKey       = "SECRET_KEY"
 	encryptionKey   = "ENCRYPTION_KEY"
+	noAuth          = "AUTH_DISABLED"
 
 	// cache config for repo.
 	repoCacheTTL           = "REPOCACHE_TTL"
@@ -64,6 +65,13 @@ func GetTemplateFolder() string {
 
 func GetStaticsFolder() string {
 	return viper.GetString(staticDir)
+}
+
+func HasAuth() bool {
+	if viper.IsSet(noAuth) {
+		return false
+	}
+	return true
 }
 
 func GetRepoCacheConfig() (ttl time.Duration, interval time.Duration) {

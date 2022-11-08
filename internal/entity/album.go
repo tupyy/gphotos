@@ -13,8 +13,8 @@ type Album struct {
 	Name string
 	// CreateAt - creation date
 	CreatedAt time.Time
-	// OwnerID - owner-s id
-	OwnerID string
+	// Owner - owner's username
+	Owner string
 	// Description - description of the album
 	Description string
 	// Location - location of the album

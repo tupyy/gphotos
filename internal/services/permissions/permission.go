@@ -81,7 +81,7 @@ func (apr *albumPermissionService) Resolve(album entity.Album, user entity.User)
 type OwnerPolicy struct{}
 
 func (i OwnerPolicy) Resolve(a entity.Album, u entity.User) bool {
-	return a.OwnerID == u.ID
+	return a.Owner == u.ID
 }
 
 // RolePolicy checks if the user has a certain role.

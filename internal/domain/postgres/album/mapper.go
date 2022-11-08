@@ -11,7 +11,7 @@ func toModel(e entity.Album) models.Album {
 	m := models.Album{
 		Name:        e.Name,
 		CreatedAt:   e.CreatedAt,
-		OwnerID:     e.OwnerID,
+		OwnerID:     e.Owner,
 		Description: &e.Description,
 		Location:    &e.Location,
 		Bucket:      e.Bucket,
@@ -31,7 +31,7 @@ func fromModel(m models.Album) entity.Album {
 		ID:        m.ID,
 		Name:      m.Name,
 		CreatedAt: m.CreatedAt,
-		OwnerID:   m.OwnerID,
+		Owner:     m.OwnerID,
 		Bucket:    m.Bucket,
 	}
 

@@ -36,18 +36,6 @@ paths:
         description: sort mode
         schema:
           type: string
-      - name: offset
-        in: query
-        description: page offset
-        schema:
-          type: integer
-          format: int32
-      - name: limit
-        in: query
-        description: total number of albums to return
-        schema:
-          type: integer
-          format: int32
       - name: filter
         in: query
         description: filter expression
@@ -63,13 +51,122 @@ paths:
         description: return shared albums
         schema:
           type: boolean
+      - $ref: "#/components/parameters/page"
+      - $ref: "#/components/parameters/size"
       responses:
         200:
           description: list of albums owned by or shared with logged user
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Albums'
+                $ref: '#/components/schemas/AlbumList'
+        401:
+          description: Not authenticated.
+          content: {}
+        403:
+          description: Forbidden.
+          content: {}
+        500:
+          description: Internal error.
+          content: {}
+        503:
+          description: Not available.
+          content: {}
+    post:
+      description: create an album
+      operationId: createAlbum
+      requestBody:
+        description: album data
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AlbumRequestPayload'
+        responses:
+          201:
+            description: album created
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Album'
+          401:
+            description: Not authenticated.
+            content: {}
+          403:
+            description: Forbidden.
+            content: {}
+          500:
+            description: Internal error.
+            content: {}
+          503:
+            description: Not available.
+            content: {}
+      tags:
+        - Albums
+  /api/gphotos/v1/albums/{album_id}:
+    get:
+      operationId: GetAlbumByID
+      tags:
+        - Albums
+      parameters:
+        - $ref: "#/components/parameters/album_id"
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Album'
+        401:
+          description: Not authenticated.
+          content: {}
+        403:
+          description: Forbidden.
+          content: {}
+        500:
+          description: Internal error.
+          content: {}
+        503:
+          description: Not available.
+          content: {}
+    patch:
+      operationId: UpdateAlbum
+      tags:
+        - Albums
+      parameters:
+        - $ref: "#/components/parameters/album_id"
+      requestBody:
+        description: album data
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AlbumRequestPayload'
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Album'
+        401:
+          description: Not authenticated.
+          content: {}
+        403:
+          description: Forbidden.
+          content: {}
+        500:
+          description: Internal error.
+          content: {}
+        503:
+          description: Not available.
+          content: {}
+    delete:
+      operationId: DeleteAlbum
+      parameters:
+        - $ref: "#/components/parameters/album_id"
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Album'
         401:
           description: Not authenticated.
           content: {}
@@ -89,19 +186,14 @@ paths:
       description: get all user's album shared with the current logger user
       operationId: getAlbumsByUser
       parameters:
-      - name: user_id
-        in: path
-        description: id of the album's owner
-        required: true
-        schema:
-          type: string
+        - $ref: "#/components/parameters/userID"
       responses:
         200:
           description: list of album shard by 'user_id' with logged user
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Albums'
+                $ref: '#/components/schemas/AlbumList'
         401:
           description: Not authenticated.
           content: {}
@@ -121,19 +213,14 @@ paths:
       description: get all user's album shared with the current logger user
       operationId: getAlbumsByGroup
       parameters:
-      - name: group_id
-        in: path
-        description: id of the group
-        required: true
-        schema:
-          type: string
+        - $ref: "#/components/parameters/groupID"
       responses:
         200:
           description: list of album shared by 'group_id' with logged user
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Albums'
+                $ref: '#/components/schemas/AlbumList'
         401:
           description: Not authenticated.
           content: {}
@@ -149,16 +236,11 @@ paths:
   /api/gphotos/v1/albums/{album_id}/permissions:
     get:
       tags:
-      - Albums
+      - Permissions
       description: retrieve the list of user and group permissions
       operationId: getAlbumPermissions
       parameters:
-      - name: album_id
-        in: path
-        description: id of the album
-        required: true
-        schema:
-          type: string
+        - $ref: "#/components/parameters/album_id"
       responses:
         200:
           description: retrieve the list of user and group permissions
@@ -181,23 +263,18 @@ paths:
   /api/gphotos/v1/albums/{album_id}/photos:
     get:
       tags:
-      - Albums
+      - Media
       description: retrieve the list of photos of the album 
       operationId: getAlbumPhotos
       parameters:
-      - name: album_id
-        in: path
-        description: id of the album
-        required: true
-        schema:
-          type: string
+        - $ref: "#/components/parameters/album_id"
       responses:
         200:
           description: retrieve the list of photos of the album
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Photos'
+                $ref: '#/components/schemas/PhotoList'
         401:
           description: Not authenticated.
           content: {}
@@ -225,6 +302,23 @@ components:
           type: string
         href:
           type: string
+    List:
+      required:
+        - kind
+        - page
+        - size
+        - total
+        - items
+      type: object
+      properties:
+        kind:
+          type: string
+        page:
+          type: integer
+        size:
+          type: integer
+        total:
+          type: integer     
     VersionMetadata:
       allOf:
       - $ref: '#/components/schemas/ObjectReference'
@@ -249,9 +343,9 @@ components:
             type: string
             description: name of the album
           created_at:
-            type: integer
+            type: string
             description: creation date in unix timestamp
-            format: int64
+            format: date-time
           description:
             type: string
             description: description of the album
@@ -287,29 +381,22 @@ components:
                 type: string
               href:
                 type: string
-    Albums:
-      type: object
-      properties:
-        albums:
-          type: array
-          items:
-            $ref: '#/components/schemas/Album'
-        page:
-          type: integer
-          description: number of the page
-          format: int32
-        size:
-          type: integer
-          description: number of album in a page
-          format: int32
-        total:
-          type: integer
-          format: int32
+    AlbumList:
+      allOf:
+        - $ref: "#/components/schemas/List"
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/Album'
     Photo:
       allOf:
       - $ref: '#/components/schemas/ObjectReference'
       - type: object
         properties:
+          album:
+            $ref: '#/components/schemas/ObjectReference'
           filename:
             type: string
             description: name of the file
@@ -319,52 +406,50 @@ components:
           thumbnail:
             type: string
             description: path to the thumbnail of the photo
-    Photos:
-      type: object
-      properties:
-        album:
-          $ref: '#/components/schemas/ObjectReference'
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/Photo'
+      - required:
+          - album
+          - filename
+          - bucket
+          - thumbnail
+    PhotoList:
+      allOf:
+        - $ref: '#/components/schemas/List'
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/Photo'
     Tag:
       allOf:
       - $ref: '#/components/schemas/ObjectReference'
       - required:
         - name
-        - user_id
+        - user
+        - albums
         type: object
         properties:
-          user_id:
-            type: string
-            description: tag's owner id
+          albums:
+            type: array
+            items:
+              $ref: '#/components/schemas/ObjectReference'
+          user:
+            $ref: '#/components/schemas/ObjectReference'
           name:
             type: string
             description: name of the tag
           color:
             type: string
             description: color of the tag in hex format
-    Tags:
+    TagList:
       allOf:
-      - $ref: '#/components/schemas/ObjectReference'
-      - type: object
-        properties:
-          items:
-            type: array
+        - $ref: "#/components/schemas/List"
+        - type: object
+          properties:
             items:
-              $ref: '#/components/schemas/Tag'
-          page:
-            type: integer
-            description: number of the page
-            format: int32
-          size:
-            type: integer
-            description: number of album in a page
-            format: int32
-          total:
-            type: integer
-            format: int32
+              type: array
+              items:
+                $ref: '#/components/schemas/Tag'
     User:
       allOf:
       - $ref: '#/components/schemas/ObjectReference'
@@ -378,7 +463,7 @@ components:
             description: surname of the user
           user_id:
             type: string
-            description: user_od
+            description: user_id
           groups:
             type: array
             items:
@@ -432,3 +517,58 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/GroupPermissions'
+    AlbumRequestPayload:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        created_at:
+          type: integer
+          format: int64
+        location:
+          type: string
+        user_permissions:
+          type: string
+        group_permissions:
+          type: string
+      required:
+        - name
+  # Parameters
+  parameters:
+    album_id:
+      name: album_id
+      description: The ID of the album
+      schema:
+        type: string
+      in: path
+      required: true
+    userID:
+      name: user_id
+      description: The ID of the user
+      schema:
+        type: string
+      in: path
+      required: true
+    groupID:
+      name: group_id
+      description: The ID of the group
+      schema:
+        type: string
+      in: path
+      required: true
+    page:
+      name: page
+      in: query
+      description: page number
+      schema:
+        type: integer
+        format: int32
+    size:
+      name: size
+      in: query
+      description: total number of items per page
+      schema:
+        type: integer
+        format: int32

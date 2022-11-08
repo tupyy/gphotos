@@ -36,7 +36,7 @@ func (ca albumJoinRow) ToEntity() (entity.Album, error) {
 		ID:        ca.ID,
 		Name:      ca.Name,
 		CreatedAt: ca.CreatedAt,
-		OwnerID:   ca.OwnerID,
+		Owner:     ca.OwnerID,
 		Bucket:    ca.Bucket,
 	}
 

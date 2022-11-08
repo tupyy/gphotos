@@ -49,7 +49,7 @@ func (as *AlbumTestSuite) TestGetAlbumByID() {
 	asserter.Nil(err)
 	asserter.Len(ent.UserPermissions, 1)
 	asserter.Len(ent.GroupPermissions, 3)
-	asserter.Equal("user1", ent.OwnerID)
+	asserter.Equal("user1", ent.Owner)
 
 	_, err = as.repo.GetByID(context.Background(), 100)
 	asserter.NotNil(err)
@@ -210,7 +210,7 @@ func (as *AlbumTestSuite1) TestCreateAlbum() {
 	album := entity.Album{
 		Name:        "name",
 		CreatedAt:   time.Now(),
-		OwnerID:     "user1",
+		Owner:       "user1",
 		Description: "test",
 		Location:    "test",
 		UserPermissions: map[string][]entity.Permission{

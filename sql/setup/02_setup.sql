@@ -16,7 +16,8 @@ CREATE TABLE album (
     owner_id TEXT NOT NULL,
     bucket TEXT NOT NULL,
     description TEXT,
-    location TEXT
+    location TEXT,
+    thumbnail VARCHAR(200)
 );
 
 CREATE TYPE permission_id as ENUM (
