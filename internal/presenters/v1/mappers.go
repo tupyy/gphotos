@@ -18,7 +18,6 @@ func MapAlbumToModel(album entity.Album) apiv1.Album {
 	encryptedUsername, _ := gen.EncryptData(album.Owner)
 
 	albumRef := mapAlbumRef(album)
-	permissions := MapAlbumPermissions(album)
 
 	model := apiv1.Album{
 		Id:          albumRef.Id,
@@ -30,12 +29,21 @@ func MapAlbumToModel(album entity.Album) apiv1.Album {
 		Location:    &album.Location,
 		CreatedAt:   album.CreatedAt,
 		Thumbnail:   &album.Thumbnail,
-		Owner: &apiv1.ObjectReference{
-			Kind: "User",
+		Owner: apiv1.ObjectReference{
+			Kind: UserKind,
 			Href: fmt.Sprintf("%s/users/%s", baseV1URL, encryptedUsername),
 			Id:   encryptedUsername,
 		},
-		Permissions: &permissions,
+		Permissions: apiv1.ObjectReference{
+			Kind: AlbumPermissionsKind,
+			Href: fmt.Sprintf("%s/permissions", albumRef.Href),
+			Id:   albumRef.Id,
+		},
+		Photos: apiv1.ObjectReference{
+			Kind: PhotoListKind,
+			Href: fmt.Sprintf("%s/photos", albumRef.Href),
+			Id:   albumRef.Id,
+		},
 	}
 
 	return model
@@ -48,7 +56,7 @@ func mapAlbumRef(album entity.Album) apiv1.ObjectReference {
 	return apiv1.ObjectReference{
 		Href: fmt.Sprintf("%s/album/%s", baseV1URL, encryptedID),
 		Id:   encryptedID,
-		Kind: "Album",
+		Kind: AlbumKind,
 	}
 }
 
@@ -71,12 +79,12 @@ func MapAlbumPermissions(album entity.Album) apiv1.AlbumPermissions {
 		return apiPermissions
 	}
 
-	userPermissions := mapPermissions(album.UserPermissions, "user")
-	groupPermissions := mapPermissions(album.GroupPermissions, "group")
+	userPermissions := mapPermissions(album.UserPermissions, UserKind)
+	groupPermissions := mapPermissions(album.GroupPermissions, GroupKind)
 	albumRef := mapAlbumRef(album)
 
 	albumPermissions := apiv1.AlbumPermissions{
-		Kind:   "AlbumPermissionsList",
+		Kind:   AlbumPermissionsKind,
 		Id:     albumRef.Id,
 		Href:   fmt.Sprintf("%s/album/%s/permissions", baseV1URL, albumRef.Id),
 		Users:  &userPermissions,

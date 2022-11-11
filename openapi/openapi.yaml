@@ -492,6 +492,9 @@ components:
         - bucket
         - created_at
         - name
+        - owner
+        - permissions
+        - photos
         type: object
         properties:
           name:
@@ -520,7 +523,7 @@ components:
           tags:
             $ref: '#/components/schemas/TagList'
           permissions:
-            $ref: '#/components/schemas/AlbumPermissions'
+            $ref: '#/components/schemas/ObjectReference'
     AlbumList:
       allOf:
         - $ref: "#/components/schemas/List"
