@@ -31,8 +31,7 @@ func init() {
 	tables = make(map[string]*TableInfo)
 
 	tables["album"] = albumTableInfo
-	tables["album_group_permissions"] = album_group_permissionsTableInfo
-	tables["album_user_permissions"] = album_user_permissionsTableInfo
+	tables["album_permissions"] = album_permissionsTableInfo
 	tables["albums_tags"] = albums_tagsTableInfo
 	tables["tag"] = tagTableInfo
 }

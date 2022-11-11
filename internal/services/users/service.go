@@ -3,9 +3,9 @@ package users
 import (
 	"context"
 
-	"github.com/tupyy/gophoto/internal/domain/filters/user"
-	userFilters "github.com/tupyy/gophoto/internal/domain/filters/user"
 	"github.com/tupyy/gophoto/internal/entity"
+	"github.com/tupyy/gophoto/internal/repos/filters/user"
+	userFilters "github.com/tupyy/gophoto/internal/repos/filters/user"
 )
 
 type KeycloakRepository interface {

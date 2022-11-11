@@ -27,15 +27,15 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	apiv1 "github.com/tupyy/gophoto/api/v1"
-	internalApiv1 "github.com/tupyy/gophoto/internal/api/v1"
 	"github.com/tupyy/gophoto/internal/auth"
 	"github.com/tupyy/gophoto/internal/conf"
-	keycloakRepo "github.com/tupyy/gophoto/internal/domain/keycloak"
-	miniorepo "github.com/tupyy/gophoto/internal/domain/minio"
-	"github.com/tupyy/gophoto/internal/domain/postgres/album"
-	"github.com/tupyy/gophoto/internal/domain/postgres/tag"
-	"github.com/tupyy/gophoto/internal/domain/postgres/user"
 	"github.com/tupyy/gophoto/internal/entity"
+	handlersv1 "github.com/tupyy/gophoto/internal/handlers/v1"
+	keycloakRepo "github.com/tupyy/gophoto/internal/repos/keycloak"
+	miniorepo "github.com/tupyy/gophoto/internal/repos/minio"
+	"github.com/tupyy/gophoto/internal/repos/postgres/album"
+	"github.com/tupyy/gophoto/internal/repos/postgres/tag"
+	"github.com/tupyy/gophoto/internal/repos/postgres/user"
 	"github.com/tupyy/gophoto/internal/router"
 	albumService "github.com/tupyy/gophoto/internal/services/album"
 	"github.com/tupyy/gophoto/internal/services/media"
@@ -108,7 +108,7 @@ func init() {
 	rootCmd.AddCommand(serveCmd)
 }
 
-func createServer(client pgclient.Client, mclient *minio.Client) (*internalApiv1.Server, error) {
+func createServer(client pgclient.Client, mclient *minio.Client) (*handlersv1.Server, error) {
 	services := make(map[string]interface{})
 
 	// create keycloak repo
@@ -154,6 +154,6 @@ func createServer(client pgclient.Client, mclient *minio.Client) (*internalApiv1
 	services["user"] = usersService
 	services["tag"] = tagService
 
-	server := internalApiv1.NewServer(albumService, usersService)
+	server := handlersv1.NewServer(albumService, usersService)
 	return server, nil
 }

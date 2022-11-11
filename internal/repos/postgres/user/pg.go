@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/sirupsen/logrus"
-	"github.com/tupyy/gophoto/internal/domain"
 	"github.com/tupyy/gophoto/internal/entity"
+	domain "github.com/tupyy/gophoto/internal/repos"
 	"github.com/tupyy/gophoto/internal/utils/logutil"
 	"github.com/tupyy/gophoto/internal/utils/pgclient"
 	"gorm.io/gorm"

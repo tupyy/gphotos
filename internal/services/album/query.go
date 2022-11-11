@@ -82,7 +82,7 @@ func (q *Query) SharedAlbums(b bool) *Query {
 
 // All returns a list of albums sliced if offset & limit are set and the total number of albums.
 func (q *Query) All(ctx context.Context, user entity.User) ([]entity.Album, int, error) {
-	albums := make(map[int32]entity.Album)
+	albums := make(map[string]entity.Album)
 
 	if q.personalAlbums {
 		// fetch personal albums
@@ -164,15 +164,15 @@ func (q *Query) All(ctx context.Context, user entity.User) ([]entity.Album, int,
 	return q.paginate(albs), len(albs), nil
 }
 
-func (q *Query) First(ctx context.Context, id int32) (entity.Album, error) {
+func (q *Query) First(ctx context.Context, id string) (entity.Album, error) {
 	album, err := q.albumRepo.GetByID(ctx, id)
 	if err != nil {
-		return entity.Album{}, fmt.Errorf("failed to get album '%d': %v", id, err)
+		return entity.Album{}, fmt.Errorf("failed to get album '%s': %v", id, err)
 	}
 
 	medias, err := q.mediaService.ListBucket(ctx, album.Bucket)
 	if err != nil {
-		return entity.Album{}, fmt.Errorf("%w album id '%d': %v", services.ErrListBucket, id, err)
+		return entity.Album{}, fmt.Errorf("%w album id '%s': %v", services.ErrListBucket, id, err)
 	}
 
 	photos := make([]entity.Media, 0, len(medias))

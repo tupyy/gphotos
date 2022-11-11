@@ -9,8 +9,8 @@ import (
 	keycloak "github.com/Nerzal/gocloak/v11"
 	"github.com/pkg/errors"
 	"github.com/tupyy/gophoto/internal/conf"
-	userFilters "github.com/tupyy/gophoto/internal/domain/filters/user"
 	"github.com/tupyy/gophoto/internal/entity"
+	userFilters "github.com/tupyy/gophoto/internal/repos/filters/user"
 	"github.com/tupyy/gophoto/internal/utils/logutil"
 )
 

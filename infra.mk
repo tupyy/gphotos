@@ -80,8 +80,6 @@ postgres.setup.init:
 postgres.setup.tables:
 	$(PSQL_COMMAND) --dbname=gophoto --user=$(RESOURCE_ADMIN_USER) \
 		-f sql/setup/02_setup.sql
-	$(PSQL_COMMAND) --dbname=gophoto --user=$(RESOURCE_ADMIN_USER) \
-		-f sql/setup/03_views.sql
 
 postgres.setup.migrations:
 	$(PSQL_COMMAND) --dbname=gophoto --user=$(RESOURCE_ADMIN_USER) \

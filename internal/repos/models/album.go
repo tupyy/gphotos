@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/guregu/null"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 )
 
 var (
@@ -21,19 +21,19 @@ DB Table Details
 
 
 Table: album
-[ 0] id                                             INT4                 null: false  primary: true   isArray: false  auto: false  col: INT4            len: -1      default: []
+[ 0] id                                             TEXT                 null: false  primary: true   isArray: false  auto: false  col: TEXT            len: -1      default: []
 [ 1] name                                           TEXT                 null: false  primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
 [ 2] created_at                                     TIMESTAMP            null: false  primary: false  isArray: false  auto: false  col: TIMESTAMP       len: -1      default: [timezone('UTC']
 [ 3] owner_id                                       TEXT                 null: false  primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
 [ 4] bucket                                         TEXT                 null: false  primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
 [ 5] description                                    TEXT                 null: true   primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
 [ 6] location                                       TEXT                 null: true   primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
-[ 7] thumbnail                                      VARCHAR(100)         null: true   primary: false  isArray: false  auto: false  col: VARCHAR         len: 100     default: []
+[ 7] thumbnail                                      VARCHAR(200)         null: true   primary: false  isArray: false  auto: false  col: VARCHAR         len: 200     default: []
 
 
 JSON Sample
 -------------------------------------
-{    "description": "VVwFjkeGBbKvyCgzbYKOiCSdO",    "location": "HqipdySOyjJGhAXddMmojynpc",    "thumbnail": "uBgEDbmuYoPRHfmbYWNRpdvxL",    "id": 63,    "name": "FWhycuHcZaPgFbydTUWAimPUV",    "created_at": "2107-04-06T08:36:30.307147087+02:00",    "owner_id": "mIbIwHSPCgbEqbKoQNunBfLIu",    "bucket": "fbJmQrpTDcWMxwaQYZxvQCJAd"}
+{    "id": "vTySCPFdPkXQxEMhAJrpSIKPj",    "name": "SvNpbELMCnjVRqFtUapoghmqN",    "created_at": "2273-05-03T12:17:05.57289503+02:00",    "owner_id": "gHODeCvCfnMtMWHHZneEkNRSS",    "bucket": "ZgCpolOXoFjluvUSEyIqnGYLZ",    "description": "uINysTFZQrqjuLoqChVofRyuJ",    "location": "NHpETeEuZhNTomfntBhrySERw",    "thumbnail": "jeOHURrmAQgxiTCZblULgRtRc"}
 
 
 
@@ -41,8 +41,8 @@ JSON Sample
 
 // Album struct is a row record of the album table in the gophoto database
 type Album struct {
-	//[ 0] id                                             INT4                 null: false  primary: true   isArray: false  auto: false  col: INT4            len: -1      default: []
-	ID int32 `gorm:"primary_key;column:id;type:INT4;"`
+	//[ 0] id                                             TEXT                 null: false  primary: true   isArray: false  auto: false  col: TEXT            len: -1      default: []
+	ID string `gorm:"primary_key;column:id;type:TEXT;"`
 	//[ 1] name                                           TEXT                 null: false  primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
 	Name string `gorm:"column:name;type:TEXT;"`
 	//[ 2] created_at                                     TIMESTAMP            null: false  primary: false  isArray: false  auto: false  col: TIMESTAMP       len: -1      default: [timezone('UTC']
@@ -55,8 +55,8 @@ type Album struct {
 	Description *string `gorm:"column:description;type:TEXT;"`
 	//[ 6] location                                       TEXT                 null: true   primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
 	Location *string `gorm:"column:location;type:TEXT;"`
-	//[ 7] thumbnail                                      VARCHAR(100)         null: true   primary: false  isArray: false  auto: false  col: VARCHAR         len: 100     default: []
-	Thumbnail sql.NullString `gorm:"column:thumbnail;type:VARCHAR;size:100;"`
+	//[ 7] thumbnail                                      VARCHAR(200)         null: true   primary: false  isArray: false  auto: false  col: VARCHAR         len: 200     default: []
+	Thumbnail sql.NullString `gorm:"column:thumbnail;type:VARCHAR;size:200;"`
 }
 
 var albumTableInfo = &TableInfo{
@@ -69,15 +69,15 @@ var albumTableInfo = &TableInfo{
 			Comment:            ``,
 			Notes:              ``,
 			Nullable:           false,
-			DatabaseTypeName:   "INT4",
-			DatabaseTypePretty: "INT4",
+			DatabaseTypeName:   "TEXT",
+			DatabaseTypePretty: "TEXT",
 			IsPrimaryKey:       true,
 			IsAutoIncrement:    false,
 			IsArray:            false,
-			ColumnType:         "INT4",
+			ColumnType:         "TEXT",
 			ColumnLength:       -1,
 			GoFieldName:        "ID",
-			GoFieldType:        "int32",
+			GoFieldType:        "string",
 			JSONFieldName:      "id",
 			ProtobufFieldName:  "id",
 			ProtobufType:       "",
@@ -217,12 +217,12 @@ var albumTableInfo = &TableInfo{
 			Notes:              ``,
 			Nullable:           true,
 			DatabaseTypeName:   "VARCHAR",
-			DatabaseTypePretty: "VARCHAR(100)",
+			DatabaseTypePretty: "VARCHAR(200)",
 			IsPrimaryKey:       false,
 			IsAutoIncrement:    false,
 			IsArray:            false,
 			ColumnType:         "VARCHAR",
-			ColumnLength:       100,
+			ColumnLength:       200,
 			GoFieldName:        "Thumbnail",
 			GoFieldType:        "sql.NullString",
 			JSONFieldName:      "thumbnail",

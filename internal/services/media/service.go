@@ -8,6 +8,7 @@ import (
 	"path"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/internal/services/image"
@@ -15,7 +16,7 @@ import (
 )
 
 // Store describe photo store operations
-type MediaRepository interface {
+type MinioRepository interface {
 	// GetFile returns a reader to file.
 	GetFile(ctx context.Context, bucket, filename string) (io.ReadSeeker, map[string]string, error)
 	// PutFile save a file to a bucket.
@@ -25,9 +26,13 @@ type MediaRepository interface {
 	// DeleteFile deletes a file from a bucket.
 	DeleteFile(ctx context.Context, bucket, filename string) error
 	// CreateBucket create a bucket.
-	CreateBucket(ctx context.Context, bucket string) error
+	CreateBucket(ctx context.Context, bucket string, tags map[string]string) error
 	// DeleteBucket removes bucket.
 	DeleteBucket(ctx context.Context, bucket string) error
+	// set tags to bucket
+	SetBucketTagging(ctx context.Context, bucket string, tags map[string]string) error
+	// get bucket tags
+	GetBucketTagging(ctx context.Context, buclet string) (map[string]string, error)
 }
 
 type MediaType int
@@ -38,20 +43,25 @@ const (
 )
 
 type Service struct {
-	repo MediaRepository
+	repo MinioRepository
 }
 
-func New(repo MediaRepository) *Service {
+func New(repo MinioRepository) *Service {
 	return &Service{repo}
 }
 
-func (s *Service) CreateBucket(ctx context.Context, bucket string) error {
-	return s.repo.CreateBucket(ctx, bucket)
+func (s *Service) CreateBucket(ctx context.Context, bucket string, tags map[string]string) error {
+	return s.repo.CreateBucket(ctx, bucket, tags)
 }
 
-// TODO move logic from repo to here
+// DeleteBucket does not delete the bucket. Only set the tags delete_at
 func (s *Service) DeleteBucket(ctx context.Context, bucket string) error {
-	return s.repo.DeleteBucket(ctx, bucket)
+	bucketTags, err := s.repo.GetBucketTagging(ctx, bucket)
+	if err != nil {
+		return err
+	}
+	bucketTags["album/deleted_at"] = time.Now().Format(time.RFC3339)
+	return s.repo.SetBucketTagging(ctx, bucket, bucketTags)
 }
 
 func (s *Service) ListBucket(ctx context.Context, bucket string) ([]entity.Media, error) {
@@ -128,7 +138,7 @@ func (s *Service) Delete(ctx context.Context, bucket, filename string) error {
 	return s.repo.DeleteFile(ctx, bucket, filename)
 }
 
-func processPhoto(ctx context.Context, repo MediaRepository, bucket, filename string, r io.ReadSeeker) error {
+func processPhoto(ctx context.Context, repo MinioRepository, bucket, filename string, r io.ReadSeeker) error {
 	var imgBuffer bytes.Buffer
 
 	if err := image.Process(r, &imgBuffer); err != nil {
@@ -151,7 +161,7 @@ func processPhoto(ctx context.Context, repo MediaRepository, bucket, filename st
 	return nil
 }
 
-func createThumbnail(ctx context.Context, repo MediaRepository, bucket, filename string, r io.ReadSeeker) error {
+func createThumbnail(ctx context.Context, repo MinioRepository, bucket, filename string, r io.ReadSeeker) error {
 	var imgThumbnailBuffer bytes.Buffer
 
 	if err := image.CreateThumbnail(r, &imgThumbnailBuffer); err != nil {

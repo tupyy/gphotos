@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/rs/xid"
 	"github.com/sirupsen/logrus"
-	repo "github.com/tupyy/gophoto/internal/domain"
-	"github.com/tupyy/gophoto/internal/domain/models"
 	"github.com/tupyy/gophoto/internal/entity"
+	repo "github.com/tupyy/gophoto/internal/repos"
+	"github.com/tupyy/gophoto/internal/repos/models"
 	"github.com/tupyy/gophoto/internal/utils/logutil"
 	"github.com/tupyy/gophoto/internal/utils/pgclient"
 	"gorm.io/gorm"
@@ -32,53 +33,32 @@ func NewPostgresRepo(client pgclient.Client) (*AlbumPostgresRepo, error) {
 	return &AlbumPostgresRepo{gormDB, client}, nil
 }
 
-func (a *AlbumPostgresRepo) Create(ctx context.Context, album entity.Album) (albumID int32, err error) {
+func (a *AlbumPostgresRepo) Create(ctx context.Context, album entity.Album) (entity.Album, error) {
 	logger := logutil.GetDefaultLogger()
 
 	tx := a.db.WithContext(ctx).Begin()
 
 	m := toModel(album)
+	m.ID = xid.New().String()
+	album.ID = m.ID
 
 	result := tx.Create(&m)
 	if result.Error != nil {
 		logger.WithError(result.Error).Warnf("cannot create album: %v", album)
 
-		return -1, fmt.Errorf("%w cannot create album %+v", repo.ErrCreateAlbum, result.Error)
-	}
-
-	// create permissions entries
-	if len(album.UserPermissions) > 0 {
-		permModels := toUserPermissionsModels(m.ID, album.UserPermissions)
-
-		if result := tx.CreateInBatches(permModels, len(permModels)); result.Error != nil {
-			logger.WithError(result.Error).Warnf("cannot create album user permissions: %v", permModels)
-			tx.Rollback()
-
-			return -1, fmt.Errorf("%w cannot create user permissions %+v", repo.ErrCreateAlbum, result.Error)
-		}
-	}
-
-	if len(album.GroupPermissions) > 0 {
-		permModels := toGroupPermissionsModels(m.ID, album.GroupPermissions)
-
-		if result := tx.CreateInBatches(permModels, len(permModels)); result.Error != nil {
-			logger.WithError(result.Error).Warnf("cannot create album group permissions: %v", permModels)
-			tx.Rollback()
-
-			return -1, fmt.Errorf("%w cannot create group permissions %+v", repo.ErrCreateAlbum, result.Error)
-		}
+		return album, fmt.Errorf("%w cannot create album %+v", repo.ErrCreateAlbum, result.Error)
 	}
 
 	if err := tx.Commit().Error; err != nil {
 		logger.WithError(result.Error).Warnf("error commit album: %v", album)
 
-		return -1, fmt.Errorf("%w cannot create album %+v", repo.ErrCreateAlbum, result.Error)
+		return album, fmt.Errorf("%w cannot create album %+v", repo.ErrCreateAlbum, result.Error)
 	}
 
-	return m.ID, nil
+	return album, nil
 }
 
-func (a *AlbumPostgresRepo) Delete(ctx context.Context, id int32) error {
+func (a *AlbumPostgresRepo) Delete(ctx context.Context, id string) error {
 	if res := a.db.WithContext(ctx).Delete(&models.Album{}, id); res.Error != nil {
 		return fmt.Errorf("%w %+v", repo.ErrDeleteAlbum, res.Error)
 	}
@@ -86,14 +66,14 @@ func (a *AlbumPostgresRepo) Delete(ctx context.Context, id int32) error {
 	return nil
 }
 
-func (a *AlbumPostgresRepo) Update(ctx context.Context, album entity.Album) error {
+func (a *AlbumPostgresRepo) Update(ctx context.Context, album entity.Album) (entity.Album, error) {
 	var ca albumJoinRow
 
 	logger := logutil.GetDefaultLogger()
 
 	tx := a.db.WithContext(ctx).Table("album").Where("id = ?", album.ID).First(&ca)
 	if tx.Error != nil {
-		return fmt.Errorf("%w %v album_id=%d", repo.ErrAlbumNotFound, tx.Error, album.ID)
+		return album, fmt.Errorf("%w %v album_id=%s", repo.ErrAlbumNotFound, tx.Error, album.ID)
 	}
 
 	newAlbum := entity.Album{
@@ -115,46 +95,7 @@ func (a *AlbumPostgresRepo) Update(ctx context.Context, album entity.Album) erro
 	if result.Error != nil {
 		logger.WithError(result.Error).Warnf("cannot update album: %v", album)
 
-		return fmt.Errorf("%w %+v", repo.ErrUpdateAlbum, result.Error)
-	}
-
-	// update user permissions
-	result = tx.Where("album_id = ?", album.ID).Delete(models.AlbumUserPermissions{})
-	if result.Error != nil {
-		logger.WithError(result.Error).Warnf("cannot delete user permissions while updating album: %v", album)
-		tx.Rollback()
-
-		return fmt.Errorf("%w %+v album_id: %d", repo.ErrUpdateAlbum, result.Error, album.ID)
-	}
-
-	if len(album.UserPermissions) != 0 {
-		permModels := toUserPermissionsModels(m.ID, album.UserPermissions)
-
-		if result := tx.CreateInBatches(permModels, len(permModels)); result.Error != nil {
-			logger.WithError(result.Error).Warnf("cannot create album user permissions: %v", permModels)
-			tx.Rollback()
-
-			return fmt.Errorf("%w %+v album_id: %d", repo.ErrUpdateAlbum, result.Error, album.ID)
-		}
-	}
-
-	result = tx.Where("album_id = ?", album.ID).Delete(models.AlbumGroupPermissions{})
-	if result.Error != nil {
-		logger.WithError(result.Error).Warnf("cannot delete group permissions while updating album: %v", album)
-		tx.Rollback()
-
-		return fmt.Errorf("%w %+v album_id: %d", repo.ErrUpdateAlbum, result.Error, album.ID)
-	}
-
-	if len(album.GroupPermissions) != 0 {
-		permModels := toGroupPermissionsModels(m.ID, album.GroupPermissions)
-
-		if result := tx.CreateInBatches(permModels, len(permModels)); result.Error != nil {
-			logger.WithError(result.Error).Warnf("cannot create album group permissions: %v", permModels)
-			tx.Rollback()
-
-			return fmt.Errorf("%w %+v album_id: %d", repo.ErrUpdateAlbum, result.Error, album.ID)
-		}
+		return album, fmt.Errorf("%w %+v", repo.ErrUpdateAlbum, result.Error)
 	}
 
 	if err := tx.Commit().Error; err != nil {
@@ -163,10 +104,10 @@ func (a *AlbumPostgresRepo) Update(ctx context.Context, album entity.Album) erro
 			"old album": fmt.Sprintf("%+v", ca),
 		}).Warnf("error commit album: %v", album)
 
-		return fmt.Errorf("%w %+v album_id: %d", repo.ErrUpdateAlbum, result.Error, album.ID)
+		return album, fmt.Errorf("%w %+v album_id: %s", repo.ErrUpdateAlbum, result.Error, album.ID)
 	}
 
-	return nil
+	return album, nil
 }
 
 // Get returns all the albums sorted by id.
@@ -178,10 +119,9 @@ func (a *AlbumPostgresRepo) Get(ctx context.Context) ([]entity.Album, error) {
 		Joins("JOIN albums_tags ON (albums_tags.tag_id = tag.id)")
 
 	tx := a.db.WithContext(ctx).Table("album").Table("tag").
-		Select(`album.*, tags.id as tag_id, tags.name as tag_name,tags.color as tag_color, album_user_permissions.permissions as user_permissions, album_user_permissions.user_id as user_id,
-				album_group_permissions.permissions as group_permissions, album_group_permissions.group_name as group_name`).
-		Joins("LEFT JOIN album_user_permissions ON (album.id = album_user_permissions.album_id)").
-		Joins("LEFT JOIN album_group_permissions ON (album.id = album_group_permissions.album_id)").
+		Select(`album.*, tags.id as tag_id, tags.name as tag_name,tags.color as tag_color, album_permissions.permissions as permissions, album_permissions.owner_id as permission_owner_id,
+				album_permissions.owner_kind as permission_owner_kind`).
+		Joins("LEFT JOIN album_permissions ON (album.id = album_permissions.album_id)").
 		Joins("LEFT JOIN (?) as tags ON (tags.album_id = album.id)", tagSubQuery)
 
 	tx.Find(&albums)
@@ -201,7 +141,7 @@ func (a *AlbumPostgresRepo) Get(ctx context.Context) ([]entity.Album, error) {
 }
 
 // GetByID return the album if any with id id.
-func (a *AlbumPostgresRepo) GetByID(ctx context.Context, id int32) (entity.Album, error) {
+func (a *AlbumPostgresRepo) GetByID(ctx context.Context, id string) (entity.Album, error) {
 	var albums albumJoinRows
 
 	tagSubQuery := a.db.WithContext(ctx).Table("tag").
@@ -209,10 +149,9 @@ func (a *AlbumPostgresRepo) GetByID(ctx context.Context, id int32) (entity.Album
 		Joins("JOIN albums_tags ON (albums_tags.tag_id = tag.id)")
 
 	tx := a.db.WithContext(ctx).Table("album").
-		Select(`album.*, tags.id as tag_id, tags.name as tag_name,tags.color as tag_color, album_user_permissions.permissions as user_permissions, album_user_permissions.user_id as user_id,
-				album_group_permissions.permissions as group_permissions, album_group_permissions.group_name as group_name`).
-		Joins("LEFT JOIN album_user_permissions ON (album.id = album_user_permissions.album_id)").
-		Joins("LEFT JOIN album_group_permissions ON (album.id = album_group_permissions.album_id)").
+		Select(`album.*, tags.id as tag_id, tags.name as tag_name,tags.color as tag_color, album_permissions.permissions as permissions, album_permissions.owner_id as permission_owner_id,
+				album_permissions.owner_kind as permission_owner_kind`).
+		Joins("LEFT JOIN album_permissions ON (album.id = album_permissions.album_id)").
 		Joins("LEFT JOIN (?) as tags ON (tags.album_id = album.id)", tagSubQuery).
 		Where("album.id = ?", id).
 		Find(&albums)
@@ -222,9 +161,7 @@ func (a *AlbumPostgresRepo) GetByID(ctx context.Context, id int32) (entity.Album
 	}
 
 	if len(albums) == 0 {
-		logutil.GetDefaultLogger().WithField("album id", id).Warn("no album found by id")
-
-		return entity.Album{}, nil
+		return entity.Album{}, fmt.Errorf("album not found")
 	}
 
 	entities := albums.Merge()
@@ -241,10 +178,9 @@ func (a *AlbumPostgresRepo) GetByOwner(ctx context.Context, owner string) ([]ent
 		Joins("JOIN albums_tags ON (albums_tags.tag_id = tag.id)")
 
 	tx := a.db.WithContext(ctx).Table("album").
-		Select(`album.*, tags.id as tag_id, tags.name as tag_name,tags.color as tag_color, album_user_permissions.permissions as user_permissions, album_user_permissions.user_id as user_id,
-				album_group_permissions.permissions as group_permissions, album_group_permissions.group_name as group_name`).
-		Joins("LEFT JOIN album_user_permissions ON (album.id = album_user_permissions.album_id)").
-		Joins("LEFT JOIN album_group_permissions ON (album.id = album_group_permissions.album_id)").
+		Select(`album.*, tags.id as tag_id, tags.name as tag_name,tags.color as tag_color, album_permissions.permissions as permissions, album_permissions.owner_id as permissions_owner_id,
+				album_permissions.owner_kind as permission_owner_kind`).
+		Joins("LEFT JOIN album_permissions ON (album.id = album_permissions.album_id)").
 		Joins("LEFT JOIN (?) as tags ON (tags.album_id = album.id)", tagSubQuery).
 		Where("album.owner_id = ?", owner)
 
@@ -254,8 +190,6 @@ func (a *AlbumPostgresRepo) GetByOwner(ctx context.Context, owner string) ([]ent
 	}
 
 	if len(albums) == 0 {
-		logutil.GetDefaultLogger().WithField("owner", owner).Warn("no album found by owner id")
-
 		return []entity.Album{}, nil
 	}
 
@@ -286,8 +220,6 @@ func (a *AlbumPostgresRepo) GetByUser(ctx context.Context, username string) ([]e
 	}
 
 	if len(albums) == 0 {
-		logutil.GetDefaultLogger().WithField("username", username).Warn("no album found by user id")
-
 		return []entity.Album{}, nil
 	}
 

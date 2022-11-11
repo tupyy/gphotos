@@ -8,7 +8,7 @@ import (
 
 type Album struct {
 	// ID - id of the album
-	ID int32
+	ID string
 	// Name - name of the album
 	Name string
 	// CreateAt - creation date
@@ -40,7 +40,7 @@ type Album struct {
 func (a Album) String() string {
 	var sb strings.Builder
 
-	fmt.Fprintf(&sb, "id = %d ", a.ID)
+	fmt.Fprintf(&sb, "id = %s ", a.ID)
 	fmt.Fprintf(&sb, "name = %s ", a.Name)
 	fmt.Fprintf(&sb, "created_at = %+v ", a.CreatedAt)
 	fmt.Fprintf(&sb, "description = %s ", a.Description)

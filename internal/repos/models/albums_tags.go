@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/guregu/null"
-	uuid "github.com/satori/go.uuid"
+	"github.com/satori/go.uuid"
 )
 
 var (
@@ -21,19 +21,13 @@ DB Table Details
 
 
 Table: albums_tags
-[ 0] album_id                                       INT4                 null: false  primary: false  isArray: false  auto: false  col: INT4            len: -1      default: []
-[ 1] tag_id                                         INT4                 null: false  primary: false  isArray: false  auto: false  col: INT4            len: -1      default: []
+[ 0] album_id                                       INT4                 null: false  primary: true   isArray: false  auto: false  col: INT4            len: -1      default: []
+[ 1] tag_id                                         INT4                 null: false  primary: true   isArray: false  auto: false  col: INT4            len: -1      default: []
 
 
 JSON Sample
 -------------------------------------
-{    "album_id": 11,    "tag_id": 55}
-
-
-Comments
--------------------------------------
-[ 0] Warning table: albums_tags does not have a primary key defined, setting col position 1 album_id as primary key
-
+{    "album_id": 1,    "tag_id": 81}
 
 
 
@@ -43,8 +37,8 @@ Comments
 type AlbumsTags struct {
 	//[ 0] album_id                                       INT4                 null: false  primary: true   isArray: false  auto: false  col: INT4            len: -1      default: []
 	AlbumID int32 `gorm:"primary_key;column:album_id;type:INT4;"`
-	//[ 1] tag_id                                         INT4                 null: false  primary: false  isArray: false  auto: false  col: INT4            len: -1      default: []
-	TagID int32 `gorm:"column:tag_id;type:INT4;"`
+	//[ 1] tag_id                                         INT4                 null: false  primary: true   isArray: false  auto: false  col: INT4            len: -1      default: []
+	TagID int32 `gorm:"primary_key;column:tag_id;type:INT4;"`
 }
 
 var albums_tagsTableInfo = &TableInfo{
@@ -52,11 +46,10 @@ var albums_tagsTableInfo = &TableInfo{
 	Columns: []*ColumnInfo{
 
 		&ColumnInfo{
-			Index:   0,
-			Name:    "album_id",
-			Comment: ``,
-			Notes: `Warning table: albums_tags does not have a primary key defined, setting col position 1 album_id as primary key
-`,
+			Index:              0,
+			Name:               "album_id",
+			Comment:            ``,
+			Notes:              ``,
 			Nullable:           false,
 			DatabaseTypeName:   "INT4",
 			DatabaseTypePretty: "INT4",
@@ -81,7 +74,7 @@ var albums_tagsTableInfo = &TableInfo{
 			Nullable:           false,
 			DatabaseTypeName:   "INT4",
 			DatabaseTypePretty: "INT4",
-			IsPrimaryKey:       false,
+			IsPrimaryKey:       true,
 			IsAutoIncrement:    false,
 			IsArray:            false,
 			ColumnType:         "INT4",

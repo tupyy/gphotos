@@ -9,36 +9,25 @@ import (
 
 // Album defines model for Album.
 type Album struct {
-	// path of the bucket where media is stored
-	Bucket string `json:"bucket"`
-
+	Id          string  `json:"id"`
+	Href        string  `json:"href"`
+	Kind        string  `json:"kind"`
+	// name of the album
+	Name        string            `json:"name"`
 	// creation date in unix timestamp
 	CreatedAt time.Time `json:"created_at"`
 
 	// description of the album
 	Description *string `json:"description,omitempty"`
-	Href        string  `json:"href"`
-	Id          string  `json:"id"`
-	Kind        string  `json:"kind"`
 
 	// location of the album
 	Location *string `json:"location,omitempty"`
-
-	// name of the album
-	Name        string           `json:"name"`
-	Owner       *ObjectReference `json:"owner,omitempty"`
-	Permissions *struct {
-		Href *string `json:"href,omitempty"`
-		Kind *string `json:"kind,omitempty"`
-	} `json:"permissions,omitempty"`
-	Photos *struct {
-		Href *string `json:"href,omitempty"`
-		Kind *string `json:"kind,omitempty"`
-	} `json:"photos,omitempty"`
-	Tags *struct {
-		Href *string `json:"href,omitempty"`
-		Kind *string `json:"kind,omitempty"`
-	} `json:"tags,omitempty"`
+	// path of the bucket where media is stored
+	Bucket string `json:"bucket"`
+	Owner       *ObjectReference  `json:"owner,omitempty"`
+	Permissions *AlbumPermissions `json:"permissions,omitempty"`
+	Photos      *ObjectReference  `json:"photos,omitempty"`
+	Tags        *TagList          `json:"tags,omitempty"`
 
 	// url of the thumbnail of the album
 	Thumbnail *string `json:"thumbnail,omitempty"`
@@ -46,18 +35,33 @@ type Album struct {
 
 // AlbumList defines model for AlbumList.
 type AlbumList struct {
-	Items []Album `json:"items"`
 	Kind  string  `json:"kind"`
 	Page  int     `json:"page"`
 	Size  int     `json:"size"`
 	Total int     `json:"total"`
+	Items []Album `json:"items"`
 }
 
 // AlbumPermissions defines model for AlbumPermissions.
 type AlbumPermissions struct {
-	Album  *ObjectReference    `json:"album,omitempty"`
-	Groups *[]GroupPermissions `json:"groups,omitempty"`
-	Users  *[]UserPermissions  `json:"users,omitempty"`
+	Id     string           `json:"id"`
+	Href   string           `json:"href"`
+	Kind   string           `json:"kind"`
+	Album  *ObjectReference `json:"album,omitempty"`
+	Groups *[]Permissions   `json:"groups,omitempty"`
+	Users  *[]Permissions   `json:"users,omitempty"`
+}
+
+// AlbumPermissionsRequest defines model for AlbumPermissionsRequest.
+type AlbumPermissionsRequest = []struct {
+	Owner struct {
+		// id of the owner
+		Id string `json:"id"`
+
+		// user or group
+		Kind string `json:"kind"`
+	} `json:"owner"`
+	Permissions []string `json:"permissions"`
 }
 
 // AlbumRequestPayload defines model for AlbumRequestPayload.
@@ -70,10 +74,13 @@ type AlbumRequestPayload struct {
 	UserPermissions  *string `json:"user_permissions,omitempty"`
 }
 
-// GroupPermissions defines model for GroupPermissions.
-type GroupPermissions struct {
-	Group       ObjectReference `json:"group"`
-	Permissions []string        `json:"permissions"`
+// Error defines model for Error.
+type Error struct {
+	Code   *string `json:"code,omitempty"`
+	Href   string  `json:"href"`
+	Id     string  `json:"id"`
+	Kind   string  `json:"kind"`
+	Reason *string `json:"reason,omitempty"`
 }
 
 // List defines model for List.
@@ -91,8 +98,18 @@ type ObjectReference struct {
 	Kind string `json:"kind"`
 }
 
+// Permissions defines model for Permissions.
+type Permissions struct {
+	Owner       ObjectReference `json:"owner"`
+	Permissions []string        `json:"permissions"`
+}
+
 // Photo defines model for Photo.
 type Photo struct {
+	Id       string `json:"id"`
+	Href     string `json:"href"`
+	Kind     string `json:"kind"`
+
 	Album ObjectReference `json:"album"`
 
 	// bucket where the photo is stored
@@ -100,10 +117,6 @@ type Photo struct {
 
 	// name of the file
 	Filename string `json:"filename"`
-	Href     string `json:"href"`
-	Id       string `json:"id"`
-	Kind     string `json:"kind"`
-
 	// path to the thumbnail of the photo
 	Thumbnail string `json:"thumbnail"`
 }
@@ -117,10 +130,28 @@ type PhotoList struct {
 	Total int     `json:"total"`
 }
 
-// UserPermissions defines model for UserPermissions.
-type UserPermissions struct {
-	Permissions []string        `json:"permissions"`
-	User        ObjectReference `json:"user"`
+// Tag defines model for Tag.
+type Tag struct {
+	Albums []ObjectReference `json:"albums"`
+
+	// color of the tag in hex format
+	Color *string `json:"color,omitempty"`
+	Href  string  `json:"href"`
+	Id    string  `json:"id"`
+	Kind  string  `json:"kind"`
+
+	// name of the tag
+	Name string          `json:"name"`
+	User ObjectReference `json:"user"`
+}
+
+// TagList defines model for TagList.
+type TagList struct {
+	Items []Tag  `json:"items"`
+	Kind  string `json:"kind"`
+	Page  int    `json:"page"`
+	Size  int    `json:"size"`
+	Total int    `json:"total"`
 }
 
 // VersionMetadata defines model for VersionMetadata.
@@ -177,8 +208,14 @@ type CreateAlbumJSONBody = AlbumRequestPayload
 // UpdateAlbumJSONBody defines parameters for UpdateAlbum.
 type UpdateAlbumJSONBody = AlbumRequestPayload
 
+// SetAlbumPermissionsJSONBody defines parameters for SetAlbumPermissions.
+type SetAlbumPermissionsJSONBody = AlbumPermissionsRequest
+
 // CreateAlbumJSONRequestBody defines body for CreateAlbum for application/json ContentType.
 type CreateAlbumJSONRequestBody = CreateAlbumJSONBody
 
 // UpdateAlbumJSONRequestBody defines body for UpdateAlbum for application/json ContentType.
 type UpdateAlbumJSONRequestBody = UpdateAlbumJSONBody
+
+// SetAlbumPermissionsJSONRequestBody defines body for SetAlbumPermissions for application/json ContentType.
+type SetAlbumPermissionsJSONRequestBody = SetAlbumPermissionsJSONBody

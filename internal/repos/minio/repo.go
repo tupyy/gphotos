@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/minio/minio-go/v7"
+	miniotags "github.com/minio/minio-go/v7/pkg/tags"
 	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/internal/utils/logutil"
 )
@@ -28,7 +29,7 @@ func New(client *minio.Client) *MinioRepo {
 	return &MinioRepo{client}
 }
 
-func (m *MinioRepo) CreateBucket(ctx context.Context, bucket string) error {
+func (m *MinioRepo) CreateBucket(ctx context.Context, bucket string, tags map[string]string) error {
 	exists, err := m.client.BucketExists(ctx, bucket)
 	if err != nil {
 		return fmt.Errorf("%w failed to create bucket %s on endpoint %s", err, bucket, m.client.EndpointURL())
@@ -43,7 +44,7 @@ func (m *MinioRepo) CreateBucket(ctx context.Context, bucket string) error {
 		return fmt.Errorf("%w failed to create bucket %s on endpoint %s", err, bucket, m.client.EndpointURL())
 	}
 
-	return nil
+	return m.SetBucketTagging(ctx, bucket, tags)
 }
 
 func (m *MinioRepo) DeleteBucket(ctx context.Context, bucket string) error {
@@ -228,6 +229,30 @@ func (m *MinioRepo) ListBucket(ctx context.Context, bucket string) ([]entity.Med
 	}
 
 	return medias, nil
+}
+
+func (m *MinioRepo) SetBucketTagging(ctx context.Context, bucket string, tags map[string]string) error {
+	// Create tags from a map.
+	bucketTags, err := miniotags.NewTags(tags, false)
+	if err != nil {
+		return err
+	}
+
+	err = m.client.SetBucketTagging(ctx, bucket, bucketTags)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *MinioRepo) GetBucketTagging(ctx context.Context, bucket string) (map[string]string, error) {
+	// get present tags
+	bucketTags, err := m.client.GetBucketTagging(ctx, bucket)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get present tags from bucket '%s': %w", bucket, err)
+	}
+	return bucketTags.ToMap(), nil
 }
 
 func toEntity(o minio.ObjectInfo, bucket string) entity.Media {

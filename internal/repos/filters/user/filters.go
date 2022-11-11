@@ -2,8 +2,8 @@ package user
 
 import (
 	"github.com/pkg/errors"
-	"github.com/tupyy/gophoto/internal/domain/utils"
 	"github.com/tupyy/gophoto/internal/entity"
+	"github.com/tupyy/gophoto/internal/repos/utils"
 )
 
 type FilterName int
