@@ -9,12 +9,6 @@ import (
 
 // Album defines model for Album.
 type Album struct {
-	Id          string  `json:"id"`
-	Kind        string  `json:"kind"`
-	Href        string  `json:"href"`
-	// name of the album
-	Name        string          `json:"name"`
-	Owner       ObjectReference `json:"owner"`
 	// path of the bucket where media is stored
 	Bucket string `json:"bucket"`
 
@@ -23,10 +17,16 @@ type Album struct {
 
 	// description of the album
 	Description *string `json:"description,omitempty"`
+	Href        string  `json:"href"`
+	Id          string  `json:"id"`
+	Kind        string  `json:"kind"`
 
 	// location of the album
 	Location *string `json:"location,omitempty"`
 
+	// name of the album
+	Name        string          `json:"name"`
+	Owner       ObjectReference `json:"owner"`
 	Permissions ObjectReference `json:"permissions"`
 	Photos      ObjectReference `json:"photos"`
 	Tags        *TagList        `json:"tags,omitempty"`
@@ -46,11 +46,11 @@ type AlbumList struct {
 
 // AlbumPermissions defines model for AlbumPermissions.
 type AlbumPermissions struct {
-	Id     string           `json:"id"`
-	Kind   string           `json:"kind"`
-	Href   string           `json:"href"`
 	Album  *ObjectReference `json:"album,omitempty"`
 	Groups *[]Permissions   `json:"groups,omitempty"`
+	Href   string           `json:"href"`
+	Id     string           `json:"id"`
+	Kind   string           `json:"kind"`
 	Users  *[]Permissions   `json:"users,omitempty"`
 }
 
@@ -156,6 +156,15 @@ type TagList struct {
 	Total int    `json:"total"`
 }
 
+// TagRequestPayload defines model for TagRequestPayload.
+type TagRequestPayload struct {
+	// hex rerepresentation of the color
+	Color *string `json:"color,omitempty"`
+
+	// name of the tag
+	Name string `json:"name"`
+}
+
 // VersionMetadata defines model for VersionMetadata.
 type VersionMetadata struct {
 	Collections *[]struct {
@@ -179,6 +188,9 @@ type Page = int32
 
 // Size defines model for size.
 type Size = int32
+
+// TagId defines model for tag_id.
+type TagId = string
 
 // UserID defines model for userID.
 type UserID = string
@@ -213,6 +225,21 @@ type UpdateAlbumJSONBody = AlbumRequestPayload
 // SetAlbumPermissionsJSONBody defines parameters for SetAlbumPermissions.
 type SetAlbumPermissionsJSONBody = AlbumPermissionsRequest
 
+// GetTagsParams defines parameters for GetTags.
+type GetTagsParams struct {
+	// page number
+	Page *Page `form:"page,omitempty" json:"page,omitempty"`
+
+	// total number of items per page
+	Size *Size `form:"size,omitempty" json:"size,omitempty"`
+}
+
+// CreateTagJSONBody defines parameters for CreateTag.
+type CreateTagJSONBody = TagRequestPayload
+
+// UpdateTagJSONBody defines parameters for UpdateTag.
+type UpdateTagJSONBody = TagRequestPayload
+
 // CreateAlbumJSONRequestBody defines body for CreateAlbum for application/json ContentType.
 type CreateAlbumJSONRequestBody = CreateAlbumJSONBody
 
@@ -221,3 +248,9 @@ type UpdateAlbumJSONRequestBody = UpdateAlbumJSONBody
 
 // SetAlbumPermissionsJSONRequestBody defines body for SetAlbumPermissions for application/json ContentType.
 type SetAlbumPermissionsJSONRequestBody = SetAlbumPermissionsJSONBody
+
+// CreateTagJSONRequestBody defines body for CreateTag for application/json ContentType.
+type CreateTagJSONRequestBody = CreateTagJSONBody
+
+// UpdateTagJSONRequestBody defines body for UpdateTag for application/json ContentType.
+type UpdateTagJSONRequestBody = UpdateTagJSONBody

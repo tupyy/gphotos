@@ -93,13 +93,13 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/AlbumRequestPayload'
-        responses:
-          201:
-            description: album created
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/Album'
+      responses:
+        201:
+          description: album created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Album'
         400:
           description: bad request
           content:
@@ -135,6 +135,7 @@ paths:
         - $ref: "#/components/parameters/album_id"
       responses:
         200:
+          description: fetch album by id
           content:
             application/json:
               schema:
@@ -177,6 +178,7 @@ paths:
               $ref: '#/components/schemas/AlbumRequestPayload'
       responses:
         200:
+          description: path the album
           content:
             application/json:
               schema:
@@ -195,10 +197,13 @@ paths:
           content: {}
     delete:
       operationId: DeleteAlbum
+      tags:
+        - Albums
       parameters:
         - $ref: "#/components/parameters/album_id"
       responses:
         200:
+          description: delete album by specified id
           content:
             application/json:
               schema:
@@ -394,6 +399,40 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+      - Permissions
+      description: delete the permission of an album
+      operationId: remvoveAlbumPermissions
+      parameters:
+        - $ref: "#/components/parameters/album_id"
+      responses:
+        204:
+          description: remove all album's permissions
+        401:
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        403:
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        404:
+          description: No album found with the specified ID exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Internal error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /api/gphotos/v1/albums/{album_id}/photos:
     get:
       tags:
@@ -423,6 +462,227 @@ paths:
                 $ref: '#/components/schemas/Error'
         404:
           description: No album found with the specified ID exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Internal error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/gphotos/v1/albums/{album_id}/tags/{tag_id}:
+    post:
+      tags:
+        - Tags
+      description: associate a tag with an album
+      operationId: setTagToAlbum
+      parameters:
+        - $ref: "#/components/parameters/album_id"
+        - $ref: "#/components/parameters/tag_id"
+      responses:
+        201:
+          description: tag associated with the album
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Album'
+        401:
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        403:
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        404:
+          description: No album or tag found with the specified ID exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Internal error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+        - Tags
+      description: untag an album
+      operationId: removeTagFromAlbum
+      parameters:
+        - $ref: "#/components/parameters/album_id"
+        - $ref: "#/components/parameters/tag_id"
+      responses:
+        204:
+          description: tag dissociated with the album
+        401:
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        403:
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        404:
+          description: No album or tag found with the specified ID exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Internal error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        
+  /api/gphotos/v1/tags:
+    get:
+      tags:
+      - Tags
+      description: get all tags owned the current logged user
+      operationId: getTags
+      parameters:
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/size"
+      responses:
+        200:
+          description: list of tags owned by logged user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagList'
+        401:
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        403:
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Internal error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      description: create an tag
+      operationId: createTag
+      requestBody:
+        description: tag data
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TagRequestPayload'
+      responses:
+        201:
+          description: tag created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+        400:
+          description: bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        401:
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        403:
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Internal error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - Tags
+  /api/gphotos/v1/tags/{tag_id}:
+    patch:
+      operationId: UpdateTag 
+      tags:
+        - Tags
+      parameters:
+        - $ref: "#/components/parameters/tag_id"
+      requestBody:
+        description: tag data
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TagRequestPayload'
+      responses:
+        200:
+          description: Path tag with specified id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+        401:
+          description: Not authenticated.
+          content: {}
+        403:
+          description: Forbidden.
+          content: {}
+        500:
+          description: Internal error.
+          content: {}
+        503:
+          description: Not available.
+          content: {}
+    delete:
+      operationId: DeleteTag
+      tags:
+        - Tags
+      parameters:
+        - $ref: "#/components/parameters/tag_id"
+      responses:
+        200:
+          description: delete tag with specified id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+        401:
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        403:
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        404:
+          description: No tag found with the specified ID exists.
           content:
             application/json:
               schema:
@@ -694,11 +954,29 @@ components:
           type: string
       required:
         - name
+    TagRequestPayload:
+      type: object
+      properties:
+        name:
+          type: string
+          description: name of the tag
+        color:
+          type: string
+          description: hex rerepresentation of the color
+      required:
+        - name
   # Parameters
   parameters:
     album_id:
       name: album_id
       description: The ID of the album
+      schema:
+        type: string
+      in: path
+      required: true
+    tag_id:
+      name: tag_id
+      description: The ID of the tag
       schema:
         type: string
       in: path
