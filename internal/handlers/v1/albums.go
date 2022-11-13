@@ -1,9 +1,7 @@
 package v1
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"html"
@@ -114,7 +112,7 @@ func (server *Server) GetAlbumByID(c *gin.Context, albumID apiv1.AlbumId) {
 	ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
 	logger := logutil.GetLogger(ctx)
 
-	id, err := decryptAlbumID(albumID)
+	id, err := decrypt(albumID)
 	if err != nil {
 		logger.WithError(err).WithField("album id", albumID).Error("failed to decrypt album id")
 		common.AbortInternalError(c)
@@ -187,32 +185,6 @@ func (server *Server) CreateAlbum(c *gin.Context) {
 		Location:    escapeFieldPtr(payload.Location),
 		Owner:       session.User.Username,
 	}
-	if payload.UserPermissions != nil {
-		permForm := make(map[string][]string)
-
-		err := json.Unmarshal(bytes.NewBufferString(*payload.UserPermissions).Bytes(), &permForm)
-		if err != nil {
-			logger.WithField("permissions_string", *payload.UserPermissions).WithError(err).Warn("unmarshal error")
-		} else {
-			var pp = make(entity.Permissions)
-			pp.Parse(permForm, true)
-			album.UserPermissions = pp
-		}
-	}
-
-	if payload.GroupPermissions != nil {
-		permForm := make(map[string][]string)
-
-		err := json.Unmarshal(bytes.NewBufferString(*payload.GroupPermissions).Bytes(), &permForm)
-		if err != nil {
-			logger.WithField("permissions_string", *&payload.GroupPermissions).WithError(err).Warn("unmarshal error")
-		} else {
-			var pp = make(entity.Permissions)
-			pp.Parse(permForm, false)
-			album.GroupPermissions = pp
-		}
-	}
-
 	albumID, err := server.GetAlbumService().Create(ctx, album)
 	if err != nil {
 		common.AbortInternalError(c)
@@ -238,7 +210,7 @@ func (server *Server) UpdateAlbum(c *gin.Context, albumID apiv1.AlbumId) {
 	ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
 	logger := logutil.GetLogger(ctx)
 
-	id, err := decryptAlbumID(albumID)
+	id, err := decrypt(albumID)
 	if err != nil {
 		logger.WithError(err).WithField("album id", albumID).Error("failed to decrypt album id")
 		common.AbortInternalError(c)
@@ -292,34 +264,6 @@ func (server *Server) UpdateAlbum(c *gin.Context, albumID apiv1.AlbumId) {
 		album.Name = escapeField(payload.Name)
 	}
 
-	// only the owner and an admin has the right to edit permissions
-	if session.User.Username == album.Owner || session.User.Role == entity.RoleAdmin {
-		// add new permissions if any
-		if payload.UserPermissions != nil {
-			permForm := make(map[string][]string)
-			err := json.Unmarshal(bytes.NewBufferString(*payload.UserPermissions).Bytes(), &permForm)
-			if err != nil {
-				logger.WithField("permissions_string", *payload.UserPermissions).WithError(err).Warn("unmarshal error")
-			} else {
-				var pp = make(entity.Permissions)
-				pp.Parse(permForm, true)
-				album.UserPermissions = pp
-			}
-		}
-
-		if payload.GroupPermissions != nil {
-			permForm := make(map[string][]string)
-			err := json.Unmarshal(bytes.NewBufferString(*payload.GroupPermissions).Bytes(), &permForm)
-			if err != nil {
-				logger.WithField("permissions_string", *payload.UserPermissions).WithError(err).Warn("unmarshal error")
-			} else {
-				var pp = make(entity.Permissions)
-				pp.Parse(permForm, false)
-				album.GroupPermissions = pp
-			}
-		}
-	}
-
 	if _, err := server.GetAlbumService().Update(ctx, album); err != nil {
 		logger.WithError(err).WithFields(logrus.Fields{
 			"album id": id,
@@ -331,7 +275,7 @@ func (server *Server) UpdateAlbum(c *gin.Context, albumID apiv1.AlbumId) {
 		return
 	}
 
-	c.JSON(http.StatusOK, presentersv1.MapAlbumToModel(album))
+	c.JSON(http.StatusCreated, presentersv1.MapAlbumToModel(album))
 }
 
 // (DELETE /api/gphotos/v1/albums/{album_id})
@@ -341,7 +285,7 @@ func (server *Server) DeleteAlbum(c *gin.Context, albumId apiv1.AlbumId) {
 	ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
 	logger := logutil.GetLogger(ctx)
 
-	id, err := decryptAlbumID(albumId)
+	id, err := decrypt(albumId)
 	if err != nil {
 		logger.WithError(err).WithField("album id", albumId).Error("failed to decrypt album id")
 		common.AbortInternalError(c)
@@ -385,11 +329,11 @@ func (server *Server) DeleteAlbum(c *gin.Context, albumId apiv1.AlbumId) {
 	c.JSON(http.StatusNoContent, gin.H{})
 }
 
-func decryptAlbumID(albumID string) (string, error) {
+func decrypt(encryptedId string) (string, error) {
 	gen := encryption.NewGenerator(conf.GetEncryptionKey())
-	id, err := gen.DecryptData(albumID)
+	id, err := gen.DecryptData(encryptedId)
 	if err != nil {
-		return albumID, err
+		return encryptedId, err
 	}
 	return id, nil
 }

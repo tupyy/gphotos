@@ -44,7 +44,7 @@ type AlbumPermissions struct {
 	//[ 2] album_id                                       TEXT                 null: false  primary: true   isArray: false  auto: false  col: TEXT            len: -1      default: []
 	AlbumID string `gorm:"primary_key;column:album_id;type:TEXT;"`
 	//[ 3] permissions                                    USER_DEFINED         null: false  primary: false  isArray: false  auto: false  col: USER_DEFINED    len: -1      default: []
-	Permissions []PermissionID `gorm:"column:permissions;type:VARCHAR;"`
+	Permissions PermissionIDs `gorm:"column:permissions;type:_PERMISSION_ID;"`
 }
 
 var album_permissionsTableInfo = &TableInfo{
@@ -120,18 +120,18 @@ var album_permissionsTableInfo = &TableInfo{
 			Comment:            ``,
 			Notes:              ``,
 			Nullable:           false,
-			DatabaseTypeName:   "VARCHAR",
+			DatabaseTypeName:   "_PERMISSION_ID",
 			DatabaseTypePretty: "USER_DEFINED",
 			IsPrimaryKey:       false,
 			IsAutoIncrement:    false,
-			IsArray:            false,
+			IsArray:            true,
 			ColumnType:         "USER_DEFINED",
 			ColumnLength:       -1,
 			GoFieldName:        "Permissions",
-			GoFieldType:        "string",
+			GoFieldType:        "PermissionIDs",
 			JSONFieldName:      "permissions",
 			ProtobufFieldName:  "permissions",
-			ProtobufType:       "string",
+			ProtobufType:       "",
 			ProtobufPos:        4,
 		},
 	},

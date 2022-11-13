@@ -304,3 +304,41 @@ func (a *AlbumPostgresRepo) GetByGroups(ctx context.Context, groupNames []string
 
 	return entities, nil
 }
+
+func (a *AlbumPostgresRepo) SetPermissions(ctx context.Context, albumId string, permissions []entity.AlbumPermission) error {
+	mapper := func(perms []entity.Permission) models.PermissionIDs {
+		mperms := make(models.PermissionIDs, 0, len(permissions))
+		for _, p := range perms {
+			mperms = append(mperms, models.PermissionID(p.String()))
+		}
+		return mperms
+	}
+
+	tx := a.db.WithContext(ctx).Begin()
+	for _, permission := range permissions {
+		tx.Create(&models.AlbumPermissions{
+			AlbumID:     albumId,
+			OwnerID:     permission.OwnerID,
+			OwnerKind:   permission.OwnerKind,
+			Permissions: mapper(permission.Permissions),
+		})
+		if tx.Error != nil {
+			return fmt.Errorf("failed to set permissions for album '%s' for owner '%s': %w", albumId, permission.OwnerID, tx.Error)
+		}
+
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return fmt.Errorf("failed to set permissions for album '%s': %w", albumId, tx.Error)
+	}
+
+	return nil
+}
+
+func (a *AlbumPostgresRepo) RemovePermissions(ctx context.Context, albumId string) error {
+	tx := a.db.WithContext(ctx).Where("album_id = ?", albumId).Delete(&models.AlbumPermissions{})
+	if tx.Error != nil {
+		return fmt.Errorf("failed to remove permissions of album '%s': %w", albumId, tx.Error)
+	}
+	return nil
+}

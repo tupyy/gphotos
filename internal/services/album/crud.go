@@ -22,6 +22,10 @@ type AlbumRepository interface {
 	Delete(ctx context.Context, id string) error
 	// Get return all the albums.
 	Get(ctx context.Context) ([]entity.Album, error)
+	// Set permissions for the album
+	SetPermissions(ctx context.Context, albumId string, permissions []entity.AlbumPermission) error
+	// remove permissions of ownerID for the album
+	RemovePermissions(ctx context.Context, albumId string) error
 	// GetByID return an album by id.
 	GetByID(ctx context.Context, id string) (entity.Album, error)
 	// GetByOwner return all albums of a user for which he is the owner.
@@ -94,5 +98,17 @@ func (s *Service) Delete(ctx context.Context, album entity.Album) error {
 		return fmt.Errorf("%w '%s': %v", services.ErrDeleteAlbum, album.ID, err)
 	}
 
+	return nil
+}
+
+func (s *Service) SetPermissions(ctx context.Context, album entity.Album, permissions []entity.AlbumPermission) error {
+	// remove old permissions
+	err := s.albumRepo.RemovePermissions(ctx, album.ID)
+	if err != nil {
+		return err
+	}
+	if err := s.albumRepo.SetPermissions(ctx, album.ID, permissions); err != nil {
+		return err
+	}
 	return nil
 }

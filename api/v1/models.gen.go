@@ -9,6 +9,12 @@ import (
 
 // Album defines model for Album.
 type Album struct {
+	Id          string  `json:"id"`
+	Kind        string  `json:"kind"`
+	Href        string  `json:"href"`
+	// name of the album
+	Name        string          `json:"name"`
+	Owner       ObjectReference `json:"owner"`
 	// path of the bucket where media is stored
 	Bucket string `json:"bucket"`
 
@@ -17,16 +23,10 @@ type Album struct {
 
 	// description of the album
 	Description *string `json:"description,omitempty"`
-	Href        string  `json:"href"`
-	Id          string  `json:"id"`
-	Kind        string  `json:"kind"`
 
 	// location of the album
 	Location *string `json:"location,omitempty"`
 
-	// name of the album
-	Name        string          `json:"name"`
-	Owner       ObjectReference `json:"owner"`
 	Permissions ObjectReference `json:"permissions"`
 	Photos      ObjectReference `json:"photos"`
 	Tags        *TagList        `json:"tags,omitempty"`
@@ -46,11 +46,11 @@ type AlbumList struct {
 
 // AlbumPermissions defines model for AlbumPermissions.
 type AlbumPermissions struct {
-	Album  *ObjectReference `json:"album,omitempty"`
-	Groups *[]Permissions   `json:"groups,omitempty"`
-	Href   string           `json:"href"`
 	Id     string           `json:"id"`
 	Kind   string           `json:"kind"`
+	Href   string           `json:"href"`
+	Album  *ObjectReference `json:"album,omitempty"`
+	Groups *[]Permissions   `json:"groups,omitempty"`
 	Users  *[]Permissions   `json:"users,omitempty"`
 }
 

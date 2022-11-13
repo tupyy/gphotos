@@ -2,6 +2,7 @@ package v1
 
 import (
 	"fmt"
+	"strings"
 
 	apiv1 "github.com/tupyy/gophoto/api/v1"
 	"github.com/tupyy/gophoto/internal/conf"
@@ -61,17 +62,19 @@ func mapAlbumRef(album entity.Album) apiv1.ObjectReference {
 }
 
 func MapAlbumPermissions(album entity.Album) apiv1.AlbumPermissions {
-	mapPermissions := func(permissions entity.Permissions, kind string) []apiv1.Permissions {
+	gen := encryption.NewGenerator(conf.GetEncryptionKey())
+	mapPermissions := func(permissions []entity.AlbumPermission, kind string) []apiv1.Permissions {
 		apiPermissions := []apiv1.Permissions{}
-		for owner, perms := range permissions {
+		for _, perms := range permissions {
+			encryptedID, _ := gen.EncryptData(perms.OwnerID)
 			up := apiv1.Permissions{
 				Owner: apiv1.ObjectReference{
 					Kind: kind,
-					Href: fmt.Sprintf("%s/%s/%s", baseV1URL, kind, owner),
-					Id:   owner,
+					Href: fmt.Sprintf("%s/%s/%s", baseV1URL, strings.ToLower(kind), encryptedID),
+					Id:   encryptedID,
 				},
 			}
-			for _, permission := range perms {
+			for _, permission := range perms.Permissions {
 				up.Permissions = append(up.Permissions, permission.String())
 			}
 			apiPermissions = append(apiPermissions, up)

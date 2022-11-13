@@ -25,10 +25,10 @@ type Album struct {
 	Thumbnail string
 	// UserPermissions - holds the list of permissions of other users for this album.
 	// The key is the user id.
-	UserPermissions Permissions
+	UserPermissions []AlbumPermission
 	// GroupPermissions - holds the list of permissions of groups for this album.
 	// The key is the group name.
-	GroupPermissions Permissions
+	GroupPermissions []AlbumPermission
 	// Photos - list of photos
 	Photos []Media
 	// Videos - list of videos
@@ -50,12 +50,12 @@ func (a Album) String() string {
 	fmt.Fprintf(&sb, "number of photos = %d ", len(a.Photos))
 	fmt.Fprintf(&sb, "number of videos = %d ", len(a.Videos))
 
-	for k, v := range a.UserPermissions {
-		fmt.Fprintf(&sb, "user = %s, permisions = %+v ", k, v)
+	for _, v := range a.UserPermissions {
+		fmt.Fprintf(&sb, " permissions = %+v ", v)
 	}
 
-	for k, v := range a.GroupPermissions {
-		fmt.Fprintf(&sb, "group = %s, permisions = %+v ", k, v)
+	for v := range a.GroupPermissions {
+		fmt.Fprintf(&sb, "permissions = %+v ", v)
 	}
 
 	for _, t := range a.Tags {

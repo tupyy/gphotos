@@ -32,11 +32,13 @@ func (ca albumJoinRow) ToEntity() (entity.Album, error) {
 	var emptyAlbum entity.Album
 
 	album := entity.Album{
-		ID:        ca.ID,
-		Name:      ca.Name,
-		CreatedAt: ca.CreatedAt,
-		Owner:     ca.OwnerID,
-		Bucket:    ca.Bucket,
+		ID:               ca.ID,
+		Name:             ca.Name,
+		CreatedAt:        ca.CreatedAt,
+		Owner:            ca.OwnerID,
+		Bucket:           ca.Bucket,
+		UserPermissions:  make([]entity.AlbumPermission, 0),
+		GroupPermissions: make([]entity.AlbumPermission, 0),
 	}
 
 	if ca.Description != nil {
@@ -63,15 +65,17 @@ func (ca albumJoinRow) ToEntity() (entity.Album, error) {
 
 		switch ca.PermissionOwnerKind {
 		case "user":
-			if album.UserPermissions == nil {
-				album.UserPermissions = make(map[string][]entity.Permission)
-			}
-			album.UserPermissions[ca.PermissionOwnerID] = permissions
+			album.UserPermissions = append(album.UserPermissions, entity.AlbumPermission{
+				OwnerID:     ca.PermissionOwnerID,
+				OwnerKind:   ca.PermissionOwnerKind,
+				Permissions: permissions,
+			})
 		case "group":
-			if album.GroupPermissions == nil {
-				album.GroupPermissions = make(map[string][]entity.Permission)
-			}
-			album.GroupPermissions[ca.PermissionOwnerID] = permissions
+			album.GroupPermissions = append(album.GroupPermissions, entity.AlbumPermission{
+				OwnerID:     ca.PermissionOwnerID,
+				OwnerKind:   ca.PermissionOwnerKind,
+				Permissions: permissions,
+			})
 		default:
 			return emptyAlbum, fmt.Errorf("wrong owner kind '%s'", ca.PermissionOwnerKind)
 		}
@@ -108,15 +112,11 @@ func (albums albumJoinRows) Merge() []entity.Album {
 		if ent, found := entitiesMap[e.ID]; found {
 			// merge permissions
 			if len(e.UserPermissions) > 0 {
-				for k, v := range e.UserPermissions {
-					ent.UserPermissions[k] = v
-				}
+				ent.UserPermissions = append(ent.UserPermissions, e.UserPermissions...)
 			}
 
 			if len(e.GroupPermissions) > 0 {
-				for k, v := range e.GroupPermissions {
-					ent.GroupPermissions[k] = v
-				}
+				ent.GroupPermissions = append(ent.GroupPermissions, e.GroupPermissions...)
 			}
 
 			// merge tags
@@ -124,10 +124,9 @@ func (albums albumJoinRows) Merge() []entity.Album {
 				for _, t := range e.Tags {
 					ent.Tags = append(ent.Tags, t)
 				}
-
-				delete(entitiesMap, ent.ID)
-				entitiesMap[ent.ID] = ent
 			}
+			delete(entitiesMap, ent.ID)
+			entitiesMap[ent.ID] = ent
 		} else {
 			entitiesMap[e.ID] = e
 		}
