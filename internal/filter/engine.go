@@ -85,7 +85,29 @@ func resolveExpr(expr *binaryExpr, album entity.Album) (bool, error) {
 	case "date":
 		return resolveDate(expr, album)
 	case "tag":
-		return resolveTags(expr, album)
+		return resolveArrayField(expr, album, func(album entity.Album) []string {
+			list := make([]string, 0, len(album.Tags))
+			for _, t := range album.Tags {
+				list = append(list, t.Name)
+			}
+			return list
+		})
+	case "permissions.user":
+		return resolveArrayField(expr, album, func(album entity.Album) []string {
+			list := make([]string, 0, len(album.UserPermissions))
+			for _, u := range album.UserPermissions {
+				list = append(list, u.OwnerID)
+			}
+			return list
+		})
+	case "permissions.group":
+		return resolveArrayField(expr, album, func(album entity.Album) []string {
+			list := make([]string, 0, len(album.GroupPermissions))
+			for _, g := range album.GroupPermissions {
+				list = append(list, g.OwnerID)
+			}
+			return list
+		})
 	default:
 		return resolveCommonField(expr, album)
 	}
@@ -116,22 +138,17 @@ func resolveDate(expr *binaryExpr, album entity.Album) (bool, error) {
 	}
 }
 
-func resolveTags(expr *binaryExpr, album entity.Album) (bool, error) {
+func resolveArrayField(expr *binaryExpr, album entity.Album, getItemsFn func(album entity.Album) []string) (bool, error) {
 	value, ok := expr.Right.(*strExpr)
 	if !ok {
 		return false, fmt.Errorf("expect string got '%s'", expr.Right.String())
 	}
 
-	var tags string
-	for _, t := range album.Tags {
-		tags = fmt.Sprintf("%s %s", tags, t.Name)
-	}
-
 	switch expr.Op {
 	case EQUALS:
-		return strings.Index(tags, value.Value) >= 0, nil
+		return strings.Index(strings.Join(getItemsFn(album), " "), value.Value) >= 0, nil
 	case NOT_EQUALS:
-		return strings.Index(tags, value.Value) == -1, nil
+		return strings.Index(strings.Join(getItemsFn(album), " "), value.Value) == -1, nil
 	}
 
 	return false, fmt.Errorf("%w tag comparison cannot have something else than '=' or '!='.got '%s'", WrongOpError, expr.Op)

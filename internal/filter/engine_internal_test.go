@@ -117,6 +117,42 @@ func TestFilterEngine(t *testing.T) {
 			album:    entity.Album{Name: "toto", Location: "loc3", CreatedAt: createDate(2022, 02, 02)},
 			expected: false,
 		},
+		{
+			expr: "permissions.user = 'toto'",
+			album: entity.Album{Name: "toto", Location: "loc3", CreatedAt: createDate(2022, 02, 02), UserPermissions: []entity.AlbumPermission{
+				{
+					OwnerID: "toto",
+				},
+			}},
+			expected: true,
+		},
+		{
+			expr: "permissions.user = 'toto2'",
+			album: entity.Album{Name: "toto", Location: "loc3", CreatedAt: createDate(2022, 02, 02), UserPermissions: []entity.AlbumPermission{
+				{
+					OwnerID: "toto",
+				},
+			}},
+			expected: false,
+		},
+		{
+			expr: "permissions.group = 'toto'",
+			album: entity.Album{Name: "toto", Location: "loc3", CreatedAt: createDate(2022, 02, 02), GroupPermissions: []entity.AlbumPermission{
+				{
+					OwnerID: "toto",
+				},
+			}},
+			expected: true,
+		},
+		{
+			expr: "permissions.group = 'toto2'",
+			album: entity.Album{Name: "toto", Location: "loc3", CreatedAt: createDate(2022, 02, 02), GroupPermissions: []entity.AlbumPermission{
+				{
+					OwnerID: "toto",
+				},
+			}},
+			expected: false,
+		},
 	}
 
 	for _, d := range data {
