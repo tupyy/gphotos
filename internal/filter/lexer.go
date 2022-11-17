@@ -1,5 +1,7 @@
 package filter
 
+import "strings"
+
 type lexer struct {
 	src     []byte
 	ch      byte
@@ -34,56 +36,32 @@ func (l *lexer) Scan() (int, Token, string) {
 	// keywords
 	if isNameStart(ch) {
 		start := l.offset - 2
-		for isNameStart(l.ch) {
+		for isNameStart(l.ch) || isDot(l.ch) { // accept dots in the variable name like "user.permissions"
 			l.next()
 		}
 		name := string(l.src[start : l.offset-1])
-		tok := VAR_NAME
-		val = name
-
+		switch strings.ToLower(name) {
+		case "in":
+			tok = IN
+			val = ""
+		case "and":
+			tok = AND
+		case "or":
+			tok = OR
+		case "like":
+			tok = LIKE
+		default:
+			tok = VARIABLE
+			val = name
+		}
 		return pos, tok, val
 	}
 
 	switch ch {
-	case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
-		// this has to be a date in format 01/02/2020
-		start := l.offset - 2
-		// check the day
-		countDigits := 1
-		for isDigit(l.ch) {
-			countDigits++
-			l.next()
-		}
-		if l.ch != '/' || countDigits != 2 {
-			return l.pos, ILLEGAL, "expected 2 digits for day"
-		}
-
-		l.next()
-		countDigits = 0
-		for isDigit(l.ch) {
-			countDigits++
-			l.next()
-		}
-		if l.ch != '/' || countDigits != 2 {
-			return l.pos, ILLEGAL, "expected 2 digits for month"
-		}
-
-		l.next()
-		countDigits = 0
-		for isDigit(l.ch) {
-			countDigits++
-			l.next()
-		}
-		if countDigits != 4 {
-			return l.pos, ILLEGAL, "expected 4 digits for year"
-		}
-
-		tok = DATE
-		val = string(l.src[start : l.offset-1])
-	case '(':
-		tok = LPAREN
-	case ')':
-		tok = RPAREN
+	case '[':
+		tok = LBRACKET
+	case ']':
+		tok = RBRACKET
 	case '=':
 		tok = EQUALS
 	case '!':
@@ -110,10 +88,8 @@ func (l *lexer) Scan() (int, Token, string) {
 		default:
 			tok = GREATER
 		}
-	case '&':
-		tok = AND
-	case '|':
-		tok = OR
+	case ',':
+		tok = COMMA
 	case '"', '\'':
 		chars := make([]byte, 0, 32) // most won't require heap allocation
 		for l.ch != ch {
@@ -127,21 +103,6 @@ func (l *lexer) Scan() (int, Token, string) {
 		l.next()
 		tok = STRING
 		val = string(chars)
-	case '/':
-		chars := make([]byte, 0, 32)
-		for l.ch != ch {
-			c := l.ch
-			if c == 0 {
-				return l.pos, ILLEGAL, "didn't find / at the end of regex"
-			}
-			l.next()
-			chars = append(chars, c)
-		}
-		l.next()
-		tok = REGEX
-		val = string(chars)
-	case '~':
-		tok = TILDA
 	default:
 		tok = ILLEGAL
 		val = "unexpected char"
@@ -172,6 +133,10 @@ func (l *lexer) next() {
 
 func isNameStart(ch byte) bool {
 	return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')
+}
+
+func isDot(ch byte) bool {
+	return ch == '.'
 }
 
 func isDigit(ch byte) bool {

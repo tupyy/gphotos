@@ -2,9 +2,8 @@ package filter
 
 import (
 	"fmt"
-	"regexp"
 	"strconv"
-	"time"
+	"strings"
 )
 
 // FilterExpr represents the top level expression.
@@ -45,23 +44,6 @@ func (e *strExpr) String() string {
 	return strconv.Quote(e.Value)
 }
 
-// Date expression
-type dateExpr struct {
-	Date time.Time
-}
-
-func (d *dateExpr) String() string {
-	return strconv.Quote(d.Date.Format("02/01/2006"))
-}
-
-type regexExpr struct {
-	Regex *regexp.Regexp
-}
-
-func (r *regexExpr) String() string {
-	return strconv.Quote(r.Regex.String())
-}
-
 // varExpr is a variable reference (name, description,location).
 type varExpr struct {
 	Name string
@@ -69,4 +51,12 @@ type varExpr struct {
 
 func (v *varExpr) String() string {
 	return strconv.Quote(v.Name)
+}
+
+type listExpr struct {
+	Items []string
+}
+
+func (v *listExpr) String() string {
+	return fmt.Sprintf("[%s]", strings.Join(v.Items, ","))
 }

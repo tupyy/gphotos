@@ -3,7 +3,9 @@ package filter
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
+	"time"
 
 	"github.com/tupyy/gophoto/internal/entity"
 )
@@ -90,20 +92,25 @@ func resolveExpr(expr *binaryExpr, album entity.Album) (bool, error) {
 }
 
 func resolveDate(expr *binaryExpr, album entity.Album) (bool, error) {
-	dateExpr, ok := expr.Right.(*dateExpr)
+	dateExpr, ok := expr.Right.(*strExpr)
 	if !ok {
-		return false, fmt.Errorf("expect date got '%s'", expr.Right.String())
+		return false, fmt.Errorf("expect string got '%s'", expr.Right.String())
+	}
+
+	date, err := time.Parse("02/01/2006", dateExpr.Value)
+	if err != nil {
+		return false, fmt.Errorf("expected date instead of '%s'", dateExpr.Value)
 	}
 
 	switch expr.Op {
 	case GREATER, GTE:
-		return album.CreatedAt.After(dateExpr.Date), nil
+		return album.CreatedAt.After(date), nil
 	case LTE, LESS:
-		return album.CreatedAt.Before(dateExpr.Date), nil
+		return album.CreatedAt.Before(date), nil
 	case EQUALS:
-		return dateExpr.Date.Day() == album.CreatedAt.Day() && dateExpr.Date.Month() == album.CreatedAt.Month() && dateExpr.Date.Year() == album.CreatedAt.Year(), nil
+		return date.Day() == album.CreatedAt.Day() && date.Month() == album.CreatedAt.Month() && date.Year() == album.CreatedAt.Year(), nil
 	case NOT_EQUALS:
-		return dateExpr.Date.Day() != album.CreatedAt.Day() || dateExpr.Date.Month() != album.CreatedAt.Month() || dateExpr.Date.Year() != album.CreatedAt.Year(), nil
+		return date.Day() != album.CreatedAt.Day() || date.Month() != album.CreatedAt.Month() || date.Year() != album.CreatedAt.Year(), nil
 	default:
 		return false, WrongOpError
 	}
@@ -141,17 +148,23 @@ func resolveCommonField(expr *binaryExpr, album entity.Album) (bool, error) {
 		varValue = album.Description
 	case "location":
 		varValue = album.Location
+	case "owner":
+		varValue = album.Owner
 	default:
 		return false, fmt.Errorf("%w unknown field %s", FieldNotFoundError, variable.Name)
 	}
 
-	if expr.Op == TILDA {
-		regex, ok := expr.Right.(*regexExpr)
+	if expr.Op == IN {
+		listExr, ok := expr.Right.(*listExpr)
 		if !ok {
-			return false, fmt.Errorf("expected regex got '%s'", expr.Right.String())
+			return false, fmt.Errorf("expect list got '%s'", expr.Right.String())
 		}
-
-		return regex.Regex.MatchString(varValue), nil
+		for _, item := range listExr.Items {
+			if item == varValue {
+				return true, nil
+			}
+		}
+		return false, nil
 	}
 
 	// we expect a string here.
@@ -173,6 +186,16 @@ func resolveCommonField(expr *binaryExpr, album entity.Album) (bool, error) {
 		return varValue < value.Value, nil
 	case LTE:
 		return varValue <= value.Value, nil
+	case LIKE:
+		regex, ok := expr.Right.(*strExpr)
+		if !ok {
+			return false, fmt.Errorf("expected string got '%s'", expr.Right.String())
+		}
+		rxp, err := regexp.Compile(regex.Value)
+		if err != nil {
+			return false, fmt.Errorf("failed to compile pattern '%s': %s", regex.Value, err)
+		}
+		return rxp.MatchString(varValue), nil
 	default:
 		return false, fmt.Errorf("%w unaccepted operator used in common fields comparison. got '%s'", WrongOpError, expr.Op)
 	}

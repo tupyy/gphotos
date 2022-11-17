@@ -1,21 +1,14 @@
 // Grammar
 //
-// expression: equality | equality (( "&" | "|" ) equality)*					;
-// equality: term ( ("==" | "!=" | "<" | "<=" | ">" | ">=" | "~") primary )*	;
-// term: VAR_NAME																;
-// primary: STRING | DATE | REGEX												;
-//
-// Note: to make it easy for user to enter expressions "&" and "|" are equivalent with "&&" and "||"
-// Date has only one format accepted: 01/02/2002 ( 02 -> month )
-// Regex format is /regex/ and it has to be Go regex.
+// expression: equality | equality ( "&&" | "||" ) equality                     ;
+// equality: variable ("=" | "!=" | "<" | "<=" | ">" | ">=" | "~") primary      ;
+// primary: STRING | ARRAY
 //
 
 package filter
 
 import (
 	"fmt"
-	"regexp"
-	"time"
 )
 
 // ParseError (actually *ParseError) is the type of error returned by parse.
@@ -27,7 +20,7 @@ type ParseError struct {
 }
 
 // Error returns a formatted version of the error, including the line number.
-func (e *ParseError) Error() string {
+func (e ParseError) Error() string {
 	return fmt.Sprintf("parse error at %d: %s", e.Position, e.Message)
 }
 
@@ -43,7 +36,7 @@ func parse(src []byte) (filterExpr *binaryExpr, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			// Convert to ParseError or re-panic
-			err = r.(*ParseError)
+			err = r.(ParseError)
 		}
 	}()
 
@@ -59,36 +52,20 @@ func parse(src []byte) (filterExpr *binaryExpr, err error) {
 
 // Parse a logic expression
 //
-// equality | equality (( "&" | "|" ) equality)*
+// equality | equality ( "&&" | "||" ) equality*
 //
 func (p *parser) expression() Expr {
 	var expr Expr
+	expr = p.equality()
 
-	if p.matches(LPAREN) {
-		p.next()
-		expr = p.expression()
-		p.consume(RPAREN, "expected ')' after expression")
-	} else {
-		expr = p.equality()
-	}
-
-	if !p.matches(AND, OR) && !p.matches(EOL, RPAREN) {
+	if !p.matches(AND, OR) && !p.matches(EOL) {
 		panic(p.errorf("unexpected expression after '%s'", p.tok))
 	}
 
 	for p.matches(AND, OR) {
 		op := p.tok
 		p.next()
-
-		var right Expr
-		if p.matches(LPAREN) {
-			p.next()
-			right = p.expression()
-			p.consume(RPAREN, "expected ')' after expression")
-		} else {
-			right = p.equality()
-		}
-
+		right := p.equality()
 		expr = &binaryExpr{Left: expr, Op: op, Right: right}
 	}
 
@@ -97,14 +74,14 @@ func (p *parser) expression() Expr {
 
 // Parse equality expression
 //
-// term ( ("==" | "!=" | "<" | "<=" | ">" | ">=" | "~") primary )*	;
+// term ("==" | "!=" | "<" | "<=" | ">" | ">=" | "~") primary
 //
 func (p *parser) equality() Expr {
-	p.expect(VAR_NAME)
+	p.expect(VARIABLE)
 	expr := &binaryExpr{Left: p.primary()}
 
 	switch p.tok {
-	case GREATER, GTE, LESS, LTE, EQUALS, NOT_EQUALS, TILDA:
+	case GREATER, GTE, LESS, LTE, EQUALS, NOT_EQUALS, LIKE, IN:
 		expr.Op = p.tok
 		p.next()
 	default:
@@ -125,14 +102,27 @@ func (p *parser) primary() Expr {
 	var expr Expr
 
 	switch p.tok {
-	case VAR_NAME:
+	case LBRACKET:
+		items := []string{}
+		keepReading := true
+		for keepReading {
+			p.next()
+			p.expect(STRING)
+			items = append(items, p.val)
+			p.next()
+			switch p.tok {
+			case RBRACKET:
+				expr = &listExpr{items}
+				keepReading = false
+			case COMMA:
+			default:
+				panic(p.errorf("unexpected either string or ] instead of '%s'", p.tok))
+			}
+		}
+	case VARIABLE:
 		expr = &varExpr{p.val}
 	case STRING:
 		expr = &strExpr{p.val}
-	case DATE:
-		expr = p.dateExpr(p.val)
-	case REGEX:
-		expr = p.regexExpr(p.val)
 	default:
 		panic(p.errorf("expected string instead of %s", p.tok))
 	}
@@ -140,24 +130,6 @@ func (p *parser) primary() Expr {
 	p.next()
 
 	return expr
-}
-
-func (p *parser) dateExpr(date string) Expr {
-	t, err := time.Parse("02/01/2006", date)
-	if err != nil {
-		panic(p.errorf("expected date instead of '%s'", date))
-	}
-
-	return &dateExpr{t}
-}
-
-func (p *parser) regexExpr(regex string) Expr {
-	r, err := regexp.Compile(regex)
-	if err != nil {
-		panic(p.errorf("expected valid regex instead of '%s'", regex))
-	}
-
-	return &regexExpr{r}
 }
 
 // Parse next token into p.tok (and set p.pos and p.val).
@@ -197,5 +169,5 @@ func (p *parser) consume(tok Token, msg string) {
 // with that message and the current position.
 func (p *parser) errorf(format string, args ...interface{}) error {
 	message := fmt.Sprintf(format, args...)
-	return &ParseError{p.pos, message}
+	return ParseError{p.pos, message}
 }
