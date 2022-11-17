@@ -197,6 +197,10 @@ generate.openapi:
 generate.models:
 	sh -c '$(GEN_CMD) --connstr "$(BASE_CONNSTR)/gophoto?sslmode=disable"  --model=models --database gophoto' 						# Generate models for the DB tables
 
+generate.typescript:
+	$(TOOLS_DIR)/oapi-codegen --config openapi/server.cfg.yaml openapi/openapi.yaml
+
+
 #####################
 # Include section   #
 #####################

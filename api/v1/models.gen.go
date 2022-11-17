@@ -29,7 +29,7 @@ type Album struct {
 	Owner       ObjectReference `json:"owner"`
 	Permissions ObjectReference `json:"permissions"`
 	Photos      ObjectReference `json:"photos"`
-	Tags        *TagList        `json:"tags,omitempty"`
+	Tags        *[]Tag          `json:"tags,omitempty"`
 
 	// url of the thumbnail of the album
 	Thumbnail *string `json:"thumbnail,omitempty"`
@@ -186,6 +186,9 @@ type GroupID = string
 // Page defines model for page.
 type Page = int32
 
+// Search defines model for search.
+type Search = string
+
 // Size defines model for size.
 type Size = int32
 
@@ -200,14 +203,14 @@ type GetAlbumsParams struct {
 	// sort mode
 	Sort *string `form:"sort,omitempty" json:"sort,omitempty"`
 
-	// filter expression
-	Filter *string `form:"filter,omitempty" json:"filter,omitempty"`
-
 	// fetch personal albums
 	Personal *bool `form:"personal,omitempty" json:"personal,omitempty"`
 
 	// return shared albums
 	Shared *bool `form:"shared,omitempty" json:"shared,omitempty"`
+
+	// search expression
+	Search *Search `form:"search,omitempty" json:"search,omitempty"`
 
 	// page number
 	Page *Page `form:"page,omitempty" json:"page,omitempty"`
@@ -218,6 +221,24 @@ type GetAlbumsParams struct {
 
 // CreateAlbumJSONBody defines parameters for CreateAlbum.
 type CreateAlbumJSONBody = AlbumRequestPayload
+
+// GetAlbumsByGroupParams defines parameters for GetAlbumsByGroup.
+type GetAlbumsByGroupParams struct {
+	// page number
+	Page *Page `form:"page,omitempty" json:"page,omitempty"`
+
+	// total number of items per page
+	Size *Size `form:"size,omitempty" json:"size,omitempty"`
+}
+
+// GetAlbumsByUserParams defines parameters for GetAlbumsByUser.
+type GetAlbumsByUserParams struct {
+	// page number
+	Page *Page `form:"page,omitempty" json:"page,omitempty"`
+
+	// total number of items per page
+	Size *Size `form:"size,omitempty" json:"size,omitempty"`
+}
 
 // UpdateAlbumJSONBody defines parameters for UpdateAlbum.
 type UpdateAlbumJSONBody = AlbumRequestPayload

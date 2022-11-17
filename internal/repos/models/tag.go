@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/guregu/null"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 )
 
 var (
@@ -38,7 +38,7 @@ JSON Sample
 // Tag struct is a row record of the tag table in the gophoto database
 type Tag struct {
 	//[ 0] id                                             INT4                 null: false  primary: true   isArray: false  auto: false  col: INT4            len: -1      default: []
-	ID int32 `gorm:"primary_key;column:id;type:INT4;"`
+	ID string `gorm:"primary_key;column:id;type:TEXT;"`
 	//[ 1] name                                           TEXT                 null: false  primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
 	Name string `gorm:"column:name;type:TEXT;"`
 	//[ 2] color                                          TEXT                 null: true   primary: false  isArray: false  auto: false  col: TEXT            len: -1      default: []
@@ -57,15 +57,15 @@ var tagTableInfo = &TableInfo{
 			Comment:            ``,
 			Notes:              ``,
 			Nullable:           false,
-			DatabaseTypeName:   "INT4",
-			DatabaseTypePretty: "INT4",
+			DatabaseTypeName:   "TEXT",
+			DatabaseTypePretty: "TEXT",
 			IsPrimaryKey:       true,
 			IsAutoIncrement:    false,
 			IsArray:            false,
-			ColumnType:         "INT4",
+			ColumnType:         "TEXT",
 			ColumnLength:       -1,
 			GoFieldName:        "ID",
-			GoFieldType:        "int32",
+			GoFieldType:        "string",
 			JSONFieldName:      "id",
 			ProtobufFieldName:  "id",
 			ProtobufType:       "",

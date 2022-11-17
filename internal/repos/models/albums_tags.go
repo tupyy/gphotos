@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/guregu/null"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 )
 
 var (
@@ -21,8 +21,8 @@ DB Table Details
 
 
 Table: albums_tags
-[ 0] album_id                                       INT4                 null: false  primary: true   isArray: false  auto: false  col: INT4            len: -1      default: []
-[ 1] tag_id                                         INT4                 null: false  primary: true   isArray: false  auto: false  col: INT4            len: -1      default: []
+[ 0] album_id                                       TEXT                 null: false  primary: true   isArray: false  auto: false  col: TEXT            len: -1      default: []
+[ 1] tag_id                                         TEXT                 null: false  primary: true   isArray: false  auto: false  col: TEXT            len: -1      default: []
 
 
 JSON Sample
@@ -35,10 +35,10 @@ JSON Sample
 
 // AlbumsTags struct is a row record of the albums_tags table in the gophoto database
 type AlbumsTags struct {
-	//[ 0] album_id                                       INT4                 null: false  primary: true   isArray: false  auto: false  col: INT4            len: -1      default: []
-	AlbumID int32 `gorm:"primary_key;column:album_id;type:INT4;"`
-	//[ 1] tag_id                                         INT4                 null: false  primary: true   isArray: false  auto: false  col: INT4            len: -1      default: []
-	TagID int32 `gorm:"primary_key;column:tag_id;type:INT4;"`
+	//[ 0] album_id                                       TEXT                 null: false  primary: true   isArray: false  auto: false  col: TEXT            len: -1      default: []
+	AlbumID string `gorm:"primary_key;column:album_id;type:TEXT;"`
+	//[ 1] tag_id                                         TEXT                 null: false  primary: true   isArray: false  auto: false  col: TEXT            len: -1      default: []
+	TagID string `gorm:"primary_key;column:tag_id;type:TEXT;"`
 }
 
 var albums_tagsTableInfo = &TableInfo{
@@ -51,15 +51,15 @@ var albums_tagsTableInfo = &TableInfo{
 			Comment:            ``,
 			Notes:              ``,
 			Nullable:           false,
-			DatabaseTypeName:   "INT4",
-			DatabaseTypePretty: "INT4",
+			DatabaseTypeName:   "TEXT",
+			DatabaseTypePretty: "TEXT",
 			IsPrimaryKey:       true,
 			IsAutoIncrement:    false,
 			IsArray:            false,
-			ColumnType:         "INT4",
+			ColumnType:         "TEXT",
 			ColumnLength:       -1,
 			GoFieldName:        "AlbumID",
-			GoFieldType:        "int32",
+			GoFieldType:        "string",
 			JSONFieldName:      "album_id",
 			ProtobufFieldName:  "album_id",
 			ProtobufType:       "",
@@ -72,15 +72,15 @@ var albums_tagsTableInfo = &TableInfo{
 			Comment:            ``,
 			Notes:              ``,
 			Nullable:           false,
-			DatabaseTypeName:   "INT4",
-			DatabaseTypePretty: "INT4",
+			DatabaseTypeName:   "TEXT",
+			DatabaseTypePretty: "TEXT",
 			IsPrimaryKey:       true,
 			IsAutoIncrement:    false,
 			IsArray:            false,
-			ColumnType:         "INT4",
+			ColumnType:         "TEXT",
 			ColumnLength:       -1,
 			GoFieldName:        "TagID",
-			GoFieldType:        "int32",
+			GoFieldType:        "string",
 			JSONFieldName:      "tag_id",
 			ProtobufFieldName:  "tag_id",
 			ProtobufType:       "",

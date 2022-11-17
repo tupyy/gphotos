@@ -3,6 +3,7 @@ package tag
 import (
 	"context"
 
+	"github.com/rs/xid"
 	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/internal/repos/models"
 	"github.com/tupyy/gophoto/internal/utils/pgclient"
@@ -27,15 +28,16 @@ func NewPostgresRepo(client pgclient.Client) (*TagRepo, error) {
 	return &TagRepo{gormDB, client}, nil
 }
 
-func (t *TagRepo) Create(ctx context.Context, tag entity.Tag) (int32, error) {
+func (t *TagRepo) Create(ctx context.Context, tag entity.Tag) (string, error) {
 	tagModel := models.Tag{
+		ID:     xid.New().String(),
 		UserID: tag.UserID,
 		Name:   tag.Name,
 		Color:  tag.Color,
 	}
 
 	if err := t.db.WithContext(ctx).Create(&tagModel).Error; err != nil {
-		return 0, err
+		return "", err
 	}
 
 	return tagModel.ID, nil
@@ -43,26 +45,24 @@ func (t *TagRepo) Create(ctx context.Context, tag entity.Tag) (int32, error) {
 
 func (t *TagRepo) Update(ctx context.Context, tag entity.Tag) error {
 	tagModel := models.Tag{
-		ID:     tag.ID,
-		UserID: tag.UserID,
-		Name:   tag.Name,
-		Color:  tag.Color,
+		Name:  tag.Name,
+		Color: tag.Color,
 	}
 
-	if err := t.db.WithContext(ctx).Save(&tagModel).Error; err != nil {
+	if err := t.db.WithContext(ctx).Where("id = ?", tag.ID).Updates(&tagModel).Error; err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (t *TagRepo) Delete(ctx context.Context, id int32) error {
+func (t *TagRepo) Delete(ctx context.Context, id string) error {
 	return t.db.WithContext(ctx).Where("id = ?", id).Delete(&models.Tag{}).Error
 }
 
 func (t *TagRepo) GetByUser(ctx context.Context, userID string) ([]entity.Tag, error) {
 	pgModels := []struct {
-		ID     int32   `gorm:"primary_key;column:id;type:INT4;"`
+		ID     string  `gorm:"primary_key;column:id;type:TEXT;"`
 		Name   string  `gorm:"column:name;type:TEXT;"`
 		Color  *string `gorm:"column:color;type:TEXT;"`
 		UserID string  `gorm:"column:user_id;type:TEXT;"`
@@ -100,7 +100,7 @@ func (t *TagRepo) GetByUser(ctx context.Context, userID string) ([]entity.Tag, e
 
 func (t *TagRepo) GetByName(ctx context.Context, userID, name string) (entity.Tag, error) {
 	pgModel := struct {
-		ID     int32   `gorm:"primary_key;column:id;type:INT4;"`
+		ID     string  `gorm:"primary_key;column:id;type:TEXT;"`
 		Name   string  `gorm:"column:name;type:TEXT;"`
 		Color  *string `gorm:"column:color;type:TEXT;"`
 		UserID string  `gorm:"column:user_id;type:TEXT;"`
@@ -132,9 +132,9 @@ func (t *TagRepo) GetByName(ctx context.Context, userID, name string) (entity.Ta
 	return tag, nil
 }
 
-func (t *TagRepo) GetByID(ctx context.Context, userID string, id int32) (entity.Tag, error) {
+func (t *TagRepo) GetByID(ctx context.Context, userID string, id string) (entity.Tag, error) {
 	pgModel := struct {
-		ID     int32   `gorm:"primary_key;column:id;type:INT4;"`
+		ID     string  `gorm:"primary_key;column:id;type:TEXT;"`
 		Name   string  `gorm:"column:name;type:TEXT;"`
 		Color  *string `gorm:"column:color;type:TEXT;"`
 		UserID string  `gorm:"column:user_id;type:TEXT;"`
@@ -165,9 +165,9 @@ func (t *TagRepo) GetByID(ctx context.Context, userID string, id int32) (entity.
 	return tag, nil
 }
 
-func (t *TagRepo) GetByAlbum(ctx context.Context, albumID int32) ([]entity.Tag, error) {
+func (t *TagRepo) GetByAlbum(ctx context.Context, albumID string) ([]entity.Tag, error) {
 	pgModels := []struct {
-		ID     int32   `gorm:"primary_key;column:id;type:INT4;"`
+		ID     string  `gorm:"primary_key;column:id;type:TEXT;"`
 		Name   string  `gorm:"column:name;type:TEXT;"`
 		Color  *string `gorm:"column:color;type:TEXT;"`
 		UserID string  `gorm:"column:user_id;type:TEXT;"`
@@ -199,7 +199,7 @@ func (t *TagRepo) GetByAlbum(ctx context.Context, albumID int32) ([]entity.Tag, 
 	return tags, nil
 }
 
-func (t *TagRepo) Associate(ctx context.Context, albumID, tagID int32) error {
+func (t *TagRepo) Associate(ctx context.Context, albumID, tagID string) error {
 	pgModel := models.AlbumsTags{
 		AlbumID: albumID,
 		TagID:   tagID,
@@ -208,6 +208,6 @@ func (t *TagRepo) Associate(ctx context.Context, albumID, tagID int32) error {
 	return t.db.WithContext(ctx).Create(&pgModel).Error
 }
 
-func (t *TagRepo) Dissociate(ctx context.Context, albumID, tagID int32) error {
+func (t *TagRepo) Dissociate(ctx context.Context, albumID, tagID string) error {
 	return t.db.WithContext(ctx).Where("album_id = ?", albumID).Where("tag_id = ?", tagID).Delete(&models.AlbumsTags{}).Error
 }

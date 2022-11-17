@@ -8,4 +8,6 @@ const (
 	PhotoListKind        string = "PhotoList"
 	UserKind             string = "User"
 	GroupKind            string = "Group"
+	TagKind              string = "Tag"
+	TagListKind          string = "TagList"
 )

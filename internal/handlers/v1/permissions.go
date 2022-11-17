@@ -116,6 +116,8 @@ func (server *Server) GetAlbumPermissions(c *gin.Context, albumId string) {
 	c.JSON(http.StatusOK, presentersv1.MapAlbumPermissions(album))
 }
 
+func (s *Server) RemoveAlbumPermissions(c *gin.Context, albumId apiv1.AlbumId) {}
+
 func mapToPermissions(form apiv1.AlbumPermissionsRequest) ([]entity.AlbumPermission, error) {
 	mapToPermissionList := func(perms []string) []entity.Permission {
 		pperms := make([]entity.Permission, 0, len(perms))

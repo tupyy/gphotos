@@ -118,7 +118,7 @@ func (a *AlbumPostgresRepo) Get(ctx context.Context) ([]entity.Album, error) {
 		Select("id, albums_tags.album_id, name, color").
 		Joins("JOIN albums_tags ON (albums_tags.tag_id = tag.id)")
 
-	tx := a.db.WithContext(ctx).Table("album").Table("tag").
+	tx := a.db.WithContext(ctx).Table("album").
 		Select(`album.*, tags.id as tag_id, tags.name as tag_name,tags.color as tag_color, album_permissions.permissions as permissions, album_permissions.owner_id as permission_owner_id,
 				album_permissions.owner_kind as permission_owner_kind`).
 		Joins("LEFT JOIN album_permissions ON (album.id = album_permissions.album_id)").
@@ -178,7 +178,7 @@ func (a *AlbumPostgresRepo) GetByOwner(ctx context.Context, owner string) ([]ent
 		Joins("JOIN albums_tags ON (albums_tags.tag_id = tag.id)")
 
 	tx := a.db.WithContext(ctx).Table("album").
-		Select(`album.*, tags.id as tag_id, tags.name as tag_name,tags.color as tag_color, album_permissions.permissions as permissions, album_permissions.owner_id as permissions_owner_id,
+		Select(`album.*, tags.id as tag_id, tags.name as tag_name,tags.color as tag_color, album_permissions.permissions as permissions, album_permissions.owner_id as permission_owner_id,
 				album_permissions.owner_kind as permission_owner_kind`).
 		Joins("LEFT JOIN album_permissions ON (album.id = album_permissions.album_id)").
 		Joins("LEFT JOIN (?) as tags ON (tags.album_id = album.id)", tagSubQuery).
@@ -207,7 +207,7 @@ func (a *AlbumPostgresRepo) GetByUser(ctx context.Context, username string) ([]e
 		Joins("JOIN albums_tags ON (albums_tags.tag_id = tag.id)")
 
 	tx := a.db.WithContext(ctx).Table("album").
-		Select(`album.*, tags.id as tag_id, tags.name as tag_name,tags.color as tag_color, album_permissions.permissions as permissions, album_permissions.owner_id as permissions_owner_id,
+		Select(`album.*, tags.id as tag_id, tags.name as tag_name,tags.color as tag_color, album_permissions.permissions as permissions, album_permissions.owner_id as permission_owner_id,
 				album_permissions.owner_kind as permission_owner_kind`).
 		Joins("LEFT JOIN album_permissions ON (album.id = album_permissions.album_id)").
 		Joins("LEFT JOIN (?) as tags ON (tags.album_id = album.id)", tagSubQuery).
@@ -237,7 +237,7 @@ func (a *AlbumPostgresRepo) GetByGroupName(ctx context.Context, groupName string
 		Joins("JOIN albums_tags ON (albums_tags.tag_id = tag.id)")
 
 	tx := a.db.WithContext(ctx).Table("album").
-		Select(`album.*, tags.id as tag_id, tags.name as tag_name,tags.color as tag_color, album_permissions.permissions as permissions, album_permissions.owner_id as permissions_owner_id,
+		Select(`album.*, tags.id as tag_id, tags.name as tag_name,tags.color as tag_color, album_permissions.permissions as permissions, album_permissions.owner_id as permission_owner_id,
 				album_permissions.owner_kind as permission_owner_kind`).
 		Joins("LEFT JOIN album_permissions ON (album.id = album_permissions.album_id)").
 		Joins("LEFT JOIN (?) as tags ON (tags.album_id = album.id)", tagSubQuery).

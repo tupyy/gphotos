@@ -114,10 +114,11 @@ func (q *Query) All(ctx context.Context, user entity.User) ([]entity.Album, int,
 			}
 
 			// get albums shared by the user's groups but filter out the ones owns by the user
-			groupSharedAlbum, err := q.albumRepo.GetByGroups(ctx, groupsToList(user.Groups))
-			if err != nil {
-				return []entity.Album{}, 0, fmt.Errorf("%w shared albums by group: %v", services.ErrGetAlbums, err)
-			}
+			// groupSharedAlbum, err := q.albumRepo.GetByGroups(ctx, groupsToList(user.Groups))
+			// if err != nil {
+			// 	return []entity.Album{}, 0, fmt.Errorf("%w shared albums by group: %v", services.ErrGetAlbums, err)
+			// }
+			groupSharedAlbum := []entity.Album{}
 
 			for i := 0; i < len(sharedAlbums)+len(groupSharedAlbum); i++ {
 				found := false

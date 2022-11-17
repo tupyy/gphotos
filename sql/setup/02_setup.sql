@@ -47,6 +47,7 @@ CREATE TABLE tag (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL UNIQUE,
     color TEXT 
+    owner_id TEXT NOT NULL,
 );
 
 CREATE INDEX tag_user_id_idx ON tag (user_id);

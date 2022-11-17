@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"html"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-contrib/sessions"
@@ -32,17 +33,21 @@ func (server *Server) GetAlbums(c *gin.Context, params apiv1.GetAlbumsParams) {
 
 	albumService := server.GetAlbumService()
 
-	q := albumService.Query()
+	q := albumService.Query().OwnAlbums(true)
 	if params.Personal != nil {
 		q.OwnAlbums(*params.Personal)
 	}
 	if params.Shared != nil {
 		q.SharedAlbums(*params.Shared)
 	}
-	if params.Filter != nil {
-		filter, err := filter.New(*params.Filter)
+	if params.Search != nil {
+		searchExp := *params.Search
+		if se, err := strconv.Unquote(*params.Search); err == nil {
+			searchExp = se
+		}
+		filter, err := filter.New(searchExp)
 		if err != nil {
-			logger.WithError(err).Error("failed to create filter engine")
+			logger.WithError(err).WithField("filter", *params.Search).Error("failed to create filter engine")
 			common.AbortBadRequestWithJson(c, err, err.Error())
 
 			return
@@ -99,11 +104,115 @@ func (server *Server) GetAlbums(c *gin.Context, params apiv1.GetAlbumsParams) {
 }
 
 // (GET /api/gphotos/v1/albums/groups/{group_id})
-func (server *Server) GetAlbumsByGroup(c *gin.Context, groupId string) {
+func (server *Server) GetAlbumsByGroup(c *gin.Context, groupId string, params apiv1.GetAlbumsByGroupParams) {
+	session := c.MustGet("session").(entity.Session)
+
+	ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
+	logger := logutil.GetLogger(c)
+
+	id, err := decrypt(groupId)
+	if err != nil {
+		logger.WithError(err).WithField("group id", groupId).Error("failed to decrypt group id")
+		common.AbortInternalError(c)
+		return
+	}
+
+	albumService := server.GetAlbumService()
+
+	filter, _ := filter.New(fmt.Sprintf("permissions.group = '%s'", id))
+	q := albumService.Query().
+		OwnAlbums(false).
+		SharedAlbums(true).
+		Filter(filter)
+
+	// paginate
+	page := 1
+	if params.Page != nil {
+		page = int(*params.Page)
+		q.Page(page)
+	}
+
+	if params.Size != nil {
+		q.Size(int(*params.Size))
+	}
+
+	albums, total, err := q.All(ctx, session.User)
+	if err != nil {
+		logger.WithError(err).Error("failed to get albums")
+		common.AbortInternalErrorWithJson(c)
+		return
+	}
+
+	albumModels := make([]apiv1.Album, 0, len(albums))
+	for _, album := range albums {
+		albumModels = append(albumModels, presentersv1.MapAlbumToModel(album))
+	}
+
+	c.JSON(http.StatusOK, &apiv1.AlbumList{
+		Kind:  "AlbumList",
+		Page:  page,
+		Size:  len(albumModels),
+		Total: total,
+		Items: albumModels,
+	})
+
+	return
 }
 
 // (GET /api/gphotos/v1/albums/users/{user_id})
-func (server *Server) GetAlbumsByUser(c *gin.Context, userId string) {
+func (server *Server) GetAlbumsByUser(c *gin.Context, userId string, params apiv1.GetAlbumsByUserParams) {
+	session := c.MustGet("session").(entity.Session)
+
+	ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
+	logger := logutil.GetLogger(c)
+
+	id, err := decrypt(userId)
+	if err != nil {
+		logger.WithError(err).WithField("userId id", userId).Error("failed to decrypt user id")
+		common.AbortInternalError(c)
+		return
+	}
+
+	albumService := server.GetAlbumService()
+
+	filter, _ := filter.New(fmt.Sprintf("permissions.user = '%s'", id))
+	q := albumService.Query().
+		OwnAlbums(false).
+		SharedAlbums(true).
+		Filter(filter)
+
+	// paginate
+	page := 1
+	if params.Page != nil {
+		page = int(*params.Page)
+		q.Page(page)
+	}
+
+	if params.Size != nil {
+		q.Size(int(*params.Size))
+	}
+
+	albums, total, err := q.All(ctx, session.User)
+	if err != nil {
+		logger.WithError(err).Error("failed to get albums")
+		common.AbortInternalErrorWithJson(c)
+		return
+	}
+
+	albumModels := make([]apiv1.Album, 0, len(albums))
+	for _, album := range albums {
+		albumModels = append(albumModels, presentersv1.MapAlbumToModel(album))
+	}
+
+	c.JSON(http.StatusOK, &apiv1.AlbumList{
+		Kind:  "AlbumList",
+		Page:  page,
+		Size:  len(albumModels),
+		Total: total,
+		Items: albumModels,
+	})
+
+	return
 }
 
 func (server *Server) GetAlbumByID(c *gin.Context, albumID apiv1.AlbumId) {
@@ -343,6 +452,14 @@ func escapeFieldPtr(fieldValue *string) string {
 		return html.EscapeString(*fieldValue)
 	}
 	return ""
+}
+
+func escapeFieldPtr2(fieldValue *string) *string {
+	if fieldValue != nil {
+		value := html.EscapeString(*fieldValue)
+		return &value
+	}
+	return nil
 }
 
 func escapeField(fieldValue string) string {

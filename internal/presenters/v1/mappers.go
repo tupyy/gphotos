@@ -19,6 +19,10 @@ func MapAlbumToModel(album entity.Album) apiv1.Album {
 	encryptedUsername, _ := gen.EncryptData(album.Owner)
 
 	albumRef := mapAlbumRef(album)
+	tags := make([]apiv1.Tag, 0, len(album.Tags))
+	for _, tag := range album.Tags {
+		tags = append(tags, MapTagToModel(tag))
+	}
 
 	model := apiv1.Album{
 		Id:          albumRef.Id,
@@ -45,6 +49,7 @@ func MapAlbumToModel(album entity.Album) apiv1.Album {
 			Href: fmt.Sprintf("%s/photos", albumRef.Href),
 			Id:   albumRef.Id,
 		},
+		Tags: &tags,
 	}
 
 	return model

@@ -15,11 +15,11 @@ type albumJoinRow struct {
 	ID                  string               `gorm:"column_name:id;type:TEXT"`
 	Name                string               `gorm:"column:name;type:TEXT;"`
 	CreatedAt           time.Time            `gorm:"column:created_at;type:TIMESTAMP;default:timezone('UTC');"`
-	OwnerID             string               `gorm:"column:owner_id;type:INT4;"`
+	OwnerID             string               `gorm:"column:owner_id;type:TEXT;"`
 	Description         *string              `gorm:"column:description;type:TEXT;"`
 	Location            *string              `gorm:"column:location;type:TEXT;"`
 	Bucket              string               `gorm:"column:bucket;type:TEXT;"`
-	TagID               int32                `gorm:"column:tag_id;type:INT4"`
+	TagID               string               `gorm:"column:tag_id;type:TEXT"`
 	TagName             *string              `gorm:"column:tag_name;type:TEXT;"`
 	TagColor            *string              `gorm:"column:tag_color;tape:TEXT"`
 	Thumbnail           sql.NullString       `gorm:"column:thumbnail;type:VARCHAR;size:100;"`

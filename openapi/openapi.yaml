@@ -42,11 +42,6 @@ paths:
         description: sort mode
         schema:
           type: string
-      - name: filter
-        in: query
-        description: filter expression
-        schema:
-          type: string
       - name: personal
         in: query
         description: fetch personal albums
@@ -57,6 +52,7 @@ paths:
         description: return shared albums
         schema:
           type: boolean
+      - $ref: "#/components/parameters/search"
       - $ref: "#/components/parameters/page"
       - $ref: "#/components/parameters/size"
       responses:
@@ -240,6 +236,8 @@ paths:
       operationId: getAlbumsByUser
       parameters:
         - $ref: "#/components/parameters/userID"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/size"
       responses:
         200:
           description: list of album shard by 'user_id' with logged user
@@ -279,6 +277,8 @@ paths:
       operationId: getAlbumsByGroup
       parameters:
         - $ref: "#/components/parameters/groupID"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/size"
       responses:
         200:
           description: list of album shared by 'group_id' with logged user
@@ -403,7 +403,7 @@ paths:
       tags:
       - Permissions
       description: delete the permission of an album
-      operationId: remvoveAlbumPermissions
+      operationId: removeAlbumPermissions
       parameters:
         - $ref: "#/components/parameters/album_id"
       responses:
@@ -547,7 +547,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        
   /api/gphotos/v1/tags:
     get:
       tags:
@@ -781,7 +780,9 @@ components:
           photos:
             $ref: '#/components/schemas/ObjectReference'
           tags:
-            $ref: '#/components/schemas/TagList'
+            type: array
+            items:
+              $ref: '#/components/schemas/Tag'
           permissions:
             $ref: '#/components/schemas/ObjectReference'
     AlbumList:
@@ -995,6 +996,12 @@ components:
         type: string
       in: path
       required: true
+    search:
+      name: search
+      in: query
+      description: search expression
+      schema:
+        type: string
     page:
       name: page
       in: query
