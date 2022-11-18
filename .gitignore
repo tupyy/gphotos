@@ -2,6 +2,7 @@ vendor/
 sql/.pgpass
 keycloak/.pass
 resources/prod.yaml
+resources/config-dev.json
 target/
 tools/
 .vimspector.json
