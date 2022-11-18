@@ -9,7 +9,7 @@ import (
 func New(c conf.MinioConfig) (*minio.Client, error) {
 	// Initialize minio client object.
 	return minio.New(c.Url, &minio.Options{
-		Creds:  credentials.NewStaticV4(c.User, c.Password, ""),
+		Creds:  credentials.NewStaticV4(c.AccessID, c.AccessSecretKey, ""),
 		Secure: false,
 	})
 }

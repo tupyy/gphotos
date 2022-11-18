@@ -155,7 +155,7 @@ run.docker.logs:
 
 #help run.local: run the application locally
 run.local:
-	$(CURDIR)/target/run serve --config $(CURDIR)/resources/.$(NAME)-$(ENV).yaml
+	$(CURDIR)/target/run serve --config $(CURDIR)/resources/config-$(ENV).json
 
 run.local.noauth: GPHOTOS_AUTH_DISABLED ?= "true"
 run.local.noauth:

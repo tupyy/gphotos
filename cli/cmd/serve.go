@@ -51,13 +51,10 @@ var serveCmd = &cobra.Command{
 	Use:   "serve",
 	Short: "run server",
 	Run: func(cmd *cobra.Command, args []string) {
-		keycloakConf := conf.GetKeycloakConfig()
-
-		fmt.Printf("Conf used\n %s\n", keycloakConf.String())
+		fmt.Printf("Conf used\n %s\n", conf.GetConfiguration())
 
 		logrus.SetLevel(conf.GetLogLevel())
 		logrus.SetReportCaller(true)
-		logrus.SetFormatter(conf.GetLogFormatter())
 
 		// initialize cookie store
 		store := memstore.NewStore([]byte(conf.GetServerSecretKey()))
