@@ -88,6 +88,26 @@ type Error struct {
 	Reason *string `json:"reason,omitempty"`
 }
 
+// Group defines model for Group.
+type Group struct {
+	Href    string             `json:"href"`
+	Id      string             `json:"id"`
+	Kind    string             `json:"kind"`
+	Members *[]ObjectReference `json:"members,omitempty"`
+
+	// name of the group
+	Name *string `json:"name,omitempty"`
+}
+
+// GroupList defines model for GroupList.
+type GroupList struct {
+	Items []Group `json:"items"`
+	Kind  string  `json:"kind"`
+	Page  int     `json:"page"`
+	Size  int     `json:"size"`
+	Total int     `json:"total"`
+}
+
 // List defines model for List.
 type List struct {
 	Kind  string `json:"kind"`
@@ -129,6 +149,9 @@ type PhotoList struct {
 	Total int     `json:"total"`
 }
 
+// PhotoRequestPayload defines model for PhotoRequestPayload.
+type PhotoRequestPayload = string
+
 // Tag defines model for Tag.
 type Tag struct {
 	Albums []ObjectReference `json:"albums"`
@@ -162,6 +185,32 @@ type TagRequestPayload struct {
 	Name string `json:"name"`
 }
 
+// User defines model for User.
+type User struct {
+	Groups *[]ObjectReference `json:"groups,omitempty"`
+	Href   string             `json:"href"`
+	Id     string             `json:"id"`
+	Kind   string             `json:"kind"`
+
+	// name of the user
+	Name *string `json:"name,omitempty"`
+
+	// surname of the user
+	Surname *string `json:"surname,omitempty"`
+
+	// user_id
+	UserId *string `json:"user_id,omitempty"`
+}
+
+// UserList defines model for UserList.
+type UserList struct {
+	Items []User `json:"items"`
+	Kind  string `json:"kind"`
+	Page  int    `json:"page"`
+	Size  int    `json:"size"`
+	Total int    `json:"total"`
+}
+
 // VersionMetadata defines model for VersionMetadata.
 type VersionMetadata struct {
 	Collections *[]struct {
@@ -177,8 +226,8 @@ type VersionMetadata struct {
 // AlbumId defines model for album_id.
 type AlbumId = string
 
-// GroupID defines model for groupID.
-type GroupID = string
+// GroupId defines model for group_id.
+type GroupId = string
 
 // Page defines model for page.
 type Page = int32
@@ -195,18 +244,18 @@ type Size = int32
 // TagId defines model for tag_id.
 type TagId = string
 
-// UserID defines model for userID.
-type UserID = string
+// UserId defines model for user_id.
+type UserId = string
 
 // GetAlbumsParams defines parameters for GetAlbums.
 type GetAlbumsParams struct {
-	// sort mode
+	// Sort the list of albums.
 	Sort *string `form:"sort,omitempty" json:"sort,omitempty"`
 
-	// fetch personal albums
+	// Fetch personal albums.
 	Personal *bool `form:"personal,omitempty" json:"personal,omitempty"`
 
-	// return shared albums
+	// Fetch shared albums.
 	Shared *bool `form:"shared,omitempty" json:"shared,omitempty"`
 
 	// search expression

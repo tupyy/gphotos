@@ -9,7 +9,7 @@ paths:
     get:
       tags:
       - Versions
-      description: get information about available versions
+      description: Get information about available versions.
       operationId: getVersionMetadata
       responses:
         200:
@@ -34,22 +34,22 @@ paths:
     get:
       tags:
       - Albums
-      description: get all albums owned by or shared with the current logged user
+      description: Get all albums owned by or shared with the current logged user.
       operationId: getAlbums
       parameters:
       - name: sort
         in: query
-        description: sort mode
+        description: Sort the list of albums.
         schema:
           type: string
       - name: personal
         in: query
-        description: fetch personal albums
+        description: Fetch personal albums.
         schema:
           type: boolean
       - name: shared
         in: query
-        description: return shared albums
+        description: Fetch shared albums.
         schema:
           type: boolean
       - $ref: "#/components/parameters/search"
@@ -57,7 +57,7 @@ paths:
       - $ref: "#/components/parameters/size"
       responses:
         200:
-          description: list of albums owned by or shared with logged user
+          description: List of albums owned by or shared with logged user.
           content:
             application/json:
               schema:
@@ -81,7 +81,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
     post:
-      description: create an album
+      description: Create an album.
       operationId: createAlbum
       requestBody:
         description: album data
@@ -91,13 +91,13 @@ paths:
               $ref: '#/components/schemas/AlbumRequestPayload'
       responses:
         201:
-          description: album created
+          description: Album created.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Album'
         400:
-          description: bad request
+          description: Bad request.
           content:
             application/json:
               schema:
@@ -124,6 +124,7 @@ paths:
         - Albums
   /api/gphotos/v1/albums/{album_id}:
     get:
+      description: Get album by specified id.
       operationId: GetAlbumByID
       tags:
         - Albums
@@ -131,7 +132,7 @@ paths:
         - $ref: "#/components/parameters/album_id"
       responses:
         200:
-          description: fetch album by id
+          description: Fetch album by specified id.
           content:
             application/json:
               schema:
@@ -161,20 +162,21 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
     patch:
+      description: Update an album.
       operationId: UpdateAlbum
       tags:
         - Albums
       parameters:
         - $ref: "#/components/parameters/album_id"
       requestBody:
-        description: album data
+        description: Album data
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/AlbumRequestPayload'
       responses:
         200:
-          description: path the album
+          description: Album successfully updated.
           content:
             application/json:
               schema:
@@ -192,6 +194,7 @@ paths:
           description: Not available.
           content: {}
     delete:
+      description: Delete the album with specified id.
       operationId: DeleteAlbum
       tags:
         - Albums
@@ -199,7 +202,7 @@ paths:
         - $ref: "#/components/parameters/album_id"
       responses:
         200:
-          description: delete album by specified id
+          description: Delete album by specified id.
           content:
             application/json:
               schema:
@@ -228,19 +231,59 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /api/gphotos/v1/albums/{album_id}/thumbnail:
+    get:
+      description: Get the thumbnail of the specified album.
+      operationId: GetAlbumThumbnail
+      tags:
+        - Albums
+      parameters:
+        - $ref: "#/components/parameters/album_id"
+      responses:
+        200:
+          description: Retreive album's thumbnail.
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+        401:
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        403:
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        404:
+          description: No album found with the specified ID exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Internal error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /api/gphotos/v1/albums/users/{user_id}:
     get:
       tags:
       - Albums
-      description: get all user's album shared with the current logger user
+      description: Get all user's album shared with the current logger user.
       operationId: getAlbumsByUser
       parameters:
-        - $ref: "#/components/parameters/userID"
+        - $ref: "#/components/parameters/user_id"
         - $ref: "#/components/parameters/page"
         - $ref: "#/components/parameters/size"
       responses:
         200:
-          description: list of album shard by 'user_id' with logged user
+          description: List of album shard by 'user_id' with logged user
           content:
             application/json:
               schema:
@@ -273,15 +316,15 @@ paths:
     get:
       tags:
       - Albums
-      description: get all user's album shared with the current logger user
+      description: Get all groups's album shared with the current logger user.
       operationId: getAlbumsByGroup
       parameters:
-        - $ref: "#/components/parameters/groupID"
+        - $ref: "#/components/parameters/group_id"
         - $ref: "#/components/parameters/page"
         - $ref: "#/components/parameters/size"
       responses:
         200:
-          description: list of album shared by 'group_id' with logged user
+          description: List of album shared by 'group_id' with logged user.
           content:
             application/json:
               schema:
@@ -314,7 +357,7 @@ paths:
     get:
       tags:
       - Permissions
-      description: retrieve the list of user and group permissions
+      description: Retrieve the list of user and group permissions.
       operationId: getAlbumPermissions
       parameters:
         - $ref: "#/components/parameters/album_id"
@@ -352,25 +395,25 @@ paths:
     post:
       tags:
       - Permissions
-      description: set permission on an album
+      description: Set permission on an album.
       operationId: setAlbumPermissions
       parameters:
         - $ref: "#/components/parameters/album_id"
       requestBody:
-        description: permissions to be applied on the album
+        description: Permissions to be applied on the album.
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/AlbumPermissionsRequest'
       responses:
         200:
-          description: retrieve the list of user and group permissions
+          description: Return the list of updated permissions.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AlbumPermissions'
         400:
-          description: bad request
+          description: Bad request.
           content:
             application/json:
               schema:
@@ -402,49 +445,13 @@ paths:
     delete:
       tags:
       - Permissions
-      description: delete the permission of an album
+      description: Delete the permission of an album
       operationId: removeAlbumPermissions
       parameters:
         - $ref: "#/components/parameters/album_id"
       responses:
         204:
-          description: remove all album's permissions
-        401:
-          description: Not authenticated.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        403:
-          description: Forbidden.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        404:
-          description: No album found with the specified ID exists.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        500:
-          description: Internal error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-  /api/gphotos/v1/albums/{album_id}/thumbnail:
-    get:
-      operationId: GetAlbumThumbnail
-      tags:
-        - Albums
-      parameters:
-        - $ref: "#/components/parameters/album_id"
-      responses:
-        200:
-          description: retreive album thumbnail
-          content:
-            image/png:
+          description: Remove all album's permissions
         401:
           description: Not authenticated.
           content:
@@ -473,7 +480,7 @@ paths:
     get:
       tags:
       - Media
-      description: retrieve the list of photos of the album 
+      description: Retrieve the list of photos of the album.
       operationId: getAlbumPhotos
       parameters:
         - $ref: "#/components/parameters/album_id"
@@ -481,7 +488,7 @@ paths:
         - $ref: "#/components/parameters/size"
       responses:
         200:
-          description: retrieve the list of photos of the album
+          description: Retrieve the list of photos of the album.
           content:
             application/json:
               schema:
@@ -510,22 +517,65 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+    post:
+      tags:
+        - Media
+      description: Upload a photo to specified album
+      operationId: uploadPhoto
+      parameters:
+        - $ref: "#/components/parameters/album_id"
+      requestBody:
+        content:
+          image/png:
+            schema:
+              $ref: "#/components/schemas/PhotoRequestPayload"
+      responses:
+        201:
+          description: upload ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Photo'
+        401:
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        403:
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        404:
+          description: No album found with the specified ID exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Internal error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /api/gphotos/v1/albums/{album_id}/tags/{tag_id}:
     post:
       tags:
         - Tags
-      description: associate a tag with an album
+      description: Associate a tag with an album.
       operationId: setTagToAlbum
       parameters:
         - $ref: "#/components/parameters/album_id"
         - $ref: "#/components/parameters/tag_id"
       responses:
         201:
-          description: tag associated with the album
+          description: Tag associated with the album
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Album'
+                $ref: '#/components/schemas/Tag'
         401:
           description: Not authenticated.
           content:
@@ -553,14 +603,14 @@ paths:
     delete:
       tags:
         - Tags
-      description: untag an album
+      description: Untag an album
       operationId: removeTagFromAlbum
       parameters:
         - $ref: "#/components/parameters/album_id"
         - $ref: "#/components/parameters/tag_id"
       responses:
         204:
-          description: tag dissociated with the album
+          description: Tag dissociated with the album
         401:
           description: Not authenticated.
           content:
@@ -589,14 +639,14 @@ paths:
     get:
       tags:
       - Tags
-      description: get all tags owned the current logged user
+      description: Get all tags owned the current logged user.
       operationId: getTags
       parameters:
         - $ref: "#/components/parameters/page"
         - $ref: "#/components/parameters/size"
       responses:
         200:
-          description: list of tags owned by logged user
+          description: List of tags owned by logged user
           content:
             application/json:
               schema:
@@ -620,23 +670,23 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
     post:
-      description: create an tag
+      description: Create an tag
       operationId: createTag
       requestBody:
-        description: tag data
+        description: Tag data
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/TagRequestPayload'
       responses:
         201:
-          description: tag created
+          description: Tag created.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Tag'
         400:
-          description: bad request
+          description: Bad request.
           content:
             application/json:
               schema:
@@ -663,20 +713,21 @@ paths:
         - Tags
   /api/gphotos/v1/tags/{tag_id}:
     patch:
+      description: Update the specified tag.
       operationId: UpdateTag 
       tags:
         - Tags
       parameters:
         - $ref: "#/components/parameters/tag_id"
       requestBody:
-        description: tag data
+        description: Tag data
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/TagRequestPayload'
       responses:
         200:
-          description: Path tag with specified id
+          description: Updated tag.
           content:
             application/json:
               schema:
@@ -694,6 +745,7 @@ paths:
           description: Not available.
           content: {}
     delete:
+      description: Delete the specified tag.
       operationId: DeleteTag
       tags:
         - Tags
@@ -701,7 +753,7 @@ paths:
         - $ref: "#/components/parameters/tag_id"
       responses:
         200:
-          description: delete tag with specified id
+          description: Delete tag with specified id
           content:
             application/json:
               schema:
@@ -734,15 +786,18 @@ paths:
     get:
       tags:
       - Media
-      description: get photo with specified id
+      description: Get photo with specified id.
       operationId: getPhoto
       parameters:
         - $ref: "#/components/parameters/photo_id"
       responses:
         200:
-          description: retrieve the photo with specified id
+          description: Retrieve the photo with specified id.
           content:
             image/png:
+              schema:
+                type: string
+                format: binary
         401:
           description: Not authenticated.
           content:
@@ -770,13 +825,13 @@ paths:
     delete:
       tags:
       - Media
-      description: delete photo with specified id
+      description: Delete photo with specified id.
       operationId: deletePhoto
       parameters:
         - $ref: "#/components/parameters/photo_id"
       responses:
         204:
-          description: delete the photo with specified id
+          description: Delete the photo with specified id.
         401:
           description: Not authenticated.
           content:
@@ -791,6 +846,134 @@ paths:
                 $ref: '#/components/schemas/Error'
         404:
           description: No photo found with the specified ID exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Internal error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/gphotos/v1/users:
+    get:
+      tags:
+        - Users
+      description: Return the list of all users except administators.
+      operationId: getUsers
+      responses:
+        200:
+          description: Return a list with all registered users except admins
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserList'
+        401:
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        403:
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Internal error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/gphotos/v1/users/{user_id}/related:
+    get:
+      tags:
+        - Users
+      description: Get all the users which shared an album with the logged user
+      operationId: getRelatedUsers
+      parameters:
+         - $ref: "#/components/parameters/user_id"
+      responses:
+        200:
+          description: return a list with all registered users except admins
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserList'
+        401:
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        403:
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Internal error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/gphotos/v1/users/{user_id}/groups/related:
+    get:
+      tags:
+        - Users
+      description: Get all the groups which shared an album with specified user
+      operationId: getRelatedGroups
+      parameters:
+         - $ref: "#/components/parameters/user_id"
+      responses:
+        200:
+          description: return a list with all registered users except admins
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserList'
+        401:
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        403:
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Internal error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/gphotos/v1/groups:
+    get:
+      tags:
+        - Groups
+      description: Return the list of all groups.
+      operationId: getGroups
+      responses:
+        200:
+          description: return a list with all existing groups
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupList'
+        401:
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        403:
+          description: Forbidden.
           content:
             application/json:
               schema:
@@ -975,6 +1158,15 @@ components:
             type: array
             items:
               $ref: '#/components/schemas/ObjectReference'
+    UserList:
+      allOf:
+        - $ref: "#/components/schemas/List"
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/User'
     Group:
       allOf:
       - $ref: '#/components/schemas/ObjectReference'
@@ -987,6 +1179,15 @@ components:
             type: array
             items:
               $ref: '#/components/schemas/ObjectReference'
+    GroupList:
+      allOf:
+      - $ref: '#/components/schemas/List'
+      - type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/Group'
     Permissions:
       required:
       - permissions
@@ -1072,6 +1273,9 @@ components:
           description: hex rerepresentation of the color
       required:
         - name
+    PhotoRequestPayload:
+      type: string
+      format: binary
   # Parameters
   parameters:
     album_id:
@@ -1095,14 +1299,14 @@ components:
         type: string
       in: path
       required: true
-    userID:
+    user_id:
       name: user_id
       description: The ID of the user
       schema:
         type: string
       in: path
       required: true
-    groupID:
+    group_id:
       name: group_id
       description: The ID of the group
       schema:
