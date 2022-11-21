@@ -73,7 +73,10 @@ type AlbumRequestPayload struct {
 	GroupPermissions *string `json:"group_permissions,omitempty"`
 	Location         *string `json:"location,omitempty"`
 	Name             string  `json:"name"`
-	UserPermissions  *string `json:"user_permissions,omitempty"`
+
+	// name of the thumbnail
+	Thumbnail       *string `json:"thumbnail,omitempty"`
+	UserPermissions *string `json:"user_permissions,omitempty"`
 }
 
 // Error defines model for Error.

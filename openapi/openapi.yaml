@@ -1056,6 +1056,9 @@ components:
           type: string
         group_permissions:
           type: string
+        thumbnail:
+          description: name of the thumbnail
+          type: string
       required:
         - name
     TagRequestPayload:
