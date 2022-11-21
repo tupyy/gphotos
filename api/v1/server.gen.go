@@ -55,13 +55,22 @@ type ServerInterface interface {
 	SetAlbumPermissions(c *gin.Context, albumId AlbumId)
 
 	// (GET /api/gphotos/v1/albums/{album_id}/photos)
-	GetAlbumPhotos(c *gin.Context, albumId AlbumId)
+	GetAlbumPhotos(c *gin.Context, albumId AlbumId, params GetAlbumPhotosParams)
 
 	// (DELETE /api/gphotos/v1/albums/{album_id}/tags/{tag_id})
 	RemoveTagFromAlbum(c *gin.Context, albumId AlbumId, tagId TagId)
 
 	// (POST /api/gphotos/v1/albums/{album_id}/tags/{tag_id})
 	SetTagToAlbum(c *gin.Context, albumId AlbumId, tagId TagId)
+
+	// (GET /api/gphotos/v1/albums/{album_id}/thumbnail)
+	GetAlbumThumbnail(c *gin.Context, albumId AlbumId)
+
+	// (DELETE /api/gphotos/v1/photo/{photo_id})
+	DeletePhoto(c *gin.Context, photoId PhotoId)
+
+	// (GET /api/gphotos/v1/photo/{photo_id})
+	GetPhoto(c *gin.Context, photoId PhotoId)
 
 	// (GET /api/gphotos/v1/tags)
 	GetTags(c *gin.Context, params GetTagsParams)
@@ -417,11 +426,36 @@ func (siw *ServerInterfaceWrapper) GetAlbumPhotos(c *gin.Context) {
 		return
 	}
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetAlbumPhotosParams
+
+	// ------------- Optional query parameter "page" -------------
+	if paramValue := c.Query("page"); paramValue != "" {
+
+	}
+
+	err = runtime.BindQueryParameter("form", true, false, "page", c.Request.URL.Query(), &params.Page)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter page: %s", err)})
+		return
+	}
+
+	// ------------- Optional query parameter "size" -------------
+	if paramValue := c.Query("size"); paramValue != "" {
+
+	}
+
+	err = runtime.BindQueryParameter("form", true, false, "size", c.Request.URL.Query(), &params.Size)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter size: %s", err)})
+		return
+	}
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
 
-	siw.Handler.GetAlbumPhotos(c, albumId)
+	siw.Handler.GetAlbumPhotos(c, albumId, params)
 }
 
 // RemoveTagFromAlbum operation middleware
@@ -482,6 +516,69 @@ func (siw *ServerInterfaceWrapper) SetTagToAlbum(c *gin.Context) {
 	}
 
 	siw.Handler.SetTagToAlbum(c, albumId, tagId)
+}
+
+// GetAlbumThumbnail operation middleware
+func (siw *ServerInterfaceWrapper) GetAlbumThumbnail(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "album_id" -------------
+	var albumId AlbumId
+
+	err = runtime.BindStyledParameter("simple", false, "album_id", c.Param("album_id"), &albumId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter album_id: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetAlbumThumbnail(c, albumId)
+}
+
+// DeletePhoto operation middleware
+func (siw *ServerInterfaceWrapper) DeletePhoto(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "photo_id" -------------
+	var photoId PhotoId
+
+	err = runtime.BindStyledParameter("simple", false, "photo_id", c.Param("photo_id"), &photoId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter photo_id: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.DeletePhoto(c, photoId)
+}
+
+// GetPhoto operation middleware
+func (siw *ServerInterfaceWrapper) GetPhoto(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "photo_id" -------------
+	var photoId PhotoId
+
+	err = runtime.BindStyledParameter("simple", false, "photo_id", c.Param("photo_id"), &photoId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter photo_id: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetPhoto(c, photoId)
 }
 
 // GetTags operation middleware
@@ -619,6 +716,12 @@ func RegisterHandlersWithOptions(router *gin.Engine, si ServerInterface, options
 
 	router.POST(options.BaseURL+"/api/gphotos/v1/albums/:album_id/tags/:tag_id", wrapper.SetTagToAlbum)
 
+	router.GET(options.BaseURL+"/api/gphotos/v1/albums/:album_id/thumbnail", wrapper.GetAlbumThumbnail)
+
+	router.DELETE(options.BaseURL+"/api/gphotos/v1/photo/:photo_id", wrapper.DeletePhoto)
+
+	router.GET(options.BaseURL+"/api/gphotos/v1/photo/:photo_id", wrapper.GetPhoto)
+
 	router.GET(options.BaseURL+"/api/gphotos/v1/tags", wrapper.GetTags)
 
 	router.POST(options.BaseURL+"/api/gphotos/v1/tags", wrapper.CreateTag)
@@ -633,42 +736,43 @@ func RegisterHandlersWithOptions(router *gin.Engine, si ServerInterface, options
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
-	"TgAA",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

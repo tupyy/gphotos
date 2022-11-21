@@ -32,7 +32,7 @@ func (server *Server) SetAlbumPermissions(c *gin.Context, albumId apiv1.AlbumId)
 		return
 	}
 
-	album, err := server.GetAlbumService().Query().First(ctx, id)
+	album, err := server.AlbumService().Query().First(ctx, id)
 	if err != nil {
 		logger.WithError(err).WithField("album id", c.GetInt("id")).Error("failed to get album")
 		common.AbortNotFoundWithJson(c, err, "update album")
@@ -68,7 +68,7 @@ func (server *Server) SetAlbumPermissions(c *gin.Context, albumId apiv1.AlbumId)
 		return
 	}
 
-	if err := server.GetAlbumService().SetPermissions(ctx, album, perms); err != nil {
+	if err := server.AlbumService().SetPermissions(ctx, album, perms); err != nil {
 		common.AbortBadRequestWithJson(c, err, "cannot set permissions")
 		return
 	}
@@ -90,7 +90,7 @@ func (server *Server) GetAlbumPermissions(c *gin.Context, albumId string) {
 		return
 	}
 
-	album, err := server.GetAlbumService().Query().First(ctx, id)
+	album, err := server.AlbumService().Query().First(ctx, id)
 	if err != nil {
 		logger.WithError(err).WithField("album id", c.GetInt("id")).Error("failed to get album")
 		common.AbortNotFound(c, err, "update album")

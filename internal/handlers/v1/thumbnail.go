@@ -1,74 +1,70 @@
 package v1
 
 import (
+	"context"
+	"io/ioutil"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
-	"github.com/tupyy/gophoto/internal/services/album"
+	"github.com/sirupsen/logrus"
+	apiv1 "github.com/tupyy/gophoto/api/v1"
+	"github.com/tupyy/gophoto/internal/common"
+	"github.com/tupyy/gophoto/internal/entity"
+	"github.com/tupyy/gophoto/internal/services/permissions"
+	"github.com/tupyy/gophoto/internal/utils/logutil"
 )
 
-func Thumbnail(r *gin.RouterGroup, albumService *album.Service) {
-	// s, _ := c.Get("sessionData")
-	// session := s.(entity.Session)
+func (server *Server) GetAlbumThumbnail(c *gin.Context, albumId apiv1.AlbumId) {
+	session := c.MustGet("session").(entity.Session)
 
-	// ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
-	// logger := logutil.GetLogger(ctx)
+	ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
+	logger := logutil.GetLogger(ctx)
 
-	// album, err := albumService.Query().First(ctx, int32(c.GetInt("id")))
-	// if err != nil {
-	// 	logger.WithError(err).WithField("album id", c.GetInt("id")).Error("failed to get album")
-	// 	common.AbortNotFoundWithJson(c, err, "update album")
+	id, err := decrypt(albumId)
+	if err != nil {
+		logger.WithError(err).WithField("album id", albumId).Error("failed to decrypt album id")
+		common.AbortInternalError(c)
+		return
+	}
 
-	// 	return
-	// }
+	album, err := server.AlbumService().Query().First(ctx, id)
+	if err != nil {
+		logger.WithError(err).WithField("album id", c.GetInt("id")).Error("failed to get album")
+		common.AbortNotFound(c, err, "update album")
 
-	// // only editors and admins have the right to create albums
-	// apr := permissions.NewAlbumPermissionService()
-	// hasPermission := apr.Policy(permissions.OwnerPolicy{}).
-	// 	Policy(permissions.RolePolicy{Role: entity.RoleAdmin}).
-	// 	Policy(permissions.UserPermissionPolicy{Permission: entity.PermissionEditAlbum}).
-	// 	Policy(permissions.GroupPermissionPolicy{Permission: entity.PermissionEditAlbum}).
-	// 	Strategy(permissions.AtLeastOneStrategy).
-	// 	Resolve(album, session.User)
+		return
+	}
 
-	// if !hasPermission {
-	// 	common.AbortForbiddenWithJson(c, errors.New("user has no edit permission"), "user role forbids editing the album")
+	// only users with editPermission set for this album or one of user's group with the same permission
+	// can edit this album
+	apr := permissions.NewAlbumPermissionService()
+	hasPermission := apr.Policy(permissions.OwnerPolicy{}).
+		Policy(permissions.RolePolicy{Role: entity.RoleAdmin}).
+		Policy(permissions.AnyUserPermissionPolicty{}).
+		Policy(permissions.AnyGroupPermissionPolicy{}).
+		Strategy(permissions.AtLeastOneStrategy).
+		Resolve(album, session.User)
 
-	// 	return
-	// }
+	if !hasPermission {
+		logger.WithFields(logrus.Fields{
+			"request user id": session.User.ID,
+			"album owner id":  album.Owner,
+		}).Error("current user has no permission of this album")
+		common.AbortForbidden(c, common.NewMissingPermissionError(entity.PermissionEditAlbum, album, session.User), "get album")
+		return
+	}
 
-	// var thumbnailForm form.AlbumThumbnail
-	// if err := c.ShouldBind(&thumbnailForm); err != nil {
-	// 	logger.WithError(err).WithField("query parameters", fmt.Sprintf("%v", thumbnailForm)).Error("failed to bind query parameters to form")
-	// 	common.AbortBadRequestWithJson(c, err, "fail to bind to form")
+	thumbnail, _, err := server.MediaService().GetPhoto(c, album.Bucket, album.Thumbnail)
+	if err != nil {
+		common.AbortNotFoundWithJson(c, err, "thumbnail not found")
+		return
+	}
 
-	// 	return
-	// }
+	content, err := ioutil.ReadAll(thumbnail)
+	if err != nil {
+		common.AbortInternalErrorWithJson(c)
+		return
+	}
 
-	// gen := encryption.NewGenerator(conf.GetEncryptionKey())
-
-	// decryptedImageName, err := gen.DecryptData(thumbnailForm.Image)
-	// if err != nil {
-	// 	logger.WithError(err).WithField("album", album.String()).Error("failed to set thumbnail")
-
-	// 	common.AbortInternalErrorWithJson(c)
-
-	// 	return
-	// }
-
-	// parts := strings.Split(decryptedImageName, "/")
-	// thumbnailImageName := fmt.Sprintf("thumbnail/%s", parts[1])
-
-	// logger.WithField("thumbnail", thumbnailImageName).Debug("set thumbnail")
-
-	// encryptedThumbnailImageName, _ := gen.EncryptData(thumbnailImageName)
-	// album.Thumbnail = encryptedThumbnailImageName
-
-	// if _, err := albumService.Update(ctx, album); err != nil {
-	// 	logger.WithError(err).WithField("album", album.String()).Error("failed to set thumbnail")
-
-	// 	common.AbortInternalErrorWithJson(c)
-
-	// 	return
-	// }
-
-	// c.JSON(http.StatusOK, "ok")
+	c.Data(http.StatusOK, "image/png", content)
 }

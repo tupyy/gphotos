@@ -151,6 +151,6 @@ func createServer(client pgclient.Client, mclient *minio.Client) (*handlersv1.Se
 	services["user"] = usersService
 	services["tag"] = tagService
 
-	server := handlersv1.NewServer(albumService, usersService, tagService)
+	server := handlersv1.NewServer(albumService, usersService, tagService, mediaService)
 	return server, nil
 }

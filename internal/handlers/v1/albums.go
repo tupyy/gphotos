@@ -31,7 +31,7 @@ func (server *Server) GetAlbums(c *gin.Context, params apiv1.GetAlbumsParams) {
 	ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
 	logger := logutil.GetLogger(c)
 
-	albumService := server.GetAlbumService()
+	albumService := server.AlbumService()
 
 	q := albumService.Query().OwnAlbums(true)
 	if params.Personal != nil {
@@ -117,7 +117,7 @@ func (server *Server) GetAlbumsByGroup(c *gin.Context, groupId string, params ap
 		return
 	}
 
-	albumService := server.GetAlbumService()
+	albumService := server.AlbumService()
 
 	filter, _ := filter.New(fmt.Sprintf("permissions.group = '%s'", id))
 	q := albumService.Query().
@@ -173,7 +173,7 @@ func (server *Server) GetAlbumsByUser(c *gin.Context, userId string, params apiv
 		return
 	}
 
-	albumService := server.GetAlbumService()
+	albumService := server.AlbumService()
 
 	filter, _ := filter.New(fmt.Sprintf("permissions.user = '%s'", id))
 	q := albumService.Query().
@@ -228,7 +228,7 @@ func (server *Server) GetAlbumByID(c *gin.Context, albumID apiv1.AlbumId) {
 		return
 	}
 
-	album, err := server.GetAlbumService().Query().First(ctx, id)
+	album, err := server.AlbumService().Query().First(ctx, id)
 	if err != nil {
 		logger.WithError(err).WithField("album id", c.GetInt("id")).Error("failed to get album")
 		common.AbortNotFound(c, err, "update album")
@@ -294,7 +294,7 @@ func (server *Server) CreateAlbum(c *gin.Context) {
 		Location:    escapeFieldPtr(payload.Location),
 		Owner:       session.User.Username,
 	}
-	albumID, err := server.GetAlbumService().Create(ctx, album)
+	albumID, err := server.AlbumService().Create(ctx, album)
 	if err != nil {
 		common.AbortInternalError(c)
 
@@ -326,7 +326,7 @@ func (server *Server) UpdateAlbum(c *gin.Context, albumID apiv1.AlbumId) {
 		return
 	}
 
-	album, err := server.GetAlbumService().Query().First(ctx, id)
+	album, err := server.AlbumService().Query().First(ctx, id)
 	if err != nil {
 		logger.WithError(err).WithField("album id", c.GetInt("id")).Error("failed to get album")
 		common.AbortNotFoundWithJson(c, err, "update album")
@@ -373,7 +373,7 @@ func (server *Server) UpdateAlbum(c *gin.Context, albumID apiv1.AlbumId) {
 		album.Name = escapeField(payload.Name)
 	}
 
-	if _, err := server.GetAlbumService().Update(ctx, album); err != nil {
+	if _, err := server.AlbumService().Update(ctx, album); err != nil {
 		logger.WithError(err).WithFields(logrus.Fields{
 			"album id": id,
 			"album":    fmt.Sprintf("%+v", album),
@@ -401,7 +401,7 @@ func (server *Server) DeleteAlbum(c *gin.Context, albumId apiv1.AlbumId) {
 		return
 	}
 
-	album, err := server.GetAlbumService().Query().First(ctx, id)
+	album, err := server.AlbumService().Query().First(ctx, id)
 	if err != nil {
 		logger.WithError(err).WithField("album id", c.GetInt("id")).Error("failed to get album")
 		common.AbortNotFound(c, err, "update album")
@@ -428,7 +428,7 @@ func (server *Server) DeleteAlbum(c *gin.Context, albumId apiv1.AlbumId) {
 		return
 	}
 
-	if err := server.GetAlbumService().Delete(ctx, album); err != nil {
+	if err := server.AlbumService().Delete(ctx, album); err != nil {
 		logger.WithError(err).WithField("album id", album.ID).Error("failed to delete album")
 		common.AbortInternalError(c)
 

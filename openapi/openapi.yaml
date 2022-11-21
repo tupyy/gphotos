@@ -433,6 +433,42 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /api/gphotos/v1/albums/{album_id}/thumbnail:
+    get:
+      operationId: GetAlbumThumbnail
+      tags:
+        - Albums
+      parameters:
+        - $ref: "#/components/parameters/album_id"
+      responses:
+        200:
+          description: retreive album thumbnail
+          content:
+            image/png:
+        401:
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        403:
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        404:
+          description: No album found with the specified ID exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Internal error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /api/gphotos/v1/albums/{album_id}/photos:
     get:
       tags:
@@ -441,6 +477,8 @@ paths:
       operationId: getAlbumPhotos
       parameters:
         - $ref: "#/components/parameters/album_id"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/size"
       responses:
         200:
           description: retrieve the list of photos of the album
@@ -692,6 +730,77 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /api/gphotos/v1/photo/{photo_id}:
+    get:
+      tags:
+      - Media
+      description: get photo with specified id
+      operationId: getPhoto
+      parameters:
+        - $ref: "#/components/parameters/photo_id"
+      responses:
+        200:
+          description: retrieve the photo with specified id
+          content:
+            image/png:
+        401:
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        403:
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        404:
+          description: No photo found with the specified ID exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Internal error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+      - Media
+      description: delete photo with specified id
+      operationId: deletePhoto
+      parameters:
+        - $ref: "#/components/parameters/photo_id"
+      responses:
+        204:
+          description: delete the photo with specified id
+        401:
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        403:
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        404:
+          description: No photo found with the specified ID exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Internal error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 components:
   schemas:
     ObjectReference:
@@ -801,12 +910,6 @@ components:
         properties:
           album:
             $ref: '#/components/schemas/ObjectReference'
-          filename:
-            type: string
-            description: name of the file
-          bucket:
-            type: string
-            description: bucket where the photo is stored
           thumbnail:
             type: string
             description: path to the thumbnail of the photo
@@ -978,6 +1081,13 @@ components:
     tag_id:
       name: tag_id
       description: The ID of the tag
+      schema:
+        type: string
+      in: path
+      required: true
+    photo_id:
+      name: photo_id
+      description: The ID of the resource
       schema:
         type: string
       in: path

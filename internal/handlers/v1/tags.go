@@ -152,7 +152,7 @@ func (server *Server) RemoveTagFromAlbum(c *gin.Context, albumId apiv1.AlbumId, 
 
 	albumID, _ := gen.DecryptData(albumId)
 
-	album, err := server.GetAlbumService().Query().First(c, albumID)
+	album, err := server.AlbumService().Query().First(c, albumID)
 	if err != nil {
 		common.AbortNotFoundWithJson(c, err, "dissociate tag from album")
 		return
@@ -220,7 +220,7 @@ func (server *Server) SetTagToAlbum(c *gin.Context, albumId apiv1.AlbumId, tagId
 	}
 
 	albumID, _ := gen.DecryptData(albumId)
-	album, err := server.GetAlbumService().Query().First(c, albumID)
+	album, err := server.AlbumService().Query().First(c, albumID)
 	if err != nil {
 		common.AbortNotFoundWithJson(c, err, "associate tag from album")
 

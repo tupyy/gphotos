@@ -109,15 +109,9 @@ type Permissions struct {
 // Photo defines model for Photo.
 type Photo struct {
 	Album ObjectReference `json:"album"`
-
-	// bucket where the photo is stored
-	Bucket string `json:"bucket"`
-
-	// name of the file
-	Filename string `json:"filename"`
-	Href     string `json:"href"`
-	Id       string `json:"id"`
-	Kind     string `json:"kind"`
+	Href  string          `json:"href"`
+	Id    string          `json:"id"`
+	Kind  string          `json:"kind"`
 
 	// path to the thumbnail of the photo
 	Thumbnail string `json:"thumbnail"`
@@ -186,6 +180,9 @@ type GroupID = string
 // Page defines model for page.
 type Page = int32
 
+// PhotoId defines model for photo_id.
+type PhotoId = string
+
 // Search defines model for search.
 type Search = string
 
@@ -245,6 +242,15 @@ type UpdateAlbumJSONBody = AlbumRequestPayload
 
 // SetAlbumPermissionsJSONBody defines parameters for SetAlbumPermissions.
 type SetAlbumPermissionsJSONBody = AlbumPermissionsRequest
+
+// GetAlbumPhotosParams defines parameters for GetAlbumPhotos.
+type GetAlbumPhotosParams struct {
+	// page number
+	Page *Page `form:"page,omitempty" json:"page,omitempty"`
+
+	// total number of items per page
+	Size *Size `form:"size,omitempty" json:"size,omitempty"`
+}
 
 // GetTagsParams defines parameters for GetTags.
 type GetTagsParams struct {
