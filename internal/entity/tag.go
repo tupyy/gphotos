@@ -3,7 +3,7 @@ package entity
 import "fmt"
 
 type Tag struct {
-	ID int32
+	ID string
 	// UserID - id of the owner
 	UserID string
 	// Name - name of the tag
@@ -11,7 +11,7 @@ type Tag struct {
 	// Color - color of the tag (optional)
 	Color *string
 	// Albums -- list of associated albums
-	Albums []int32
+	Albums []string
 }
 
 func (t Tag) String() string {

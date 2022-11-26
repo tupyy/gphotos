@@ -2,8 +2,12 @@ package entity
 
 // HasUserPermissions returns true if user has at least one permission.
 func HasUserPermissions(a Album, userID string) bool {
-	_, found := a.UserPermissions[userID]
-
+	found := false
+	for _, perm := range a.UserPermissions {
+		if perm.OwnerID == userID {
+			return true
+		}
+	}
 	return found
 }
 
@@ -13,7 +17,8 @@ func HasUserPermission(a Album, userID string, permission Permission) bool {
 		return false
 	}
 
-	for _, p := range a.UserPermissions[userID] {
+	perms, _ := GetUserPermissions(a, userID)
+	for _, p := range perms {
 		if p == permission {
 			return true
 		}
@@ -24,11 +29,13 @@ func HasUserPermission(a Album, userID string, permission Permission) bool {
 
 // GetUserPermissions returns all permission of user.
 func GetUserPermissions(a Album, userID string) (permissions []Permission, found bool) {
-	if _, found = a.UserPermissions[userID]; !found {
-		return
+	for _, perm := range a.UserPermissions {
+		if perm.OwnerID == userID {
+			return perm.Permissions, true
+		}
 	}
 
-	return a.UserPermissions[userID], true
+	return []Permission{}, false
 }
 
 // HasGroupPermission returns true if group has permission set for album.
@@ -37,7 +44,8 @@ func HasGroupPermission(a Album, groupName string, permission Permission) bool {
 		return false
 	}
 
-	for _, p := range a.GroupPermissions[groupName] {
+	perms, _ := GetGroupPermissions(a, groupName)
+	for _, p := range perms {
 		if p == permission {
 			return true
 		}
@@ -48,16 +56,22 @@ func HasGroupPermission(a Album, groupName string, permission Permission) bool {
 
 // HasGroupPermissions returns true if group has at least one permission.
 func HasGroupPermissions(a Album, groupName string) bool {
-	_, found := a.GroupPermissions[groupName]
-
+	found := false
+	for _, perm := range a.GroupPermissions {
+		if perm.OwnerID == groupName {
+			return true
+		}
+	}
 	return found
 }
 
 // GetGroupPermissions returns all permission of group.
 func GetGroupPermissions(a Album, groupName string) (permissions []Permission, found bool) {
-	if _, found = a.GroupPermissions[groupName]; !found {
-		return
+	for _, perm := range a.GroupPermissions {
+		if perm.OwnerID == groupName {
+			return perm.Permissions, true
+		}
 	}
 
-	return a.GroupPermissions[groupName], true
+	return []Permission{}, false
 }

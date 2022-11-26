@@ -8,7 +8,7 @@ import (
 
 	"github.com/disintegration/imaging"
 	"github.com/rwcarlsen/goexif/exif"
-	"github.com/tupyy/gophoto/utils/logutil"
+	"github.com/tupyy/gophoto/internal/utils/logutil"
 )
 
 // Process encode the image as jpg and create a thumbnail.

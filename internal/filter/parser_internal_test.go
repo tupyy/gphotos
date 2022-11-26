@@ -19,18 +19,18 @@ func TestParser(t *testing.T) {
 			hasError: false,
 		},
 		{
-			test:     "name = 'test' & description != 'toto' & location = 'loc'",
-			expected: "(((\"name\" = \"test\") & (\"description\" != \"toto\")) & (\"location\" = \"loc\"))",
+			test:     "name = 'test' and description != 'toto' and location = 'loc'",
+			expected: "(((\"name\" = \"test\") and (\"description\" != \"toto\")) and (\"location\" = \"loc\"))",
 			hasError: false,
 		},
 		{
-			test:     "name = 'test' & description != 'toto' & location = 'loc' | tag = 'tag'",
-			expected: "((((\"name\" = \"test\") & (\"description\" != \"toto\")) & (\"location\" = \"loc\")) | (\"tag\" = \"tag\"))",
+			test:     "name = 'test' and description != 'toto' and location = 'loc' or tag = 'tag'",
+			expected: "((((\"name\" = \"test\") and (\"description\" != \"toto\")) and (\"location\" = \"loc\")) or (\"tag\" = \"tag\"))",
 			hasError: false,
 		},
 		{
-			test:     "name = 'test' | description != 'toto'",
-			expected: "((\"name\" = \"test\") | (\"description\" != \"toto\"))",
+			test:     "name = 'test' or description != 'toto'",
+			expected: "((\"name\" = \"test\") or (\"description\" != \"toto\"))",
 			hasError: false,
 		},
 		{
@@ -38,15 +38,15 @@ func TestParser(t *testing.T) {
 			hasError: true,
 		},
 		{
-			test:     "& name = 'test'",
+			test:     "and name = 'test'",
 			hasError: true,
 		},
 		{
-			test:     "name = 'test' &",
+			test:     "name = 'test' and",
 			hasError: true,
 		},
 		{
-			test:     "name & 'test'",
+			test:     "name and 'test'",
 			hasError: true,
 		},
 		{
@@ -54,28 +54,21 @@ func TestParser(t *testing.T) {
 			hasError: true,
 		},
 		{
-			test:     "name ='test' & (name != 'toto' & name != 'titi')",
-			expected: "((\"name\" = \"test\") & ((\"name\" != \"toto\") & (\"name\" != \"titi\")))",
+			test:     "name in ['1', '2']",
+			expected: "(\"name\" in [1,2])",
 			hasError: false,
 		},
 		{
-			test:     "name ='test' & (name != 'toto' & (name != 'titi'))",
-			expected: "((\"name\" = \"test\") & ((\"name\" != \"toto\") & (\"name\" != \"titi\")))",
-			hasError: false,
-		},
-		{
-			test:     "name ='test' & (name != 'toto' & (name != 'titi')",
+			test:     "name in '1', '2']",
 			hasError: true,
 		},
 		{
-			test:     "(name ='test') & (name != 'toto') & (name != 'titi')",
-			expected: "(((\"name\" = \"test\") & (\"name\" != \"toto\")) & (\"name\" != \"titi\"))",
-			hasError: false,
+			test:     "name in ['1', '2'",
+			hasError: true,
 		},
 		{
-			test:     "((name ='test' & name != 'toto') & name != 'titi') & name > 'tata'",
-			expected: "((((\"name\" = \"test\") & (\"name\" != \"toto\")) & (\"name\" != \"titi\")) & (\"name\" > \"tata\"))",
-			hasError: false,
+			test:     "name in ['1''2']",
+			hasError: true,
 		},
 	}
 

@@ -5,11 +5,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/tupyy/gophoto/internal/domain"
 	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/internal/services"
 	"github.com/tupyy/gophoto/internal/services/media"
-	"github.com/tupyy/gophoto/utils/logutil"
+	"github.com/tupyy/gophoto/internal/utils/logutil"
 )
 
 var (
@@ -22,8 +21,8 @@ type Filter interface {
 }
 
 type Query struct {
-	limit  int
-	offset int
+	size int
+	page int
 	// get personal albums.
 	personalAlbums bool
 	// get shared albums.
@@ -31,7 +30,7 @@ type Query struct {
 	// filter
 	filter Filter
 	// album repo
-	albumRepo domain.Album
+	albumRepo AlbumRepository
 	// media service
 	mediaService *media.Service
 	//album sorter
@@ -51,14 +50,13 @@ func (q *Query) Filter(filter Filter) *Query {
 	return q
 }
 
-func (q *Query) Limit(limit int) *Query {
-	q.limit = limit
-
+func (q *Query) Size(size int) *Query {
+	q.size = size
 	return q
 }
 
-func (q *Query) Offset(offset int) *Query {
-	q.offset = offset
+func (q *Query) Page(page int) *Query {
+	q.page = page
 
 	return q
 }
@@ -84,11 +82,11 @@ func (q *Query) SharedAlbums(b bool) *Query {
 
 // All returns a list of albums sliced if offset & limit are set and the total number of albums.
 func (q *Query) All(ctx context.Context, user entity.User) ([]entity.Album, int, error) {
-	albums := make(map[int32]entity.Album)
+	albums := make(map[string]entity.Album)
 
 	if q.personalAlbums {
 		// fetch personal albums
-		pa, err := q.albumRepo.GetByOwnerID(ctx, user.ID)
+		pa, err := q.albumRepo.GetByOwner(ctx, user.Username)
 		if err != nil {
 			return []entity.Album{}, 0, fmt.Errorf("%w personal album: %v", services.ErrGetAlbums, err)
 		}
@@ -110,16 +108,17 @@ func (q *Query) All(ctx context.Context, user entity.User) ([]entity.Album, int,
 				albums[a.ID] = a
 			}
 		} else if user.CanShare {
-			sharedAlbums, err := q.albumRepo.GetByUserID(ctx, user.ID)
+			sharedAlbums, err := q.albumRepo.GetByUser(ctx, user.Username)
 			if err != nil {
 				return []entity.Album{}, 0, fmt.Errorf("%w shared albums: %v", services.ErrGetAlbums, err)
 			}
 
 			// get albums shared by the user's groups but filter out the ones owns by the user
-			groupSharedAlbum, err := q.albumRepo.GetByGroups(ctx, groupsToList(user.Groups))
-			if err != nil {
-				return []entity.Album{}, 0, fmt.Errorf("%w shared albums by group: %v", services.ErrGetAlbums, err)
-			}
+			// groupSharedAlbum, err := q.albumRepo.GetByGroups(ctx, groupsToList(user.Groups))
+			// if err != nil {
+			// 	return []entity.Album{}, 0, fmt.Errorf("%w shared albums by group: %v", services.ErrGetAlbums, err)
+			// }
+			groupSharedAlbum := []entity.Album{}
 
 			for i := 0; i < len(sharedAlbums)+len(groupSharedAlbum); i++ {
 				found := false
@@ -163,20 +162,18 @@ func (q *Query) All(ctx context.Context, user entity.User) ([]entity.Album, int,
 		q.sorter.Sort(albs)
 	}
 
-	pages := q.paginate(albs)
-
-	return pages, len(albs), nil
+	return q.paginate(albs), len(albs), nil
 }
 
-func (q *Query) First(ctx context.Context, id int32) (entity.Album, error) {
+func (q *Query) First(ctx context.Context, id string) (entity.Album, error) {
 	album, err := q.albumRepo.GetByID(ctx, id)
 	if err != nil {
-		return entity.Album{}, fmt.Errorf("failed to get album '%d': %v", id, err)
+		return entity.Album{}, fmt.Errorf("failed to get album '%s': %v", id, err)
 	}
 
 	medias, err := q.mediaService.ListBucket(ctx, album.Bucket)
 	if err != nil {
-		return entity.Album{}, fmt.Errorf("%w album id '%d': %v", services.ErrListBucket, id, err)
+		return entity.Album{}, fmt.Errorf("%w album id '%s': %v", services.ErrListBucket, id, err)
 	}
 
 	photos := make([]entity.Media, 0, len(medias))
@@ -201,42 +198,24 @@ func (q *Query) paginate(albums []entity.Album) []entity.Album {
 	// pagination
 	var page []entity.Album
 
-	if q.offset > 0 && q.limit > 0 {
-		if q.offset >= len(albums) {
-			return []entity.Album{}
-		}
-
-		limit := q.limit
-		if q.offset+limit >= len(albums) {
-			limit = len(albums) - q.offset
-		}
-
-		page = append(page, albums[q.offset:q.offset+limit]...)
-
-		return page
+	if q.page <= 0 || q.size <= 0 {
+		return albums
 	}
 
-	if q.offset > 0 && q.limit == 0 {
-		if q.offset > len(albums) {
-			return []entity.Album{}
-		}
+	offset := (q.page - 1) * q.size
+	limit := offset + q.size
 
-		page = append(page, albums[q.offset:]...)
-
-		return page
+	if limit >= len(albums) {
+		limit = len(albums)
 	}
 
-	if q.offset == 0 && q.limit > 0 {
-		if q.limit > len(albums) {
-			return albums
-		}
-
-		page = append(page, albums[:q.limit]...)
-
-		return page
+	if offset >= len(albums) {
+		return []entity.Album{}
 	}
 
-	return albums
+	page = append(page, albums[offset:limit]...)
+
+	return page
 }
 
 func groupsToList(groups []entity.Group) []string {

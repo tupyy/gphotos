@@ -8,43 +8,41 @@ const (
 
 	AND
 	EQUALS
-	DIV
 	GTE
 	GREATER
-	LPAREN
 	LTE
 	LESS
 	OR
-	TILDA
 	NOT_EQUALS
-	RPAREN
+	LIKE
+	IN
+	LBRACKET
+	RBRACKET
+	COMMA
 
 	// literal names as (name, description, location..)
-	VAR_NAME
 	STRING
-	DATE
-	REGEX // regex are defined as /regex/
+	VARIABLE
 )
 
 var tokenNames = map[Token]string{
 	ILLEGAL:    "illegal",
 	EOL:        "EOL",
-	AND:        "&",
-	DIV:        "/",
+	AND:        "and",
 	EQUALS:     "=",
 	GTE:        ">=",
 	GREATER:    ">",
-	LPAREN:     "(",
 	LTE:        "<=",
 	LESS:       "<",
-	OR:         "|",
-	TILDA:      "~",
-	RPAREN:     ")",
+	OR:         "or",
 	NOT_EQUALS: "!=",
-	VAR_NAME:   "name",
 	STRING:     "string",
-	DATE:       "date",
-	REGEX:      "regex",
+	LBRACKET:   "[",
+	RBRACKET:   "]",
+	COMMA:      ",",
+	IN:         "in",
+	VARIABLE:   "variable",
+	LIKE:       "like",
 }
 
 func (t Token) String() string {

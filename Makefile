@@ -63,7 +63,7 @@ IMAGE_TAG=$(VERSION)-$(GIT_COMMIT)
 IMAGE_NAME=gophoto
 NAME=gophoto
 
-.PHONY: build.prepare build.vendor build.vendor.full build.docker build.get.imagename build.get.tag
+.PHONY: build.prepare build.vendor build.vendor.full build.docker build.get.imagename build.get.tag build.swagger
 
 #help build.prepare: prepare target/ folder
 build.prepare:
@@ -96,7 +96,6 @@ build.get.imagename:
 #help build.get.tag: Allows to get the tag of the service (for the CI)
 build.get.tag:
 	@echo -n $(IMAGE_TAG)
-
 
 #####################
 # Check targets     #
@@ -156,6 +155,10 @@ run.docker.logs:
 
 #help run.local: run the application locally
 run.local:
+	$(CURDIR)/target/run serve --config $(CURDIR)/resources/config-$(ENV).json
+
+run.local.noauth: GPHOTOS_AUTH_DISABLED ?= "true"
+run.local.noauth:
 	$(CURDIR)/target/run serve --config $(CURDIR)/resources/.$(NAME)-$(ENV).yaml
 
 #################
@@ -183,11 +186,20 @@ GEN_CMD=$(TOOLS_DIR)/gen --sqltype=postgres \
 	--module=github.com/tupyy/gophoto/internal/domain \
 	--gorm --no-json --no-xml --overwrite --mapping tools/mappings.json
 
-.PHONY: generate.models
+.PHONY: generate.openapi generate.models
+
+#help generate.openapi: generate server and model from openapi.yaml
+generate.openapi:
+	$(TOOLS_DIR)/oapi-codegen --config openapi/server.cfg.yaml openapi/openapi.yaml
+	$(TOOLS_DIR)/oapi-codegen --config openapi/models.cfg.yaml openapi/openapi.yaml
 
 #help generate.models: generate models for the gophoto database
 generate.models:
 	sh -c '$(GEN_CMD) --connstr "$(BASE_CONNSTR)/gophoto?sslmode=disable"  --model=models --database gophoto' 						# Generate models for the DB tables
+
+generate.typescript:
+	$(TOOLS_DIR)/oapi-codegen --config openapi/server.cfg.yaml openapi/openapi.yaml
+
 
 #####################
 # Include section   #

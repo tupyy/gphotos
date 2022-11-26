@@ -81,7 +81,7 @@ func (apr *albumPermissionService) Resolve(album entity.Album, user entity.User)
 type OwnerPolicy struct{}
 
 func (i OwnerPolicy) Resolve(a entity.Album, u entity.User) bool {
-	return a.OwnerID == u.ID
+	return a.Owner == u.Username
 }
 
 // RolePolicy checks if the user has a certain role.
@@ -99,13 +99,13 @@ type UserPermissionPolicy struct {
 }
 
 func (up UserPermissionPolicy) Resolve(a entity.Album, u entity.User) bool {
-	return entity.HasUserPermission(a, u.ID, up.Permission)
+	return entity.HasUserPermission(a, u.Username, up.Permission)
 }
 
 type AnyUserPermissionPolicty struct{}
 
 func (ap AnyUserPermissionPolicty) Resolve(a entity.Album, u entity.User) bool {
-	return entity.HasUserPermissions(a, u.ID)
+	return entity.HasUserPermissions(a, u.Username)
 }
 
 // GroupPermissionPolicy checks if one of the users's group has the permission set.

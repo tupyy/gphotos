@@ -8,13 +8,13 @@ import (
 
 type Album struct {
 	// ID - id of the album
-	ID int32
+	ID string
 	// Name - name of the album
-	Name string `validate:"required"`
+	Name string
 	// CreateAt - creation date
-	CreatedAt time.Time `validate:"required"`
-	// OwnerID - owner-s id
-	OwnerID string `validate:"required"`
+	CreatedAt time.Time
+	// Owner - owner's username
+	Owner string
 	// Description - description of the album
 	Description string
 	// Location - location of the album
@@ -25,10 +25,10 @@ type Album struct {
 	Thumbnail string
 	// UserPermissions - holds the list of permissions of other users for this album.
 	// The key is the user id.
-	UserPermissions Permissions
+	UserPermissions []AlbumPermission
 	// GroupPermissions - holds the list of permissions of groups for this album.
 	// The key is the group name.
-	GroupPermissions Permissions
+	GroupPermissions []AlbumPermission
 	// Photos - list of photos
 	Photos []Media
 	// Videos - list of videos
@@ -37,18 +37,10 @@ type Album struct {
 	Tags []Tag
 }
 
-func (a Album) Validate() error {
-	if err := validate.Struct(a); err != nil {
-		return fmt.Errorf("%w album not valid %v", ErrInvalidEntity, err)
-	}
-
-	return nil
-}
-
 func (a Album) String() string {
 	var sb strings.Builder
 
-	fmt.Fprintf(&sb, "id = %d ", a.ID)
+	fmt.Fprintf(&sb, "id = %s ", a.ID)
 	fmt.Fprintf(&sb, "name = %s ", a.Name)
 	fmt.Fprintf(&sb, "created_at = %+v ", a.CreatedAt)
 	fmt.Fprintf(&sb, "description = %s ", a.Description)
@@ -58,12 +50,12 @@ func (a Album) String() string {
 	fmt.Fprintf(&sb, "number of photos = %d ", len(a.Photos))
 	fmt.Fprintf(&sb, "number of videos = %d ", len(a.Videos))
 
-	for k, v := range a.UserPermissions {
-		fmt.Fprintf(&sb, "user = %s, permisions = %+v ", k, v)
+	for _, v := range a.UserPermissions {
+		fmt.Fprintf(&sb, " permissions = %+v ", v)
 	}
 
-	for k, v := range a.GroupPermissions {
-		fmt.Fprintf(&sb, "group = %s, permisions = %+v ", k, v)
+	for v := range a.GroupPermissions {
+		fmt.Fprintf(&sb, "permissions = %+v ", v)
 	}
 
 	for _, t := range a.Tags {

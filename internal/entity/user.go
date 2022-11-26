@@ -4,35 +4,26 @@ import (
 	"fmt"
 )
 
-type Role int
+type Role string
 
 const (
-	RoleUser Role = iota
-	RoleAdmin
-	RoleEditor
+	RoleUser   Role = "user"
+	RoleAdmin  Role = "admin"
+	RoleEditor Role = "editor"
 )
 
 func (r Role) String() string {
-	switch r {
-	case RoleAdmin:
-		return "admin"
-	case RoleUser:
-		return "user"
-	case RoleEditor:
-		return "editor"
-	}
-
-	return "unknown"
+	return string(r)
 }
 
 type User struct {
-	ID        string `validate:"required"`
-	Username  string `validate:"required"`
-	FirstName string
-	LastName  string
-	Role      Role
-	CanShare  bool
-	Groups    []Group
+	ID        string  `json:"id"`
+	Username  string  `json:"username"`
+	FirstName string  `json:"first_name"`
+	LastName  string  `json:"last_name"`
+	Role      Role    `json:"role"`
+	CanShare  bool    `json:"can_share"`
+	Groups    []Group `json:"groups"`
 }
 
 func (u User) Validate() error {

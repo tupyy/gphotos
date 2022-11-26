@@ -20,7 +20,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/entity"
-	"github.com/tupyy/gophoto/utils/logutil"
+	"github.com/tupyy/gophoto/internal/utils/logutil"
 	"golang.org/x/oauth2"
 )
 

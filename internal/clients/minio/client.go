@@ -1,0 +1,18 @@
+package minio
+
+import (
+	"fmt"
+
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
+	"github.com/tupyy/gophoto/internal/conf"
+)
+
+func New(c conf.MinioConfig) (*minio.Client, error) {
+	// Initialize minio client object.
+	fmt.Printf("************%s %s\n", c.AccessID, c.AccessSecretKey)
+	return minio.New(c.Url, &minio.Options{
+		Creds:  credentials.NewStaticV4(c.AccessID, c.AccessSecretKey, ""),
+		Secure: false,
+	})
+}

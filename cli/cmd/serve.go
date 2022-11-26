@@ -22,28 +22,29 @@ import (
 	"fmt"
 
 	"github.com/gin-contrib/sessions/memstore"
+	"github.com/gin-gonic/gin"
 	"github.com/minio/minio-go/v7"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/tupyy/gophoto/internal/api"
+	apiv1 "github.com/tupyy/gophoto/api/v1"
 	"github.com/tupyy/gophoto/internal/auth"
+	minioclient "github.com/tupyy/gophoto/internal/clients/minio"
+	pgclient "github.com/tupyy/gophoto/internal/clients/pg"
 	"github.com/tupyy/gophoto/internal/conf"
-	"github.com/tupyy/gophoto/internal/domain"
-	keycloakRepo "github.com/tupyy/gophoto/internal/domain/keycloak"
-	miniorepo "github.com/tupyy/gophoto/internal/domain/minio"
-	"github.com/tupyy/gophoto/internal/domain/postgres/album"
-	"github.com/tupyy/gophoto/internal/domain/postgres/tag"
-	"github.com/tupyy/gophoto/internal/domain/postgres/user"
 	"github.com/tupyy/gophoto/internal/entity"
+	handlersv1 "github.com/tupyy/gophoto/internal/handlers/v1"
+	keycloakRepo "github.com/tupyy/gophoto/internal/repos/keycloak"
+	miniorepo "github.com/tupyy/gophoto/internal/repos/minio"
+	"github.com/tupyy/gophoto/internal/repos/postgres/album"
+	"github.com/tupyy/gophoto/internal/repos/postgres/tag"
+	"github.com/tupyy/gophoto/internal/repos/postgres/user"
+	"github.com/tupyy/gophoto/internal/router"
 	albumService "github.com/tupyy/gophoto/internal/services/album"
+	"github.com/tupyy/gophoto/internal/services/encryption"
 	"github.com/tupyy/gophoto/internal/services/media"
 	tagService "github.com/tupyy/gophoto/internal/services/tag"
 	usersService "github.com/tupyy/gophoto/internal/services/users"
-	"github.com/tupyy/gophoto/utils/logutil"
-	"github.com/tupyy/gophoto/utils/minioclient"
-	"github.com/tupyy/gophoto/utils/pgclient"
-
-	router "github.com/tupyy/gophoto/internal/routes"
+	"github.com/tupyy/gophoto/internal/utils/logutil"
 )
 
 // serveCmd represents the serve command
@@ -51,23 +52,19 @@ var serveCmd = &cobra.Command{
 	Use:   "serve",
 	Short: "run server",
 	Run: func(cmd *cobra.Command, args []string) {
-		keycloakConf := conf.GetKeycloakConfig()
-
-		fmt.Printf("Conf used\n %s\n", keycloakConf.String())
+		fmt.Printf("Conf used\n %s\n", conf.GetConfiguration())
 
 		logrus.SetLevel(conf.GetLogLevel())
 		logrus.SetReportCaller(true)
-		logrus.SetFormatter(conf.GetLogFormatter())
 
 		// initialize cookie store
 		store := memstore.NewStore([]byte(conf.GetServerSecretKey()))
 
 		// register sessionData
 		gob.Register(entity.Session{})
-		gob.Register(entity.Alert{})
 
 		// initialize postgres client
-		client, err := pgclient.NewClient(conf.GetPostgresConf())
+		client, err := pgclient.New(conf.GetPostgresConf())
 		if err != nil {
 			panic(err)
 		}
@@ -80,41 +77,28 @@ var serveCmd = &cobra.Command{
 		}
 		logutil.GetDefaultLogger().WithField("conf", conf.GetMinioConfig().String()).Info("connected at minio")
 
-		repos, err := createRepos(client, minioClient)
-		if err != nil {
-			panic(err)
-		}
-		logutil.GetDefaultLogger().Info("repositories created")
-
-		// create services
-		mediaService := media.New(repos[domain.MinioRepoName].(domain.Store))
-
-		albumRepo := repos[domain.AlbumRepoName].(domain.Album)
-		tagRepo := repos[domain.TagRepoName].(domain.Tag)
-
-		albumService := albumService.New(albumRepo, mediaService)
-		usersService := usersService.New(repos)
-		tagService := tagService.New(tagRepo)
-
-		logutil.GetDefaultLogger().Info("services created")
-
-		// create keycloak
+		// create keycloak authenticator
 		keycloakAuthenticator := auth.NewKeyCloakAuthenticator(conf.GetKeycloakConfig(), conf.GetServerAuthCallback())
 
 		// create new router
-		r := router.NewRouter(store, keycloakAuthenticator)
+		engine := gin.New()
+		router.InitEngine(engine, store, keycloakAuthenticator)
 
-		api.Logout(r.PrivateGroup, keycloakAuthenticator)
+		//api.Logout(r.PrivateGroup, keycloakAuthenticator)
 
-		api.RegisterIndexHandler(r.PrivateGroup, usersService)
-		api.RegisterAlbumHandler(r.PrivateGroup, albumService, usersService, tagService)
-		api.RegisterMediaHandler(r.PrivateGroup, albumService, mediaService)
-		api.RegisterTagHandler(r.PrivateGroup, albumService, tagService)
+		opt := apiv1.GinServerOptions{
+			Middlewares: make([]apiv1.MiddlewareFunc, 0),
+		}
+
+		server, err := createServer(client, minioClient)
+		if err != nil {
+			panic(err)
+		}
+
+		apiv1.RegisterHandlersWithOptions(engine, server, opt)
 
 		// run server
-		r.Run()
-
-		// TODO shutdown
+		engine.Run(":8080")
 	},
 }
 
@@ -122,53 +106,57 @@ func init() {
 	rootCmd.AddCommand(serveCmd)
 }
 
-func createRepos(client pgclient.Client, mclient *minio.Client) (domain.Repositories, error) {
-	repos := make(domain.Repositories)
+func createServer(client pgclient.Client, mclient *minio.Client) (*handlersv1.Server, error) {
+	services := make(map[string]interface{})
 
 	// create keycloak repo
 	kr, err := keycloakRepo.New(context.Background(), conf.GetKeycloakConfig())
 	if err != nil {
 		logutil.GetDefaultLogger().WithError(err).Warn("cannot create user repo")
 
-		return repos, err
+		return nil, err
 	}
-
-	ttl, interval := conf.GetRepoCacheConfig()
-
-	repos[domain.KeycloakRepoName] = keycloakRepo.NewCacheRepo(kr, ttl, interval)
 
 	// create album repo
 	albumRepo, err := album.NewPostgresRepo(client)
 	if err != nil {
 		logutil.GetDefaultLogger().WithError(err).Warn("failed to create album repo")
 
-		return repos, err
+		return nil, err
 	}
-	repos[domain.AlbumRepoName] = albumRepo
 
 	// create tag repo
 	tagRepo, err := tag.NewPostgresRepo(client)
 	if err != nil {
 		logutil.GetDefaultLogger().WithError(err).Warn("failed to create tag repo")
 
-		return repos, err
+		return nil, err
 	}
-	repos[domain.TagRepoName] = tagRepo
-
 	// create user repo
 	userRepo, err := user.NewPostgresRepo(client)
 	if err != nil {
 		logutil.GetDefaultLogger().WithError(err).Warn("failed to create user pg repo")
 
-		return repos, err
+		return nil, err
 	}
-
-	repos[domain.UserRepoName] = userRepo
 
 	// create minio repo
 	minioRepo := miniorepo.New(mclient)
-	minioCache := miniorepo.NewCacheRepo(minioRepo, ttl, interval)
-	repos[domain.MinioRepoName] = minioCache
+	mediaService := media.New(minioRepo)
 
-	return repos, nil
+	albumService := albumService.New(albumRepo, mediaService)
+	usersService := usersService.New(kr, userRepo)
+	tagService := tagService.New(tagRepo)
+
+	services["album"] = albumService
+	services["user"] = usersService
+	services["tag"] = tagService
+
+	encryption, err := encryption.New()
+	if err != nil {
+		return nil, err
+	}
+
+	server := handlersv1.NewServer(albumService, usersService, tagService, mediaService, encryption)
+	return server, nil
 }
