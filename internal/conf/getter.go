@@ -9,7 +9,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	postgres "github.com/tupyy/gophoto/internal/utils/pgclient"
+	postgres "github.com/tupyy/gophoto/internal/clients/pg"
 )
 
 const (

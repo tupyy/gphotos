@@ -1,4 +1,4 @@
-package pgclient
+package pg
 
 import (
 	"context"
@@ -56,7 +56,7 @@ type CircuitBreaker interface {
 	BreakOnNetworkError(err error) bool
 }
 
-func NewClient(params ClientParams) (Client, error) {
+func New(params ClientParams) (Client, error) {
 	dsn := fmt.Sprintf("host=%v port=%v user=%v password=%v dbname=%v",
 		params.Host, params.Port, params.User, params.Password, params.DBName)
 

@@ -28,6 +28,8 @@ import (
 	"github.com/spf13/cobra"
 	apiv1 "github.com/tupyy/gophoto/api/v1"
 	"github.com/tupyy/gophoto/internal/auth"
+	minioclient "github.com/tupyy/gophoto/internal/clients/minio"
+	pgclient "github.com/tupyy/gophoto/internal/clients/pg"
 	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/entity"
 	handlersv1 "github.com/tupyy/gophoto/internal/handlers/v1"
@@ -43,8 +45,6 @@ import (
 	tagService "github.com/tupyy/gophoto/internal/services/tag"
 	usersService "github.com/tupyy/gophoto/internal/services/users"
 	"github.com/tupyy/gophoto/internal/utils/logutil"
-	"github.com/tupyy/gophoto/internal/utils/minioclient"
-	"github.com/tupyy/gophoto/internal/utils/pgclient"
 )
 
 // serveCmd represents the serve command
@@ -64,7 +64,7 @@ var serveCmd = &cobra.Command{
 		gob.Register(entity.Session{})
 
 		// initialize postgres client
-		client, err := pgclient.NewClient(conf.GetPostgresConf())
+		client, err := pgclient.New(conf.GetPostgresConf())
 		if err != nil {
 			panic(err)
 		}

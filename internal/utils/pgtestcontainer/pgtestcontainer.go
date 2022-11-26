@@ -10,7 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 	testcontainers "github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
-	"github.com/tupyy/gophoto/internal/utils/pgclient"
+	pgclient "github.com/tupyy/gophoto/internal/clients/pg"
 )
 
 const (
@@ -132,7 +132,7 @@ func (c *PostgreSQLContainer) GetInitialClient(ctx context.Context) (pgclient.Cl
 		return pgclient.Client{}, err
 	}
 
-	client, _ := pgclient.NewClient(pgclient.ClientParams{
+	client, _ := pgclient.New(pgclient.ClientParams{
 		Host:     host,
 		Port:     uint(mappedPort.Int()),
 		User:     c.req.User,
@@ -155,7 +155,7 @@ func (c *PostgreSQLContainer) GetClient(ctx context.Context, username, password,
 		return pgclient.Client{}, err
 	}
 
-	client, _ := pgclient.NewClient(pgclient.ClientParams{
+	client, _ := pgclient.New(pgclient.ClientParams{
 		Host:     host,
 		Port:     uint(mappedPort.Int()),
 		User:     username,

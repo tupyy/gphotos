@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"github.com/rs/xid"
+	pgclient "github.com/tupyy/gophoto/internal/clients/pg"
 	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/internal/repos/models"
-	"github.com/tupyy/gophoto/internal/utils/pgclient"
 	"gorm.io/gorm"
 )
 

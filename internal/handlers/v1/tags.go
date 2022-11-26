@@ -8,11 +8,9 @@ import (
 	"github.com/sirupsen/logrus"
 	apiv1 "github.com/tupyy/gophoto/api/v1"
 	"github.com/tupyy/gophoto/internal/common"
-	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/entity"
 	mappersv1 "github.com/tupyy/gophoto/internal/mappers/v1"
 	"github.com/tupyy/gophoto/internal/services/permissions"
-	"github.com/tupyy/gophoto/internal/utils/encryption"
 	"github.com/tupyy/gophoto/internal/utils/logutil"
 )
 
@@ -62,8 +60,7 @@ func (server *Server) UpdateTag(c *gin.Context, tagId apiv1.TagId) {
 	}
 
 	logger := logutil.GetLogger(c)
-	gen := encryption.NewGenerator(conf.GetEncryptionKey())
-	tagID, err := gen.DecryptData(tagId)
+	tagID, err := server.EncryptionService().Decrypt(tagId)
 	if err != nil {
 		logger.WithError(err).Error("decrypt tag id")
 	}
@@ -100,9 +97,7 @@ func (server *Server) DeleteTag(c *gin.Context, tagId apiv1.TagId) {
 	}
 
 	logger := logutil.GetLogger(c)
-	gen := encryption.NewGenerator(conf.GetEncryptionKey())
-
-	tagID, err := gen.DecryptData(c.Param("id"))
+	tagID, err := server.EncryptionService().Decrypt(tagId)
 	if err != nil {
 		logger.WithError(err).Error("decrypt tag id")
 	}
@@ -143,14 +138,12 @@ func (server *Server) RemoveTagFromAlbum(c *gin.Context, albumId apiv1.AlbumId, 
 	session := c.MustGet("session").(entity.Session)
 
 	logger := logutil.GetLogger(c)
-	gen := encryption.NewGenerator(conf.GetEncryptionKey())
-
-	tagID, err := gen.DecryptData(tagId)
+	tagID, err := server.EncryptionService().Decrypt(tagId)
 	if err != nil {
 		logger.WithError(err).Error("decrypt tag id")
 	}
 
-	albumID, _ := gen.DecryptData(albumId)
+	albumID, _ := server.EncryptionService().Decrypt(albumId)
 
 	album, err := server.AlbumService().Query().First(c, albumID)
 	if err != nil {
@@ -212,14 +205,12 @@ func (server *Server) SetTagToAlbum(c *gin.Context, albumId apiv1.AlbumId, tagId
 	session := c.MustGet("session").(entity.Session)
 
 	logger := logutil.GetLogger(c)
-	gen := encryption.NewGenerator(conf.GetEncryptionKey())
-
-	tagID, err := gen.DecryptData(tagId)
+	tagID, err := server.EncryptionService().Decrypt(tagId)
 	if err != nil {
 		logger.WithError(err).Error("decrypt tag id")
 	}
 
-	albumID, _ := gen.DecryptData(albumId)
+	albumID, _ := server.EncryptionService().Decrypt(albumId)
 	album, err := server.AlbumService().Query().First(c, albumID)
 	if err != nil {
 		common.AbortNotFoundWithJson(c, err, "associate tag from album")

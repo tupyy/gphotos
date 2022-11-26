@@ -1,4 +1,4 @@
-package pgclient
+package pg
 
 import (
 	"context"

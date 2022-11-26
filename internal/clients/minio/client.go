@@ -1,4 +1,4 @@
-package minioclient
+package minio
 
 import (
 	"fmt"

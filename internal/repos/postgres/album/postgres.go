@@ -7,11 +7,11 @@ import (
 
 	"github.com/rs/xid"
 	"github.com/sirupsen/logrus"
+	pgclient "github.com/tupyy/gophoto/internal/clients/pg"
 	"github.com/tupyy/gophoto/internal/entity"
 	repo "github.com/tupyy/gophoto/internal/repos"
 	"github.com/tupyy/gophoto/internal/repos/models"
 	"github.com/tupyy/gophoto/internal/utils/logutil"
-	"github.com/tupyy/gophoto/internal/utils/pgclient"
 	"gorm.io/gorm"
 )
 
