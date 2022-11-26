@@ -8,7 +8,7 @@ import (
 
 	"github.com/disintegration/imaging"
 	"github.com/rwcarlsen/goexif/exif"
-	"github.com/tupyy/gophoto/internal/utils/logutil"
+	"go.uber.org/zap"
 )
 
 // Process encode the image as jpg and create a thumbnail.
@@ -27,7 +27,7 @@ func Process(r io.ReadSeeker, imgWriter io.Writer) error {
 		return fmt.Errorf("failed to encode as jpg: %v", err)
 	}
 
-	logutil.GetDefaultLogger().Debug("image encoded as jpg")
+	zap.S().Debug("image encoded as jpg")
 
 	return nil
 }
@@ -50,7 +50,7 @@ func CreateThumbnail(r io.ReadSeeker, w io.Writer) error {
 		return fmt.Errorf("failed to encode the thumbnail: %v", err)
 	}
 
-	logutil.GetDefaultLogger().Debug("thumbnail image created")
+	zap.S().Debug("thumbnail created")
 
 	return nil
 }

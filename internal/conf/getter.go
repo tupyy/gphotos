@@ -7,9 +7,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	postgres "github.com/tupyy/gophoto/internal/clients/pg"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 const (
@@ -138,7 +139,6 @@ func ParseConfiguration(confFile string) error {
 	viper.AutomaticEnv() // read in environment variables that match
 
 	if len(confFile) == 0 {
-		logrus.Info("no config file specified")
 		return errors.New("no config file specified")
 	}
 
@@ -149,7 +149,8 @@ func ParseConfiguration(confFile string) error {
 	if err := json.Unmarshal(content, &configuration); err != nil {
 		return err
 	}
-	logrus.Infof("using config file: %v", confFile)
+
+	zap.S().Infow("configuration read", "file", confFile)
 	return nil
 }
 
@@ -157,21 +158,21 @@ func setDefaults() {
 	viper.SetDefault(gracefulShutdown, defaultGracefulShutdown)
 }
 
-func GetLogLevel() logrus.Level {
+func GetLogLevel() zapcore.Level {
 	switch configuration.LogLevel {
 	case "TRACE":
-		return logrus.TraceLevel
+		return zap.DebugLevel
 	case "DEBUG":
-		return logrus.DebugLevel
+		return zap.DebugLevel
 	case "INFO":
-		return logrus.InfoLevel
+		return zap.InfoLevel
 	case "WARN":
-		return logrus.WarnLevel
+		return zap.WarnLevel
 	case "ERROR":
-		return logrus.ErrorLevel
+		return zap.ErrorLevel
 	}
 
-	return logrus.InfoLevel
+	return zap.DebugLevel
 }
 
 func GetGracefulShutdownDuration() time.Duration {
@@ -206,9 +207,6 @@ func GetPostgresConf() postgres.ClientParams {
 		Password: configuration.Postgres.Password,
 		DBName:   configuration.Postgres.Database,
 	}
-
-	logrus.Infof("postgres conf: %+v", ret)
-
 	return ret
 }
 

@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"html"
@@ -11,7 +10,6 @@ import (
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 	apiv1 "github.com/tupyy/gophoto/api/v1"
 	"github.com/tupyy/gophoto/internal/common"
 	"github.com/tupyy/gophoto/internal/entity"
@@ -19,15 +17,12 @@ import (
 	mappersv1 "github.com/tupyy/gophoto/internal/mappers/v1"
 	"github.com/tupyy/gophoto/internal/services/album"
 	"github.com/tupyy/gophoto/internal/services/permissions"
-	"github.com/tupyy/gophoto/internal/utils/logutil"
+	"go.uber.org/zap"
 )
 
 // (GET /api/gphotos/v1/albums)
 func (server *Server) GetAlbums(c *gin.Context, params apiv1.GetAlbumsParams) {
 	session := c.MustGet("session").(entity.Session)
-
-	ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
-	logger := logutil.GetLogger(c)
 
 	albumService := server.AlbumService()
 
@@ -45,7 +40,7 @@ func (server *Server) GetAlbums(c *gin.Context, params apiv1.GetAlbumsParams) {
 		}
 		filter, err := filter.New(searchExp)
 		if err != nil {
-			logger.WithError(err).WithField("filter", *params.Search).Error("failed to create filter engine")
+			zap.S().Errorw("failed to create filter engine", "filter", *&params.Search, "user", session.User.Username)
 			common.AbortBadRequestWithJson(c, err, err.Error())
 
 			return
@@ -78,9 +73,9 @@ func (server *Server) GetAlbums(c *gin.Context, params apiv1.GetAlbumsParams) {
 		q.Size(int(*params.Size))
 	}
 
-	albums, total, err := q.All(ctx, session.User)
+	albums, total, err := q.All(c, session.User)
 	if err != nil {
-		logger.WithError(err).Error("failed to get albums")
+		zap.S().Errorw("failed to get albums", "error", err, "user", session.User.Username)
 		common.AbortInternalErrorWithJson(c)
 		return
 	}
@@ -105,12 +100,9 @@ func (server *Server) GetAlbums(c *gin.Context, params apiv1.GetAlbumsParams) {
 func (server *Server) GetAlbumsByGroup(c *gin.Context, groupId string, params apiv1.GetAlbumsByGroupParams) {
 	session := c.MustGet("session").(entity.Session)
 
-	ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
-	logger := logutil.GetLogger(c)
-
 	id, err := server.EncryptionService().Decrypt(groupId)
 	if err != nil {
-		logger.WithError(err).WithField("group id", groupId).Error("failed to decrypt group id")
+		zap.S().Errorw("failed to decrypt group id", "error", err, "user", session.User.Username)
 		common.AbortInternalError(c)
 		return
 	}
@@ -134,9 +126,9 @@ func (server *Server) GetAlbumsByGroup(c *gin.Context, groupId string, params ap
 		q.Size(int(*params.Size))
 	}
 
-	albums, total, err := q.All(ctx, session.User)
+	albums, total, err := q.All(c, session.User)
 	if err != nil {
-		logger.WithError(err).Error("failed to get albums")
+		zap.S().Errorw("failed to get albums", "error", err, "user", session.User.Username)
 		common.AbortInternalErrorWithJson(c)
 		return
 	}
@@ -161,12 +153,9 @@ func (server *Server) GetAlbumsByGroup(c *gin.Context, groupId string, params ap
 func (server *Server) GetAlbumsByUser(c *gin.Context, userId string, params apiv1.GetAlbumsByUserParams) {
 	session := c.MustGet("session").(entity.Session)
 
-	ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
-	logger := logutil.GetLogger(c)
-
 	id, err := server.EncryptionService().Decrypt(userId)
 	if err != nil {
-		logger.WithError(err).WithField("userId id", userId).Error("failed to decrypt user id")
+		zap.S().Errorw("failed to decrypt user id", "error", err, "user id", userId, "user", session.User.Username)
 		common.AbortInternalError(c)
 		return
 	}
@@ -190,9 +179,9 @@ func (server *Server) GetAlbumsByUser(c *gin.Context, userId string, params apiv
 		q.Size(int(*params.Size))
 	}
 
-	albums, total, err := q.All(ctx, session.User)
+	albums, total, err := q.All(c, session.User)
 	if err != nil {
-		logger.WithError(err).Error("failed to get albums")
+		zap.S().Errorw("failed to get albums", "error", err, "user", session.User.Username)
 		common.AbortInternalErrorWithJson(c)
 		return
 	}
@@ -216,21 +205,17 @@ func (server *Server) GetAlbumsByUser(c *gin.Context, userId string, params apiv
 func (server *Server) GetAlbumByID(c *gin.Context, albumID apiv1.AlbumId) {
 	session := c.MustGet("session").(entity.Session)
 
-	ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
-	logger := logutil.GetLogger(ctx)
-
 	id, err := server.EncryptionService().Decrypt(albumID)
 	if err != nil {
-		logger.WithError(err).WithField("album id", albumID).Error("failed to decrypt album id")
+		zap.S().Errorw("failed to decrypt album id", "error", err, "album id", albumID, "user", session.User.Username)
 		common.AbortInternalError(c)
 		return
 	}
 
-	album, err := server.AlbumService().Query().First(ctx, id)
+	album, err := server.AlbumService().Query().First(c, id)
 	if err != nil {
-		logger.WithError(err).WithField("album id", c.GetInt("id")).Error("failed to get album")
+		zap.S().Errorw("failed to get album", "error", err, "album id", id, "user", session.User.Username)
 		common.AbortNotFound(c, err, "update album")
-
 		return
 	}
 
@@ -245,21 +230,17 @@ func (server *Server) GetAlbumByID(c *gin.Context, albumID apiv1.AlbumId) {
 		Resolve(album, session.User)
 
 	if !hasPermission {
-		logger.WithFields(logrus.Fields{
-			"request user id": session.User.ID,
-			"album owner id":  album.Owner,
-		}).Error("current user has no permission of this album")
+		zap.S().Errorw("permission denied to access album", "album", id, "user", session.User.Username)
 		common.AbortForbidden(c, common.NewMissingPermissionError(entity.PermissionEditAlbum, album, session.User), "get album")
 		return
 	}
+
+	zap.S().Infow("album access ok", "album id", albumID, "user", session.User.Username)
 	c.JSON(http.StatusOK, mappersv1.MapAlbumToModel(album))
 }
 
 func (server *Server) CreateAlbum(c *gin.Context) {
 	session := c.MustGet("session").(entity.Session)
-
-	ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
-	logger := logutil.GetLogger(ctx)
 
 	// only editors and admins have the right to create albums
 	apr := permissions.NewAlbumPermissionService()
@@ -269,6 +250,7 @@ func (server *Server) CreateAlbum(c *gin.Context) {
 		Resolve(entity.Album{}, session.User)
 
 	if !hasPermission {
+		zap.S().Errorw("permission denied to create album", "user", session.User.Username)
 		common.AbortForbidden(c, errors.New("user has no editor or admin role"), "user role forbids the creation of albums")
 		return
 	}
@@ -284,7 +266,7 @@ func (server *Server) CreateAlbum(c *gin.Context) {
 		return
 	}
 
-	logger.WithField("form", fmt.Sprintf("%+v", payload)).Info("create album request submitted")
+	zap.S().Debugw("album request payload", "payload", payload, "user", session.User.Username)
 	album := entity.Album{
 		Name:        html.EscapeString(payload.Name),
 		Description: escapeFieldPtr(payload.Description),
@@ -292,17 +274,14 @@ func (server *Server) CreateAlbum(c *gin.Context) {
 		Location:    escapeFieldPtr(payload.Location),
 		Owner:       session.User.Username,
 	}
-	albumID, err := server.AlbumService().Create(ctx, album)
+	albumID, err := server.AlbumService().Create(c, album)
 	if err != nil {
 		common.AbortInternalError(c)
 
 		return
 	}
 
-	logger.WithFields(logrus.Fields{
-		"album": fmt.Sprintf("%+v", album),
-		"id":    albumID,
-	}).Info("album entity created")
+	zap.S().Infow("album created", "album id", albumID, "user", session.User.Username)
 
 	ss := sessions.Default(c)
 	ss.Set(session.SessionID, session)
@@ -314,19 +293,16 @@ func (server *Server) CreateAlbum(c *gin.Context) {
 func (server *Server) UpdateAlbum(c *gin.Context, albumID apiv1.AlbumId) {
 	session := c.MustGet("session").(entity.Session)
 
-	ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
-	logger := logutil.GetLogger(ctx)
-
 	id, err := server.EncryptionService().Decrypt(albumID)
 	if err != nil {
-		logger.WithError(err).WithField("album id", albumID).Error("failed to decrypt album id")
+		zap.S().Errorw("failed to decrypt album id", "error", err, "album id", albumID, "user", session.User.Username)
 		common.AbortInternalError(c)
 		return
 	}
 
-	album, err := server.AlbumService().Query().First(ctx, id)
+	album, err := server.AlbumService().Query().First(c, id)
 	if err != nil {
-		logger.WithError(err).WithField("album id", c.GetInt("id")).Error("failed to get album")
+		zap.S().Errorw("failed to get album", "album id", id, "user", session.User.Username)
 		common.AbortNotFoundWithJson(c, err, "update album")
 
 		return
@@ -343,17 +319,13 @@ func (server *Server) UpdateAlbum(c *gin.Context, albumID apiv1.AlbumId) {
 		Resolve(album, session.User)
 
 	if !hasPermission {
-		logger.WithFields(logrus.Fields{
-			"request user id": session.User.ID,
-			"album owner id":  album.Owner,
-		}).Error("album can be edit either by user with edit permission or the owner")
-		common.AbortForbidden(c, common.NewMissingPermissionError(entity.PermissionEditAlbum, album, session.User), "update album")
+		zap.S().Errorw("failed to update album. user has no edit permission", "album id", id, "user", session.User.Username)
 		return
 	}
 
 	var payload apiv1.AlbumRequestPayload
 	if err := c.BindJSON(&payload); err != nil {
-		logger.WithError(err).WithField("payload", fmt.Sprintf("%v", payload)).Error("failed to bind payload")
+		zap.S().Errorw("failed to bind payload", "album id", id, "error", err, "payload", payload, "user", session.User.Username)
 		common.AbortBadRequest(c, err, "failed to parse payload")
 		return
 	}
@@ -371,16 +343,13 @@ func (server *Server) UpdateAlbum(c *gin.Context, albumID apiv1.AlbumId) {
 		album.Name = escapeField(payload.Name)
 	}
 
-	if _, err := server.AlbumService().Update(ctx, album); err != nil {
-		logger.WithError(err).WithFields(logrus.Fields{
-			"album id": id,
-			"album":    fmt.Sprintf("%+v", album),
-		}).Error("update album")
-
+	if _, err := server.AlbumService().Update(c, album); err != nil {
+		zap.S().Errorw("failed to update album", "album id", id, "error", err, "payload", payload, "user", session.User.Username)
 		common.AbortInternalError(c)
-
 		return
 	}
+
+	zap.S().Infow("album updated", "album id", id, "user", session.User.Username)
 
 	c.JSON(http.StatusCreated, mappersv1.MapAlbumToModel(album))
 }
@@ -389,19 +358,16 @@ func (server *Server) UpdateAlbum(c *gin.Context, albumID apiv1.AlbumId) {
 func (server *Server) DeleteAlbum(c *gin.Context, albumId apiv1.AlbumId) {
 	session := c.MustGet("session").(entity.Session)
 
-	ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
-	logger := logutil.GetLogger(ctx)
-
 	id, err := server.EncryptionService().Decrypt(albumId)
 	if err != nil {
-		logger.WithError(err).WithField("album id", albumId).Error("failed to decrypt album id")
+		zap.S().Errorw("failed to decrypt album id", "error", err, "album id", albumId, "album", session.User.Username)
 		common.AbortInternalError(c)
 		return
 	}
 
-	album, err := server.AlbumService().Query().First(ctx, id)
+	album, err := server.AlbumService().Query().First(c, id)
 	if err != nil {
-		logger.WithError(err).WithField("album id", c.GetInt("id")).Error("failed to get album")
+		zap.S().Errorw("failed to get album", "error", err, "album id", id, "user", session.User.Username)
 		common.AbortNotFound(c, err, "update album")
 
 		return
@@ -417,19 +383,14 @@ func (server *Server) DeleteAlbum(c *gin.Context, albumId apiv1.AlbumId) {
 		Resolve(album, session.User)
 
 	if !hasPermission {
-		logger.WithFields(logrus.Fields{
-			"request user": session.User.Username,
-			"album owner":  album.Owner,
-		}).Error("album can be edit either by user with delete permission or the owner")
+		zap.S().Errorw("failed to delete album. missing permissions", "album id", id, "user", session.User.Username)
 		common.AbortForbidden(c, common.NewMissingPermissionError(entity.PermissionDeleteAlbum, album, session.User), "delete album")
-
 		return
 	}
 
-	if err := server.AlbumService().Delete(ctx, album); err != nil {
-		logger.WithError(err).WithField("album id", album.ID).Error("failed to delete album")
+	if err := server.AlbumService().Delete(c, album); err != nil {
+		zap.S().Errorw("failed to delete album", "error", err, "album id", id, "user", session.User.Username)
 		common.AbortInternalError(c)
-
 		return
 	}
 

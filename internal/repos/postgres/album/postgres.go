@@ -6,12 +6,10 @@ import (
 	"strings"
 
 	"github.com/rs/xid"
-	"github.com/sirupsen/logrus"
 	pgclient "github.com/tupyy/gophoto/internal/clients/pg"
 	"github.com/tupyy/gophoto/internal/entity"
 	repo "github.com/tupyy/gophoto/internal/repos"
 	"github.com/tupyy/gophoto/internal/repos/models"
-	"github.com/tupyy/gophoto/internal/utils/logutil"
 	"gorm.io/gorm"
 )
 
@@ -34,8 +32,6 @@ func NewPostgresRepo(client pgclient.Client) (*AlbumPostgresRepo, error) {
 }
 
 func (a *AlbumPostgresRepo) Create(ctx context.Context, album entity.Album) (entity.Album, error) {
-	logger := logutil.GetDefaultLogger()
-
 	tx := a.db.WithContext(ctx).Begin()
 
 	m := toModel(album)
@@ -44,14 +40,10 @@ func (a *AlbumPostgresRepo) Create(ctx context.Context, album entity.Album) (ent
 
 	result := tx.Create(&m)
 	if result.Error != nil {
-		logger.WithError(result.Error).Warnf("cannot create album: %v", album)
-
 		return album, fmt.Errorf("%w cannot create album %+v", repo.ErrCreateAlbum, result.Error)
 	}
 
 	if err := tx.Commit().Error; err != nil {
-		logger.WithError(result.Error).Warnf("error commit album: %v", album)
-
 		return album, fmt.Errorf("%w cannot create album %+v", repo.ErrCreateAlbum, result.Error)
 	}
 
@@ -68,8 +60,6 @@ func (a *AlbumPostgresRepo) Delete(ctx context.Context, id string) error {
 
 func (a *AlbumPostgresRepo) Update(ctx context.Context, album entity.Album) (entity.Album, error) {
 	var ca albumJoinRow
-
-	logger := logutil.GetDefaultLogger()
 
 	tx := a.db.WithContext(ctx).Table("album").Where("id = ?", album.ID).First(&ca)
 	if tx.Error != nil {
@@ -93,17 +83,10 @@ func (a *AlbumPostgresRepo) Update(ctx context.Context, album entity.Album) (ent
 
 	result := tx.Save(&m)
 	if result.Error != nil {
-		logger.WithError(result.Error).Warnf("cannot update album: %v", album)
-
 		return album, fmt.Errorf("%w %+v", repo.ErrUpdateAlbum, result.Error)
 	}
 
 	if err := tx.Commit().Error; err != nil {
-		logger.WithError(result.Error).WithFields(logrus.Fields{
-			"new album": fmt.Sprintf("%+v", album),
-			"old album": fmt.Sprintf("%+v", ca),
-		}).Warnf("error commit album: %v", album)
-
 		return album, fmt.Errorf("%w %+v album_id: %s", repo.ErrUpdateAlbum, result.Error, album.ID)
 	}
 
@@ -130,8 +113,6 @@ func (a *AlbumPostgresRepo) Get(ctx context.Context) ([]entity.Album, error) {
 	}
 
 	if len(albums) == 0 {
-		logutil.GetDefaultLogger().Warn("no albums found")
-
 		return []entity.Album{}, nil
 	}
 
@@ -250,8 +231,6 @@ func (a *AlbumPostgresRepo) GetByGroupName(ctx context.Context, groupName string
 	}
 
 	if len(albums) == 0 {
-		logutil.GetDefaultLogger().WithField("group", groupName).Warn("no album found by group name")
-
 		return []entity.Album{}, nil
 	}
 
@@ -295,8 +274,6 @@ func (a *AlbumPostgresRepo) GetByGroups(ctx context.Context, groupNames []string
 	}
 
 	if len(albums) == 0 {
-		logutil.GetDefaultLogger().WithField("group names", fmt.Sprintf("%+v", groupNames)).Warn("no album found by group name")
-
 		return []entity.Album{}, nil
 	}
 

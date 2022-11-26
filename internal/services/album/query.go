@@ -8,7 +8,7 @@ import (
 	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/internal/services"
 	"github.com/tupyy/gophoto/internal/services/media"
-	"github.com/tupyy/gophoto/internal/utils/logutil"
+	"go.uber.org/zap"
 )
 
 var (
@@ -145,8 +145,7 @@ func (q *Query) All(ctx context.Context, user entity.User) ([]entity.Album, int,
 		if q.filter != nil {
 			resolved, err := q.filter.Resolve(a)
 			if err != nil {
-				logutil.GetDefaultLogger().WithError(err).WithField("album id", a.ID).Error("failed to resolve album")
-
+				zap.S().Errorw("failed to resolve album", "error", err, "album", a)
 				continue
 			}
 

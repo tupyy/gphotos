@@ -7,7 +7,7 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/tupyy/gophoto/internal/entity"
-	"github.com/tupyy/gophoto/internal/utils/logutil"
+	"go.uber.org/zap"
 )
 
 // FakeAuthMiddleware reads the cookie and unmarshall it into session.
@@ -18,16 +18,15 @@ func FakeAuthMiddleware() gin.HandlerFunc {
 
 		sessionEncoded := c.Request.Header.Get("SESSIONID")
 
-		logger := logutil.GetLogger(c)
 		payload, err := base64.StdEncoding.DecodeString(sessionEncoded)
 		if err != nil {
-			logger.WithError(err).Error("cannot decode cookie")
+			zap.S().Errorw("cannot decode cookie", "error", err)
 			c.Abort()
 			return
 		}
 		var se entity.Session
 		if err := json.Unmarshal(payload, &se); err != nil {
-			logger.WithError(err).Error("cannot unmarshal cookie to session")
+			zap.S().Errorw("cannot unmarshal cookie to session", "error", err)
 			c.Abort()
 			return
 		}

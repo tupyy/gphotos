@@ -1,37 +1,31 @@
 package v1
 
 import (
-	"context"
 	"io/ioutil"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 	apiv1 "github.com/tupyy/gophoto/api/v1"
 	"github.com/tupyy/gophoto/internal/common"
 	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/internal/services/permissions"
-	"github.com/tupyy/gophoto/internal/utils/logutil"
+	"go.uber.org/zap"
 )
 
 func (server *Server) GetAlbumThumbnail(c *gin.Context, albumId apiv1.AlbumId) {
 	session := c.MustGet("session").(entity.Session)
 
-	ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
-	logger := logutil.GetLogger(ctx)
-
 	id, err := server.EncryptionService().Decrypt(albumId)
 	if err != nil {
-		logger.WithError(err).WithField("album id", albumId).Error("failed to decrypt album id")
-		common.AbortInternalError(c)
+		zap.S().Errorw("failed to decrypt album id", "error", err, "album_id", albumId, "user", session.User.Username)
+		common.AbortNotFoundWithJson(c, err, "album not found")
 		return
 	}
 
-	album, err := server.AlbumService().Query().First(ctx, id)
+	album, err := server.AlbumService().Query().First(c, id)
 	if err != nil {
-		logger.WithError(err).WithField("album id", c.GetInt("id")).Error("failed to get album")
-		common.AbortNotFound(c, err, "update album")
-
+		zap.S().Errorw("failed to get album", "error", err, "album_id", id, "user", session.User.Username)
+		common.AbortNotFoundWithJson(c, err, "")
 		return
 	}
 
@@ -46,22 +40,21 @@ func (server *Server) GetAlbumThumbnail(c *gin.Context, albumId apiv1.AlbumId) {
 		Resolve(album, session.User)
 
 	if !hasPermission {
-		logger.WithFields(logrus.Fields{
-			"request user id": session.User.ID,
-			"album owner id":  album.Owner,
-		}).Error("current user has no permission of this album")
+		zap.S().Errorw("user has no read permissions on the album", "album_id", id, "user", session.User.Username)
 		common.AbortForbidden(c, common.NewMissingPermissionError(entity.PermissionEditAlbum, album, session.User), "get album")
 		return
 	}
 
 	thumbnail, _, err := server.MediaService().GetPhoto(c, album.Bucket, album.Thumbnail)
 	if err != nil {
+		zap.S().Errorw("failed to get album", "error", err, "album_id", id, "thumbnail_filename", album.Thumbnail, "bucket", album.Bucket, "user", session.User.Username)
 		common.AbortNotFoundWithJson(c, err, "thumbnail not found")
 		return
 	}
 
 	content, err := ioutil.ReadAll(thumbnail)
 	if err != nil {
+		zap.S().Errorw("failed to read thumbnail", "error", err, "album_id", id, "thumbnail_filename", album.Thumbnail, "bucket", album.Bucket, "user", session.User.Username)
 		common.AbortInternalErrorWithJson(c)
 		return
 	}
