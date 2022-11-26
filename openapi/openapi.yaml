@@ -243,7 +243,7 @@ paths:
         200:
           description: Retreive album's thumbnail.
           content:
-            image/png:
+            image/jpeg:
               schema:
                 type: string
                 format: binary
@@ -526,7 +526,7 @@ paths:
         - $ref: "#/components/parameters/album_id"
       requestBody:
         content:
-          image/png:
+          image/jpeg:
             schema:
               $ref: "#/components/schemas/PhotoRequestPayload"
       responses:
@@ -550,6 +550,82 @@ paths:
                 $ref: '#/components/schemas/Error'
         404:
           description: No album found with the specified ID exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Internal error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/gphotos/v1/album/{album_id}/photo/{photo_id}:
+    get:
+      tags:
+      - Media
+      description: Get photo with specified id.
+      operationId: getPhoto
+      parameters:
+        - $ref: "#/components/parameters/album_id"
+        - $ref: "#/components/parameters/photo_id"
+      responses:
+        200:
+          description: Retrieve the photo with specified id.
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+        401:
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        403:
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        404:
+          description: No photo or album found with the specified ID exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Internal error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+      - Media
+      description: Delete photo with specified id.
+      operationId: deletePhoto
+      parameters:
+        - $ref: "#/components/parameters/album_id"
+        - $ref: "#/components/parameters/photo_id"
+      responses:
+        204:
+          description: Delete the photo with specified id.
+        401:
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        403:
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        404:
+          description: No photo found with the specified ID exists.
           content:
             application/json:
               schema:
@@ -772,80 +848,6 @@ paths:
                 $ref: '#/components/schemas/Error'
         404:
           description: No tag found with the specified ID exists.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        500:
-          description: Internal error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-  /api/gphotos/v1/photo/{photo_id}:
-    get:
-      tags:
-      - Media
-      description: Get photo with specified id.
-      operationId: getPhoto
-      parameters:
-        - $ref: "#/components/parameters/photo_id"
-      responses:
-        200:
-          description: Retrieve the photo with specified id.
-          content:
-            image/png:
-              schema:
-                type: string
-                format: binary
-        401:
-          description: Not authenticated.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        403:
-          description: Forbidden.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        404:
-          description: No photo found with the specified ID exists.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        500:
-          description: Internal error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-    delete:
-      tags:
-      - Media
-      description: Delete photo with specified id.
-      operationId: deletePhoto
-      parameters:
-        - $ref: "#/components/parameters/photo_id"
-      responses:
-        204:
-          description: Delete the photo with specified id.
-        401:
-          description: Not authenticated.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        403:
-          description: Forbidden.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        404:
-          description: No photo found with the specified ID exists.
           content:
             application/json:
               schema:

@@ -10,7 +10,7 @@ import (
 	"github.com/tupyy/gophoto/internal/common"
 	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/entity"
-	presentersv1 "github.com/tupyy/gophoto/internal/presenters/v1"
+	mappersv1 "github.com/tupyy/gophoto/internal/mappers/v1"
 	"github.com/tupyy/gophoto/internal/services/permissions"
 	"github.com/tupyy/gophoto/internal/utils/encryption"
 	"github.com/tupyy/gophoto/internal/utils/logutil"
@@ -42,7 +42,7 @@ func (server *Server) CreateTag(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, presentersv1.MapTagToModel(newTag))
+	c.JSON(http.StatusCreated, mappersv1.MapTagToModel(newTag))
 }
 
 func (server *Server) UpdateTag(c *gin.Context, tagId apiv1.TagId) {
@@ -87,7 +87,7 @@ func (server *Server) UpdateTag(c *gin.Context, tagId apiv1.TagId) {
 
 	tag, _ = server.TagService().GetByID(c, session.User.ID, tagID)
 
-	c.JSON(http.StatusOK, presentersv1.MapTagToModel(tag))
+	c.JSON(http.StatusOK, mappersv1.MapTagToModel(tag))
 }
 
 func (server *Server) DeleteTag(c *gin.Context, tagId apiv1.TagId) {
@@ -136,7 +136,7 @@ func (server *Server) GetTags(c *gin.Context, params apiv1.GetTagsParams) {
 		return
 	}
 
-	c.JSON(http.StatusOK, presentersv1.MapTagsToList(tags))
+	c.JSON(http.StatusOK, mappersv1.MapTagsToList(tags))
 }
 
 func (server *Server) RemoveTagFromAlbum(c *gin.Context, albumId apiv1.AlbumId, tagId apiv1.TagId) {
@@ -268,5 +268,5 @@ func (server *Server) SetTagToAlbum(c *gin.Context, albumId apiv1.AlbumId, tagId
 	}
 
 	album.Tags = append(album.Tags, tag)
-	c.JSON(http.StatusCreated, presentersv1.MapAlbumToModel(album))
+	c.JSON(http.StatusCreated, mappersv1.MapAlbumToModel(album))
 }

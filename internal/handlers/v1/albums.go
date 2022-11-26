@@ -17,7 +17,7 @@ import (
 	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/internal/filter"
-	presentersv1 "github.com/tupyy/gophoto/internal/presenters/v1"
+	mappersv1 "github.com/tupyy/gophoto/internal/mappers/v1"
 	"github.com/tupyy/gophoto/internal/services/album"
 	"github.com/tupyy/gophoto/internal/services/permissions"
 	"github.com/tupyy/gophoto/internal/utils/encryption"
@@ -89,7 +89,7 @@ func (server *Server) GetAlbums(c *gin.Context, params apiv1.GetAlbumsParams) {
 
 	albumModels := make([]apiv1.Album, 0, len(albums))
 	for _, album := range albums {
-		albumModels = append(albumModels, presentersv1.MapAlbumToModel(album))
+		albumModels = append(albumModels, mappersv1.MapAlbumToModel(album))
 	}
 
 	c.JSON(http.StatusOK, &apiv1.AlbumList{
@@ -145,7 +145,7 @@ func (server *Server) GetAlbumsByGroup(c *gin.Context, groupId string, params ap
 
 	albumModels := make([]apiv1.Album, 0, len(albums))
 	for _, album := range albums {
-		albumModels = append(albumModels, presentersv1.MapAlbumToModel(album))
+		albumModels = append(albumModels, mappersv1.MapAlbumToModel(album))
 	}
 
 	c.JSON(http.StatusOK, &apiv1.AlbumList{
@@ -201,7 +201,7 @@ func (server *Server) GetAlbumsByUser(c *gin.Context, userId string, params apiv
 
 	albumModels := make([]apiv1.Album, 0, len(albums))
 	for _, album := range albums {
-		albumModels = append(albumModels, presentersv1.MapAlbumToModel(album))
+		albumModels = append(albumModels, mappersv1.MapAlbumToModel(album))
 	}
 
 	c.JSON(http.StatusOK, &apiv1.AlbumList{
@@ -254,7 +254,7 @@ func (server *Server) GetAlbumByID(c *gin.Context, albumID apiv1.AlbumId) {
 		common.AbortForbidden(c, common.NewMissingPermissionError(entity.PermissionEditAlbum, album, session.User), "get album")
 		return
 	}
-	c.JSON(http.StatusOK, presentersv1.MapAlbumToModel(album))
+	c.JSON(http.StatusOK, mappersv1.MapAlbumToModel(album))
 }
 
 func (server *Server) CreateAlbum(c *gin.Context) {
@@ -310,7 +310,7 @@ func (server *Server) CreateAlbum(c *gin.Context) {
 	ss.Set(session.SessionID, session)
 	ss.Save()
 
-	c.JSON(http.StatusOK, presentersv1.MapAlbumToModel(album))
+	c.JSON(http.StatusOK, mappersv1.MapAlbumToModel(album))
 }
 
 func (server *Server) UpdateAlbum(c *gin.Context, albumID apiv1.AlbumId) {
@@ -384,7 +384,7 @@ func (server *Server) UpdateAlbum(c *gin.Context, albumID apiv1.AlbumId) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, presentersv1.MapAlbumToModel(album))
+	c.JSON(http.StatusCreated, mappersv1.MapAlbumToModel(album))
 }
 
 // (DELETE /api/gphotos/v1/albums/{album_id})

@@ -13,7 +13,7 @@ import (
 	apiv1 "github.com/tupyy/gophoto/api/v1"
 	"github.com/tupyy/gophoto/internal/common"
 	"github.com/tupyy/gophoto/internal/entity"
-	presentersv1 "github.com/tupyy/gophoto/internal/presenters/v1"
+	mappersv1 "github.com/tupyy/gophoto/internal/mappers/v1"
 	"github.com/tupyy/gophoto/internal/services/permissions"
 	"github.com/tupyy/gophoto/internal/utils/logutil"
 )
@@ -113,7 +113,7 @@ func (server *Server) GetAlbumPermissions(c *gin.Context, albumId string) {
 		common.AbortForbidden(c, common.NewMissingPermissionError(entity.PermissionEditAlbum, album, session.User), "get album")
 		return
 	}
-	c.JSON(http.StatusOK, presentersv1.MapAlbumPermissions(album))
+	c.JSON(http.StatusOK, mappersv1.MapAlbumPermissions(album))
 }
 
 func (s *Server) RemoveAlbumPermissions(c *gin.Context, albumId apiv1.AlbumId) {}

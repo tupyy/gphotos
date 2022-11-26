@@ -3,16 +3,29 @@ package v1
 import (
 	"context"
 	"errors"
+	"html"
+	"io"
 	"net/http"
+	"regexp"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	apiv1 "github.com/tupyy/gophoto/api/v1"
 	"github.com/tupyy/gophoto/internal/common"
 	"github.com/tupyy/gophoto/internal/entity"
-	presentersv1 "github.com/tupyy/gophoto/internal/presenters/v1"
+	mappersv1 "github.com/tupyy/gophoto/internal/mappers/v1"
+	"github.com/tupyy/gophoto/internal/services/media"
 	"github.com/tupyy/gophoto/internal/services/permissions"
 	"github.com/tupyy/gophoto/internal/utils/logutil"
+)
+
+const (
+	FILENAME_MAX_LENGTH = 100
+)
+
+var (
+	filenameReg = regexp.MustCompile(`^[^±!@£$%&*+§¡€#¢§¶•ªº«\\/<>?:;|=,]*$`)
 )
 
 func (server *Server) GetAlbumPhotos(c *gin.Context, albumID string, params apiv1.GetAlbumPhotosParams) {
@@ -59,7 +72,6 @@ func (server *Server) GetAlbumPhotos(c *gin.Context, albumID string, params apiv
 			"album_id": album.ID,
 			"bucket":   album.Bucket,
 		}).Error("failed to get media")
-
 	}
 
 	total := len(media)
@@ -72,249 +84,242 @@ func (server *Server) GetAlbumPhotos(c *gin.Context, albumID string, params apiv
 		size = int(*params.Size)
 	}
 
-	model := presentersv1.MapMediaListToModel(album, paginate(media, page, size))
+	model := mappersv1.MapMediaListToModel(album, paginate(media, page, size))
 	model.Total = total
 	c.JSON(http.StatusOK, model)
 }
 
-// (GET /api/gphotos/v1/photo/{photo_id})
-func (server *Server) GetPhoto(c *gin.Context, photoId apiv1.PhotoId) {}
+func (server *Server) GetPhoto(c *gin.Context, albumId apiv1.AlbumId, photoId apiv1.PhotoId) {
+	session := c.MustGet("session").(entity.Session)
 
-// (DELETE /api/gphotos/v1/photo/{photo_id})
-func (server *Server) DeletePhoto(c *gin.Context, photoId apiv1.PhotoId) {}
+	ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
+	logger := logutil.GetLogger(ctx)
 
-// func DownloadMedia(r *gin.RouterGroup, albumService *album.Service, mediaService *media.Service) {
-// 	r.GET("/api/albums/:id/album/:media/media", utils.ParseAlbumIDHandler, parseMediaFilenameHandler, func(c *gin.Context) {
-// 		s, _ := c.Get("sessionData")
-// 		session := s.(entity.Session)
+	id, err := decrypt(albumId)
+	if err != nil {
+		logger.WithError(err).WithField("album id", albumId).Error("failed to decrypt album id")
+		common.AbortInternalError(c)
+		return
+	}
 
-// 		ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
-// 		logger := logutil.GetLogger(ctx)
+	album, err := server.AlbumService().Query().First(ctx, id)
+	if err != nil {
+		common.AbortNotFoundWithJson(c, err, "download media")
+		return
+	}
 
-// 		album, err := albumService.Query().First(ctx, int32(c.GetInt("id")))
-// 		if err != nil {
-// 			common.AbortNotFound(c, err, "download media")
+	// check permissions to this album
+	ats := permissions.NewAlbumPermissionService()
+	hasPermission := ats.Policy(permissions.OwnerPolicy{}).
+		Policy(permissions.UserPermissionPolicy{Permission: entity.PermissionReadAlbum}).
+		Policy(permissions.GroupPermissionPolicy{Permission: entity.PermissionReadAlbum}).
+		Strategy(permissions.AtLeastOneStrategy).
+		Resolve(album, session.User)
 
-// 			return
-// 		}
+	if !hasPermission {
+		logger.WithFields(logrus.Fields{
+			"album_id": album.ID,
+			"user_id":  session.User.ID,
+		}).Error("user has no permissions to read media")
 
-// 		// check permissions to this album
-// 		ats := permissions.NewAlbumPermissionService()
-// 		hasPermission := ats.Policy(permissions.OwnerPolicy{}).
-// 			Policy(permissions.UserPermissionPolicy{Permission: entity.PermissionReadAlbum}).
-// 			Policy(permissions.GroupPermissionPolicy{Permission: entity.PermissionReadAlbum}).
-// 			Strategy(permissions.AtLeastOneStrategy).
-// 			Resolve(album, session.User)
+		common.AbortForbidden(c, errors.New("user has no permission to read media"), "")
 
-// 		if !hasPermission {
-// 			logger.WithFields(logrus.Fields{
-// 				"album_id": album.ID,
-// 				"user_id":  session.User.ID,
-// 			}).Error("user has no permissions to read media")
+		return
+	}
 
-// 			common.AbortForbidden(c, errors.New("user has no permission to read media"), "")
+	pID, err := decrypt(photoId)
+	if err != nil {
+		logger.WithError(err).WithField("photo id", photoId).Error("failed to decrypt photo id")
+		common.AbortBadRequestWithJson(c, err, "bad request")
+		return
+	}
 
-// 			return
-// 		}
+	r, _, err := server.MediaService().GetPhoto(ctx, album.Bucket, pID)
+	if err != nil {
+		logger.WithFields(logrus.Fields{
+			"album_id": album.ID,
+			"media":    c.GetString("media"),
+		}).WithError(err).Error("failed to open media")
 
-// 		r, _, err := mediaService.GetPhoto(ctx, album.Bucket, c.GetString("media"))
-// 		if err != nil {
-// 			logger.WithFields(logrus.Fields{
-// 				"album_id": album.ID,
-// 				"media":    c.GetString("media"),
-// 			}).WithError(err).Error("failed to open media")
+		common.AbortInternalError(c)
 
-// 			common.AbortInternalError(c)
+		return
+	}
 
-// 			return
-// 		}
+	fileContent, err := io.ReadAll(r)
+	if err != nil {
+		logger.WithFields(logrus.Fields{
+			"album_id": album.ID,
+			"media":    c.GetString("media"),
+		}).WithError(err).Error("failed to read from media")
+		common.AbortInternalError(c)
 
-// 		fileContent, err := io.ReadAll(r)
-// 		if err != nil {
-// 			logger.WithFields(logrus.Fields{
-// 				"album_id": album.ID,
-// 				"media":    c.GetString("media"),
-// 			}).WithError(err).Error("failed to read from media")
-// 			common.AbortInternalError(c)
+		return
+	}
 
-// 			return
-// 		}
+	w := c.Writer
+	w.Header().Set("Content-Type", "image/jpeg")
+	w.Header().Set("Content-Length", strconv.Itoa(len(fileContent)))
 
-// 		w := c.Writer
-// 		w.Header().Set("Content-Type", "image/jpeg")
-// 		w.Header().Set("Content-Length", strconv.Itoa(len(fileContent)))
+	if _, err := w.Write(fileContent); err != nil {
+		logger.WithFields(logrus.Fields{
+			"album_id": album.ID,
+			"media":    c.GetString("media"),
+		}).WithError(err).Error("failed to write media")
+		common.AbortInternalError(c)
 
-// 		if _, err := w.Write(fileContent); err != nil {
-// 			logger.WithFields(logrus.Fields{
-// 				"album_id": album.ID,
-// 				"media":    c.GetString("media"),
-// 			}).WithError(err).Error("failed to write media")
-// 			common.AbortInternalError(c)
+		return
+	}
+	return
+}
 
-// 			return
-// 		}
+// (DELETE /api/gphotos/v1/album/{album_id}/photo/{photo_id})
+func (server *Server) DeletePhoto(c *gin.Context, albumId apiv1.AlbumId, photoId apiv1.PhotoId) {
+	session := c.MustGet("session").(entity.Session)
 
-// 		return
-// 	})
-// }
+	ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
+	logger := logutil.GetLogger(ctx)
 
-// func DeleteMedia(r *gin.RouterGroup, albumService *album.Service, mediaService *media.Service) {
-// 	r.DELETE("/api/albums/:id/album/:media/media", utils.ParseAlbumIDHandler, parseMediaFilenameHandler, func(c *gin.Context) {
-// 		s, _ := c.Get("sessionData")
-// 		session := s.(entity.Session)
+	id, err := decrypt(albumId)
+	if err != nil {
+		logger.WithError(err).WithField("album id", albumId).Error("failed to decrypt album id")
+		common.AbortInternalError(c)
+		return
+	}
 
-// 		ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
-// 		logger := logutil.GetLogger(ctx)
+	album, err := server.AlbumService().Query().First(ctx, id)
+	if err != nil {
+		common.AbortNotFoundWithJson(c, err, "delete media")
+		return
+	}
 
-// 		album, err := albumService.Query().First(ctx, int32(c.GetInt("id")))
-// 		if err != nil {
-// 			common.AbortNotFound(c, err, "delete media")
+	// check permissions to this album
+	ats := permissions.NewAlbumPermissionService()
+	hasPermission := ats.Policy(permissions.OwnerPolicy{}).
+		Policy(permissions.UserPermissionPolicy{Permission: entity.PermissionWriteAlbum}).
+		Policy(permissions.GroupPermissionPolicy{Permission: entity.PermissionWriteAlbum}).
+		Strategy(permissions.AtLeastOneStrategy).
+		Resolve(album, session.User)
 
-// 			return
-// 		}
+	if !hasPermission {
+		logger.WithFields(logrus.Fields{
+			"album_id": album.ID,
+			"user_id":  session.User.ID,
+		}).Error("user has no permissions to delete media")
 
-// 		// check permissions to this album
-// 		ats := permissions.NewAlbumPermissionService()
-// 		hasPermission := ats.Policy(permissions.OwnerPolicy{}).
-// 			Policy(permissions.UserPermissionPolicy{Permission: entity.PermissionWriteAlbum}).
-// 			Policy(permissions.GroupPermissionPolicy{Permission: entity.PermissionWriteAlbum}).
-// 			Strategy(permissions.AtLeastOneStrategy).
-// 			Resolve(album, session.User)
+		common.AbortForbidden(c, errors.New("user has no permission to read media"), "")
 
-// 		if !hasPermission {
-// 			logger.WithFields(logrus.Fields{
-// 				"album_id": album.ID,
-// 				"user_id":  session.User.ID,
-// 			}).Error("user has no permissions to delete media")
+		return
+	}
 
-// 			common.AbortForbidden(c, errors.New("user has no permission to read media"), "")
+	pID, err := decrypt(photoId)
+	if err != nil {
+		logger.WithError(err).WithField("photo id", photoId).Error("failed to decrypt photo id")
+		common.AbortBadRequestWithJson(c, err, "bad request")
+		return
+	}
 
-// 			return
-// 		}
+	err = server.MediaService().Delete(ctx, album.Bucket, pID)
+	if err != nil {
+		logger.WithFields(logrus.Fields{
+			"album_id": album.ID,
+			"media":    c.GetString("media"),
+		}).WithError(err).Error("failed to remove media")
 
-// 		err = mediaService.Delete(ctx, album.Bucket, c.GetString("media"))
-// 		if err != nil {
-// 			logger.WithFields(logrus.Fields{
-// 				"album_id": album.ID,
-// 				"media":    c.GetString("media"),
-// 			}).WithError(err).Error("failed to remove media")
+		common.AbortInternalError(c)
+		return
+	}
+	c.JSON(http.StatusNoContent, gin.H{})
+}
 
-// 			common.AbortInternalError(c)
+// (POST /api/gphotos/v1/albums/{album_id}/photos)
+func (server *Server) UploadPhoto(c *gin.Context, albumId apiv1.AlbumId) {
+	session := c.MustGet("session").(entity.Session)
 
-// 			return
-// 		}
+	ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
+	logger := logutil.GetLogger(ctx)
 
-// 		return
-// 	})
-// }
+	id, err := decrypt(albumId)
+	if err != nil {
+		logger.WithError(err).WithField("album id", albumId).Error("failed to decrypt album id")
+		common.AbortNotFoundWithJson(c, err, "album not found")
+		return
+	}
 
-// const (
-// 	FILENAME_MAX_LENGTH = 100
-// )
+	album, err := server.AlbumService().Query().First(c, id)
+	if err != nil {
+		common.AbortNotFoundWithJson(c, err, "update album")
+		return
+	}
 
-// var (
-// 	filenameReg = regexp.MustCompile(`^[^±!@£$%&*+§¡€#¢§¶•ªº«\\/<>?:;|=,]*$`)
-// )
+	// check permissions to this album
+	ats := permissions.NewAlbumPermissionService()
+	hasPermission := ats.Policy(permissions.OwnerPolicy{}).
+		Policy(permissions.UserPermissionPolicy{Permission: entity.PermissionWriteAlbum}).
+		Policy(permissions.GroupPermissionPolicy{Permission: entity.PermissionWriteAlbum}).
+		Strategy(permissions.AtLeastOneStrategy).
+		Resolve(album, session.User)
 
-// func UploadMedia(r *gin.RouterGroup, albumService *album.Service, mediaService *media.Service) {
-// 	r.POST("/api/albums/:id/album/upload", utils.ParseAlbumIDHandler, func(c *gin.Context) {
-// 		reqCtx := c.Request.Context()
-// 		logger := logutil.GetLogger(c)
+	if !hasPermission {
+		logger.WithFields(logrus.Fields{
+			"album_id": album.ID,
+			"user_id":  session.User.ID,
+		}).Error("user has no permissions to upload media to this album")
 
-// 		s, _ := c.Get("sessionData")
-// 		session := s.(entity.Session)
+		common.AbortForbidden(c, errors.New("user has no permission to upload media"), "")
 
-// 		album, err := albumService.Query().First(reqCtx, int32(c.GetInt("id")))
-// 		if err != nil {
-// 			common.AbortNotFound(c, err, "update album")
+		return
+	}
 
-// 			return
-// 		}
+	file, err := c.FormFile("file")
+	if err != nil {
+		logger.WithField("album id", album.ID).WithError(err).Error("failed to file from request")
+		common.AbortInternalError(c)
 
-// 		// check permissions to this album
-// 		ats := permissions.NewAlbumPermissionService()
-// 		hasPermission := ats.Policy(permissions.OwnerPolicy{}).
-// 			Policy(permissions.UserPermissionPolicy{Permission: entity.PermissionWriteAlbum}).
-// 			Policy(permissions.GroupPermissionPolicy{Permission: entity.PermissionWriteAlbum}).
-// 			Strategy(permissions.AtLeastOneStrategy).
-// 			Resolve(album, session.User)
+		return
+	}
 
-// 		if !hasPermission {
-// 			logger.WithFields(logrus.Fields{
-// 				"album_id": album.ID,
-// 				"user_id":  session.User.ID,
-// 			}).Error("user has no permissions to upload media to this album")
+	// validate filename
+	if err := validate(file.Filename); err != nil {
+		logger.WithField("filename", file.Filename).WithError(err).Error("failed to validate filename")
+		common.AbortBadRequestWithJson(c, err, "invalid filename")
+		return
+	}
 
-// 			common.AbortForbidden(c, errors.New("user has no permission to upload media"), "")
+	src, err := file.Open()
+	if err != nil {
+		logger.WithField("album id", album.ID).WithError(err).Error("failed to open file from request")
+		common.AbortInternalError(c)
+		return
+	}
+	defer src.Close()
 
-// 			return
-// 		}
+	sanitizedFilename := html.EscapeString(file.Filename)
 
-// 		file, err := c.FormFile("file")
-// 		if err != nil {
-// 			logger.WithField("album id", album.ID).WithError(err).Error("failed to file from request")
-// 			common.AbortInternalError(c)
+	if err := server.MediaService().Save(c, album.Bucket, sanitizedFilename, src, media.Photo); err != nil {
+		logger.WithError(err).Error("failed to upload media")
+		common.AbortInternalErrorWithJson(c)
+		return
+	}
 
-// 			return
-// 		}
+	c.JSON(http.StatusCreated, mappersv1.MapMediaToModel(album, entity.Media{
+		MediaType: entity.Photo,
+		Bucket:    album.Bucket,
+		Filename:  sanitizedFilename,
+	}))
+}
 
-// 		// validate filename
-// 		if err := validate(file.Filename); err != nil {
-// 			logger.WithField("filename", file.Filename).WithError(err).Error("failed to validate filename")
-// 			common.AbortBadRequestWithJson(c, err, "invalid filename")
+func validate(filename string) error {
+	if len(filename) > FILENAME_MAX_LENGTH {
+		return errors.New("filename length exceeds max length")
+	}
 
-// 			return
-// 		}
+	if !filenameReg.MatchString(filename) {
+		return errors.New("filename container forbidden characters")
+	}
 
-// 		src, err := file.Open()
-// 		if err != nil {
-// 			logger.WithField("album id", album.ID).WithError(err).Error("failed to open file from request")
-// 			common.AbortInternalError(c)
-
-// 			return
-// 		}
-// 		defer src.Close()
-
-// 		sanitizedFilename := html.EscapeString(file.Filename)
-
-// 		if err := mediaService.Save(reqCtx, album.Bucket, sanitizedFilename, src, media.Photo); err != nil {
-// 			logger.WithError(err).Error("failed to upload media")
-
-// 			common.AbortInternalErrorWithJson(c)
-
-// 			return
-// 		}
-// 	})
-// }
-
-// func validate(filename string) error {
-// 	if len(filename) > FILENAME_MAX_LENGTH {
-// 		return errors.New("filename length exceeds max length")
-// 	}
-
-// 	if !filenameReg.MatchString(filename) {
-// 		return errors.New("filename container forbidden characters")
-// 	}
-
-// 	return nil
-// }
-
-// func parseMediaFilenameHandler(c *gin.Context) {
-// 	logger := logutil.GetLogger(c)
-
-// 	// decrypt album id
-// 	gen := encryption.NewGenerator(conf.GetEncryptionKey())
-
-// 	decryptedMedia, err := gen.DecryptData(c.Param("media"))
-// 	if err != nil {
-// 		logger.WithError(err).Error("cannot decrypt media filename")
-// 		c.AbortWithError(http.StatusNotFound, err) // explicit return not found here
-
-// 		return
-// 	}
-
-// 	c.Set("media", decryptedMedia)
-// }
+	return nil
+}
 
 func paginate(photos []entity.Media, pageNumber, size int) []entity.Media {
 	// pagination

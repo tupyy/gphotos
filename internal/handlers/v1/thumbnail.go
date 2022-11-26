@@ -66,5 +66,5 @@ func (server *Server) GetAlbumThumbnail(c *gin.Context, albumId apiv1.AlbumId) {
 		return
 	}
 
-	c.Data(http.StatusOK, "image/png", content)
+	c.Data(http.StatusOK, "image/jpeg", content)
 }
