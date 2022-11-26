@@ -11,7 +11,7 @@ import (
 	"github.com/minio/minio-go/v7"
 	miniotags "github.com/minio/minio-go/v7/pkg/tags"
 	"github.com/tupyy/gophoto/internal/entity"
-	"github.com/tupyy/gophoto/internal/utils/logutil"
+	"go.uber.org/zap"
 )
 
 // this format depends on exif extract library
@@ -68,7 +68,7 @@ func (m *MinioRepo) DeleteBucket(ctx context.Context, bucket string) error {
 		// List all objects from a bucket-name with a matching prefix.
 		for object := range m.client.ListObjects(ctx, bucket, minio.ListObjectsOptions{Recursive: true}) {
 			if object.Err != nil {
-				logutil.GetDefaultLogger().WithError(err).Errorf("failed to list bucket '%s'", bucket)
+				zap.S().Errorw("failed to list bucket", "bucket", bucket, "error", object.Err)
 
 				errCh <- object.Err
 				break
@@ -265,7 +265,7 @@ func toEntity(o minio.ObjectInfo, bucket string) entity.Media {
 	if createTime, found := o.UserMetadata[dateKey]; found {
 		t, err := time.Parse(dateFormat, createTime)
 		if err != nil {
-			logutil.GetDefaultLogger().WithField("create_time", createTime).WithError(err).Warn("parse time from metadata")
+			zap.S().Errorw("failed to parse time from metadata", "error", err, "time", createTime)
 		} else {
 			e.CreateDate = t
 		}

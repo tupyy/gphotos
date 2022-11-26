@@ -19,12 +19,12 @@ package cmd
 import (
 	"context"
 	"encoding/gob"
-	"fmt"
+	"time"
 
 	"github.com/gin-contrib/sessions/memstore"
+	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
 	"github.com/minio/minio-go/v7"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	apiv1 "github.com/tupyy/gophoto/api/v1"
 	"github.com/tupyy/gophoto/internal/auth"
@@ -44,7 +44,8 @@ import (
 	"github.com/tupyy/gophoto/internal/services/media"
 	tagService "github.com/tupyy/gophoto/internal/services/tag"
 	usersService "github.com/tupyy/gophoto/internal/services/users"
-	"github.com/tupyy/gophoto/internal/utils/logutil"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 // serveCmd represents the serve command
@@ -52,10 +53,13 @@ var serveCmd = &cobra.Command{
 	Use:   "serve",
 	Short: "run server",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("Conf used\n %s\n", conf.GetConfiguration())
+		logger := setupLogger()
+		defer logger.Sync()
 
-		logrus.SetLevel(conf.GetLogLevel())
-		logrus.SetReportCaller(true)
+		undo := zap.ReplaceGlobals(logger)
+		defer undo()
+
+		zap.S().Infof("Configuration %s", conf.GetConfiguration())
 
 		// initialize cookie store
 		store := memstore.NewStore([]byte(conf.GetServerSecretKey()))
@@ -68,20 +72,22 @@ var serveCmd = &cobra.Command{
 		if err != nil {
 			panic(err)
 		}
-		logutil.GetDefaultLogger().Info("connected to db")
+		zap.S().Infow("connected to db", "conf", conf.GetPostgresConf())
 
 		// init minio client
 		minioClient, err := minioclient.New(conf.GetMinioConfig())
 		if err != nil {
 			panic(err)
 		}
-		logutil.GetDefaultLogger().WithField("conf", conf.GetMinioConfig().String()).Info("connected at minio")
+		zap.S().Infow("connected to minio", "conf", conf.GetMinioConfig())
 
 		// create keycloak authenticator
 		keycloakAuthenticator := auth.NewKeyCloakAuthenticator(conf.GetKeycloakConfig(), conf.GetServerAuthCallback())
 
 		// create new router
 		engine := gin.New()
+		engine.Use(ginzap.Ginzap(logger, time.RFC3339, true))
+		engine.Use(ginzap.RecoveryWithZap(logger, true))
 		router.InitEngine(engine, store, keycloakAuthenticator)
 
 		//api.Logout(r.PrivateGroup, keycloakAuthenticator)
@@ -112,31 +118,23 @@ func createServer(client pgclient.Client, mclient *minio.Client) (*handlersv1.Se
 	// create keycloak repo
 	kr, err := keycloakRepo.New(context.Background(), conf.GetKeycloakConfig())
 	if err != nil {
-		logutil.GetDefaultLogger().WithError(err).Warn("cannot create user repo")
-
 		return nil, err
 	}
 
 	// create album repo
 	albumRepo, err := album.NewPostgresRepo(client)
 	if err != nil {
-		logutil.GetDefaultLogger().WithError(err).Warn("failed to create album repo")
-
 		return nil, err
 	}
 
 	// create tag repo
 	tagRepo, err := tag.NewPostgresRepo(client)
 	if err != nil {
-		logutil.GetDefaultLogger().WithError(err).Warn("failed to create tag repo")
-
 		return nil, err
 	}
 	// create user repo
 	userRepo, err := user.NewPostgresRepo(client)
 	if err != nil {
-		logutil.GetDefaultLogger().WithError(err).Warn("failed to create user pg repo")
-
 		return nil, err
 	}
 
@@ -159,4 +157,34 @@ func createServer(client pgclient.Client, mclient *minio.Client) (*handlersv1.Se
 
 	server := handlersv1.NewServer(albumService, usersService, tagService, mediaService, encryption)
 	return server, nil
+}
+
+func setupLogger() *zap.Logger {
+	loggerCfg := &zap.Config{
+		Level:    zap.NewAtomicLevelAt(zapcore.InfoLevel),
+		Encoding: "json",
+		EncoderConfig: zapcore.EncoderConfig{
+			TimeKey:        "time",
+			LevelKey:       "severity",
+			NameKey:        "logger",
+			CallerKey:      "caller",
+			MessageKey:     "message",
+			StacktraceKey:  "stacktrace",
+			LineEnding:     zapcore.DefaultLineEnding,
+			EncodeTime:     zapcore.RFC3339TimeEncoder,
+			EncodeLevel:    zapcore.LowercaseLevelEncoder,
+			EncodeDuration: zapcore.SecondsDurationEncoder, EncodeCaller: zapcore.ShortCallerEncoder,
+		},
+		OutputPaths:      []string{"stdout"},
+		ErrorOutputPaths: []string{"stdout"},
+	}
+
+	loggerCfg.Level = zap.NewAtomicLevelAt(conf.GetLogLevel())
+
+	logger, err := loggerCfg.Build(zap.AddStacktrace(zap.DPanicLevel))
+	if err != nil {
+		panic(err)
+	}
+
+	return logger
 }

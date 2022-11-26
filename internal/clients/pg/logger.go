@@ -2,10 +2,9 @@ package pg
 
 import (
 	"context"
-	"fmt"
 	"time"
 
-	"github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 	"gorm.io/gorm/logger"
 )
 
@@ -19,33 +18,30 @@ func (d driverLogger) LogMode(logger.LogLevel) logger.Interface {
 }
 
 func (d driverLogger) Info(ctx context.Context, msg string, args ...interface{}) {
-	logrus.Infof(msg, args...)
+	zap.S().Infow(msg, args...)
 }
 
 func (d driverLogger) Warn(ctx context.Context, msg string, args ...interface{}) {
-	logrus.Warnf(msg, args...)
+	zap.S().Warnw(msg, args...)
 }
 
 func (d driverLogger) Error(ctx context.Context, msg string, args ...interface{}) {
-	logrus.Errorf(msg, args...)
+	zap.S().Errorw(msg, args...)
 }
 
 func (d driverLogger) Trace(ctx context.Context, begin time.Time, fc func() (string, int64), err error) {
 	elapsed := time.Since(begin)
 	sql, rows := fc()
-	l := logrus.
-		WithField("elapsed", fmt.Sprintf("%.3fms", float64(elapsed.Nanoseconds())/1e6)).
-		WithField("rows", rows)
 
 	if err != nil {
-		l.WithError(err).Errorf("error with SQL query: %v", sql)
+		zap.S().Errorw("error with sql query", "error", err, "rows", rows)
 		return
 	}
 
 	if elapsed > SlowQueryThreshold {
-		l.Warnf("slow SQL query: %v", sql)
+		zap.S().Warnw("slow sql query", "query", sql, "rows", rows)
 		return
 	}
 
-	l.Debugf("SQL query: %v", sql)
+	zap.S().Debugw("SQL query", "query", sql, "rows", rows)
 }

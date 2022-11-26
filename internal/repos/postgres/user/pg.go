@@ -5,11 +5,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/sirupsen/logrus"
 	pgclient "github.com/tupyy/gophoto/internal/clients/pg"
 	"github.com/tupyy/gophoto/internal/entity"
 	domain "github.com/tupyy/gophoto/internal/repos"
-	"github.com/tupyy/gophoto/internal/utils/logutil"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
@@ -61,10 +60,7 @@ func (a *UserPostgresRepo) GetRelatedUsers(ctx context.Context, user entity.User
 	}
 
 	if len(results) == 0 {
-		logutil.GetDefaultLogger().WithFields(logrus.Fields{
-			"group names": fmt.Sprintf("%+v", user.Groups),
-			"user_id":     user.ID}).Warn("user has no relationships with other users")
-
+		zap.S().Warnw("user has no relationships to other users", "user_id", user.Username)
 		return []string{}, nil
 	}
 

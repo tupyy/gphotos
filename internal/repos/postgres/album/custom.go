@@ -7,7 +7,7 @@ import (
 
 	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/internal/repos/models"
-	"github.com/tupyy/gophoto/internal/utils/logutil"
+	"go.uber.org/zap"
 )
 
 // custom struct to map the join
@@ -84,7 +84,6 @@ func (ca albumJoinRow) ToEntity() (entity.Album, error) {
 
 	if ca.TagName != nil {
 		album.Tags = make([]entity.Tag, 0, 1)
-
 		if ca.TagColor != nil {
 			album.Tags = append(album.Tags, entity.Tag{ID: ca.TagID, Name: *ca.TagName, Color: ca.TagColor})
 		} else {
@@ -104,8 +103,7 @@ func (albums albumJoinRows) Merge() []entity.Album {
 	for _, ca := range albums {
 		e, err := ca.ToEntity()
 		if err != nil {
-			logutil.GetDefaultLogger().WithError(err).Warn("cannot create entity")
-
+			zap.S().Warnw("cannot map to entity", "error", err, "model", ca)
 			continue
 		}
 

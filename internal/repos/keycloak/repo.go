@@ -11,7 +11,7 @@ import (
 	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/entity"
 	userFilters "github.com/tupyy/gophoto/internal/repos/filters/user"
-	"github.com/tupyy/gophoto/internal/utils/logutil"
+	"go.uber.org/zap"
 )
 
 const (
@@ -31,8 +31,6 @@ func New(ctx context.Context, c conf.KeycloakConfig) (*KeycloakRepo, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	logutil.GetDefaultLogger().Infof("connected to keycloak as %s", c.AdminUsername)
 
 	return &KeycloakRepo{client: client, token: token, realm: c.Realm, configuration: c}, nil
 }
@@ -57,7 +55,7 @@ func (k *KeycloakRepo) GetUsers(ctx context.Context, filters userFilters.Filters
 			continue
 		}
 
-		logutil.GetDefaultLogger().WithField("user", fmt.Sprintf("%+v", keycloakUser)).Trace("found user")
+		zap.S().Debugw("found user", "user", keycloakUser)
 
 		users = append(users, mapper(*keycloakUser))
 	}
@@ -78,7 +76,6 @@ func (k *KeycloakRepo) GetUsers(ctx context.Context, filters userFilters.Filters
 	//filter them
 	if len(filters) > 0 {
 		users = filter(filters, users)
-		logutil.GetDefaultLogger().WithField("count filtered users", len(users)).Debug("filter user")
 	}
 
 	return users, nil
@@ -91,14 +88,10 @@ func (k *KeycloakRepo) GetUserByID(ctx context.Context, id string) (entity.User,
 
 	keycloakUser, err := k.client.GetUserByID(ctx, k.token.AccessToken, k.realm, id)
 	if err != nil {
-		logutil.GetDefaultLogger().WithError(err).WithField("id", id).Error("cannot fetch user from keycloak")
-
 		return entity.User{}, errors.Wrap(err, "user repo")
 	}
 
 	if !*keycloakUser.Enabled {
-		logutil.GetDefaultLogger().WithError(err).WithField("id", id).Error("user disabled")
-
 		return entity.User{}, fmt.Errorf("user %s disabled", id)
 	}
 

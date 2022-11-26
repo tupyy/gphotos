@@ -20,7 +20,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/entity"
-	"github.com/tupyy/gophoto/internal/utils/logutil"
+	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 )
 
@@ -53,7 +53,7 @@ func NewKeyCloakAuthenticator(c conf.KeycloakConfig, authCallback string) Authen
 	oidcProvider := newOidcProvider(c, authCallback)
 	keycloakClient := gocloak.NewClient(c.BaseURL)
 
-	logutil.GetDefaultLogger().WithField("auth callback", authCallback).Info("set auth callback")
+	zap.S().Debugw("auth callback set", "callback url", authCallback)
 
 	return &keyCloakAuthenticator{oidcProvider: oidcProvider, client: keycloakClient, conf: c}
 }
@@ -70,21 +70,17 @@ func (k *keyCloakAuthenticator) AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		logger := logutil.GetLogger(c)
-
 		s := session.Get(cookie.Value)
 		if s == nil {
-			logger.WithField("sessionID", cookie.Value).Warn("no session found with this id")
+			zap.S().Warnw("no session found. redirect to login", "session id", cookie.Value)
 			c.Abort()
 			redirectToLogin(c, k.oidcProvider.Config)
 			return
 		}
 
-		logger.WithField("sessionID", cookie.Value).Debug("new request with session id")
 		sessionData, _ := s.(entity.Session)
-
 		if err := k.authenticate(c, sessionData); err != nil {
-			logger.WithError(err).Debug("failed to authenticate")
+			zap.S().Errorw("failed to authenticate", "session data", sessionData)
 			c.Abort()
 			redirectToLogin(c, k.oidcProvider.Config)
 			return
@@ -92,6 +88,8 @@ func (k *keyCloakAuthenticator) AuthMiddleware() gin.HandlerFunc {
 
 		session.Set(cookie.Value, sessionData)
 		session.Save()
+
+		zap.S().Infow("user authenticated", "session data", sessionData)
 
 		c.Next()
 	}
@@ -104,10 +102,6 @@ func (k *keyCloakAuthenticator) Callback() gin.HandlerFunc {
 
 		// generate a session ID
 		uuid := uuid.New()
-
-		logger := logutil.GetLogger(c)
-
-		logger.WithField("uuid", uuid.String()).Info("session created")
 
 		state := session.Get("state")
 		if state == nil {
@@ -170,8 +164,6 @@ func (k *keyCloakAuthenticator) Callback() gin.HandlerFunc {
 		session.Set(uuid.String(), sessionData)
 		session.Save()
 
-		logger.WithField("session data", fmt.Sprintf("%+v", sessionData)).Trace("session data for logged user")
-
 		// save uuid to cookie
 		c.SetCookie(sessionID, uuid.String(), 3600, "/", c.Request.Host, true, true)
 
@@ -230,12 +222,10 @@ func (k *keyCloakAuthenticator) authenticate(ctx *gin.Context, sessionData entit
 		sessionData.Token.RefreshToken = newJwt.RefreshToken
 		sessionData.ExpireAt = time.Now().Add(time.Duration(int64(newJwt.ExpiresIn)) * time.Second)
 
-		logutil.GetLogger(ctx).WithField("username", sessionData.User.Username).WithField("token expire at", sessionData.ExpireAt).Info("session has expired. Token refreshed.")
+		zap.S().Infow("session has expired. Token refreshed", "username", sessionData.User.Username, "token expiration", sessionData.ExpireAt)
 	}
 
 	ctx.Set("sessionData", sessionData)
-
-	logutil.GetLogger(ctx).WithField("user", fmt.Sprintf("%+v", sessionData)).Info("user logged in")
 
 	return nil
 }

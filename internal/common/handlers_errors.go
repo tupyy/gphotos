@@ -7,7 +7,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/tupyy/gophoto/internal/entity"
-	"github.com/tupyy/gophoto/internal/utils/logutil"
 )
 
 var (
@@ -35,7 +34,6 @@ func (p *MissingPermissionError) Error() string {
 }
 
 func Abort(c *gin.Context, status int, err error, msg string) {
-	logutil.GetLogger(c).WithError(err).Errorf("abort %s with code %d: %s", c.FullPath(), status, msg)
 	c.AbortWithError(status, err)
 }
 

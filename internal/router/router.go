@@ -7,7 +7,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/tupyy/gophoto/internal/auth"
 	"github.com/tupyy/gophoto/internal/conf"
-	"github.com/tupyy/gophoto/internal/utils/logutil"
 )
 
 type PhotoRouter struct {
@@ -19,13 +18,11 @@ func InitEngine(server *gin.Engine, store sessions.Store, authenticator auth.Aut
 	server.Use(sessions.Sessions("gophoto", store))
 
 	if gin.Mode() == "debug" {
-		logutil.GetDefaultLogger().Debug("loading statics")
 		server.Static("/static", conf.GetStaticsFolder())
 	}
 
 	server.LoadHTMLFiles("static/index.html")
 
-	server.Use(gin.Logger())
 	server.Use(gin.Recovery())
 	server.Use(auth.FakeAuthMiddleware())
 

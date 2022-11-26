@@ -12,7 +12,7 @@ import (
 
 	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/internal/services/image"
-	"github.com/tupyy/gophoto/internal/utils/logutil"
+	"go.uber.org/zap"
 )
 
 // Store describe photo store operations
@@ -75,14 +75,12 @@ func (s *Service) ListBucket(ctx context.Context, bucket string) ([]entity.Media
 		if len(m.Thumbnail) == 0 {
 			r, _, err := s.GetPhoto(ctx, m.Bucket, m.Filename)
 			if err != nil {
-				logutil.GetLogger(ctx).WithError(err).WithField("filename", m.Filename).Error("failed to get photo from repo")
-
+				zap.S().Errorw("failed to get photo from repo", "error", err, "filename", m.Filename)
 				continue
 			}
 
 			if err := createThumbnail(ctx, s.repo, m.Bucket, m.Filename, r); err != nil {
-				logutil.GetLogger(ctx).WithError(err).WithField("filename", m.Filename).Error("failed to get create thumbnail")
-
+				zap.S().Errorw("failed to create thumbnail", "error", err, "filename", m.Filename)
 				continue
 			}
 
