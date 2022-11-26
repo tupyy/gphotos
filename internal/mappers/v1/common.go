@@ -1,5 +1,12 @@
 package v1
 
+type EncryptionService interface {
+	// Encrypt data in a deterministic way.
+	Encrypt(data string) (string, error)
+	// Decrypt data.
+	Decrypt(data string) (string, error)
+}
+
 const (
 	AlbumKind            string = "Album"
 	AlbumListKind        string = "AlbumList"

@@ -4,15 +4,15 @@ import (
 	"fmt"
 
 	apiv1 "github.com/tupyy/gophoto/api/v1"
-	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/entity"
-	"github.com/tupyy/gophoto/internal/utils/encryption"
+	"github.com/tupyy/gophoto/internal/services/encryption"
 )
 
 func MapTagToModel(tag entity.Tag) apiv1.Tag {
-	gen := encryption.NewGenerator(conf.GetEncryptionKey())
-	encryptedID, _ := gen.EncryptData(tag.ID)
-	encryptedOwner, _ := gen.EncryptData(tag.UserID)
+	encryption, _ := encryption.New() // must not fail here. todo find a better way
+
+	encryptedID, _ := encryption.Encrypt(tag.ID)
+	encryptedOwner, _ := encryption.Encrypt(tag.UserID)
 
 	model := apiv1.Tag{
 		Id:    encryptedID,

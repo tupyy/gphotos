@@ -9,14 +9,15 @@ import (
 )
 
 type Server struct {
-	albumService *album.Service
-	userService  *users.Service
-	tagService   *tag.Service
-	mediaService *media.Service
+	albumService     *album.Service
+	userService      *users.Service
+	tagService       *tag.Service
+	mediaService     *media.Service
+	encryptionServer EncryptionService
 }
 
-func NewServer(a *album.Service, u *users.Service, tag *tag.Service, m *media.Service) *Server {
-	return &Server{a, u, tag, m}
+func NewServer(a *album.Service, u *users.Service, tag *tag.Service, m *media.Service, e EncryptionService) *Server {
+	return &Server{a, u, tag, m, e}
 }
 
 func (server *Server) AlbumService() *album.Service {
@@ -33,6 +34,10 @@ func (server *Server) TagService() *tag.Service {
 
 func (server *Server) MediaService() *media.Service {
 	return server.mediaService
+}
+
+func (server *Server) EncryptionService() EncryptionService {
+	return server.encryptionServer
 }
 
 // (GET /api/gphotos/v1)

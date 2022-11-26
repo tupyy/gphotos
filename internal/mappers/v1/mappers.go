@@ -5,9 +5,8 @@ import (
 	"strings"
 
 	apiv1 "github.com/tupyy/gophoto/api/v1"
-	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/entity"
-	"github.com/tupyy/gophoto/internal/utils/encryption"
+	"github.com/tupyy/gophoto/internal/services/encryption"
 )
 
 const (
@@ -15,8 +14,8 @@ const (
 )
 
 func MapAlbumToModel(album entity.Album) apiv1.Album {
-	gen := encryption.NewGenerator(conf.GetEncryptionKey())
-	encryptedUsername, _ := gen.EncryptData(album.Owner)
+	encryption, _ := encryption.New() // must not fail here
+	encryptedUsername, _ := encryption.Encrypt(album.Owner)
 
 	albumRef := mapAlbumRef(album)
 	tags := make([]apiv1.Tag, 0, len(album.Tags))
@@ -56,8 +55,8 @@ func MapAlbumToModel(album entity.Album) apiv1.Album {
 }
 
 func mapAlbumRef(album entity.Album) apiv1.ObjectReference {
-	gen := encryption.NewGenerator(conf.GetEncryptionKey())
-	encryptedID, _ := gen.EncryptData(album.ID)
+	encryption, _ := encryption.New() // must not fail here
+	encryptedID, _ := encryption.Encrypt(album.ID)
 
 	return apiv1.ObjectReference{
 		Href: fmt.Sprintf("%s/album/%s", baseV1URL, encryptedID),
@@ -67,11 +66,12 @@ func mapAlbumRef(album entity.Album) apiv1.ObjectReference {
 }
 
 func MapAlbumPermissions(album entity.Album) apiv1.AlbumPermissions {
-	gen := encryption.NewGenerator(conf.GetEncryptionKey())
+	encryption, _ := encryption.New() // must not fail here. TODO find a better way
+
 	mapPermissions := func(permissions []entity.AlbumPermission, kind string) []apiv1.Permissions {
 		apiPermissions := []apiv1.Permissions{}
 		for _, perms := range permissions {
-			encryptedID, _ := gen.EncryptData(perms.OwnerID)
+			encryptedID, _ := encryption.Encrypt(perms.OwnerID)
 			up := apiv1.Permissions{
 				Owner: apiv1.ObjectReference{
 					Kind: kind,

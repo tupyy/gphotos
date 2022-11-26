@@ -14,13 +14,11 @@ import (
 	"github.com/sirupsen/logrus"
 	apiv1 "github.com/tupyy/gophoto/api/v1"
 	"github.com/tupyy/gophoto/internal/common"
-	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/internal/filter"
 	mappersv1 "github.com/tupyy/gophoto/internal/mappers/v1"
 	"github.com/tupyy/gophoto/internal/services/album"
 	"github.com/tupyy/gophoto/internal/services/permissions"
-	"github.com/tupyy/gophoto/internal/utils/encryption"
 	"github.com/tupyy/gophoto/internal/utils/logutil"
 )
 
@@ -110,7 +108,7 @@ func (server *Server) GetAlbumsByGroup(c *gin.Context, groupId string, params ap
 	ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
 	logger := logutil.GetLogger(c)
 
-	id, err := decrypt(groupId)
+	id, err := server.EncryptionService().Decrypt(groupId)
 	if err != nil {
 		logger.WithError(err).WithField("group id", groupId).Error("failed to decrypt group id")
 		common.AbortInternalError(c)
@@ -166,7 +164,7 @@ func (server *Server) GetAlbumsByUser(c *gin.Context, userId string, params apiv
 	ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
 	logger := logutil.GetLogger(c)
 
-	id, err := decrypt(userId)
+	id, err := server.EncryptionService().Decrypt(userId)
 	if err != nil {
 		logger.WithError(err).WithField("userId id", userId).Error("failed to decrypt user id")
 		common.AbortInternalError(c)
@@ -221,7 +219,7 @@ func (server *Server) GetAlbumByID(c *gin.Context, albumID apiv1.AlbumId) {
 	ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
 	logger := logutil.GetLogger(ctx)
 
-	id, err := decrypt(albumID)
+	id, err := server.EncryptionService().Decrypt(albumID)
 	if err != nil {
 		logger.WithError(err).WithField("album id", albumID).Error("failed to decrypt album id")
 		common.AbortInternalError(c)
@@ -319,7 +317,7 @@ func (server *Server) UpdateAlbum(c *gin.Context, albumID apiv1.AlbumId) {
 	ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
 	logger := logutil.GetLogger(ctx)
 
-	id, err := decrypt(albumID)
+	id, err := server.EncryptionService().Decrypt(albumID)
 	if err != nil {
 		logger.WithError(err).WithField("album id", albumID).Error("failed to decrypt album id")
 		common.AbortInternalError(c)
@@ -394,7 +392,7 @@ func (server *Server) DeleteAlbum(c *gin.Context, albumId apiv1.AlbumId) {
 	ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
 	logger := logutil.GetLogger(ctx)
 
-	id, err := decrypt(albumId)
+	id, err := server.EncryptionService().Decrypt(albumId)
 	if err != nil {
 		logger.WithError(err).WithField("album id", albumId).Error("failed to decrypt album id")
 		common.AbortInternalError(c)
@@ -436,15 +434,6 @@ func (server *Server) DeleteAlbum(c *gin.Context, albumId apiv1.AlbumId) {
 	}
 
 	c.JSON(http.StatusNoContent, gin.H{})
-}
-
-func decrypt(encryptedId string) (string, error) {
-	gen := encryption.NewGenerator(conf.GetEncryptionKey())
-	id, err := gen.DecryptData(encryptedId)
-	if err != nil {
-		return encryptedId, err
-	}
-	return id, nil
 }
 
 func escapeFieldPtr(fieldValue *string) string {

@@ -34,7 +34,7 @@ func (server *Server) GetAlbumPhotos(c *gin.Context, albumID string, params apiv
 	ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
 	logger := logutil.GetLogger(ctx)
 
-	id, err := decrypt(albumID)
+	id, err := server.EncryptionService().Decrypt(albumID)
 	if err != nil {
 		logger.WithError(err).WithField("album id", albumID).Error("failed to decrypt album id")
 		common.AbortInternalError(c)
@@ -95,7 +95,7 @@ func (server *Server) GetPhoto(c *gin.Context, albumId apiv1.AlbumId, photoId ap
 	ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
 	logger := logutil.GetLogger(ctx)
 
-	id, err := decrypt(albumId)
+	id, err := server.EncryptionService().Decrypt(albumId)
 	if err != nil {
 		logger.WithError(err).WithField("album id", albumId).Error("failed to decrypt album id")
 		common.AbortInternalError(c)
@@ -127,7 +127,7 @@ func (server *Server) GetPhoto(c *gin.Context, albumId apiv1.AlbumId, photoId ap
 		return
 	}
 
-	pID, err := decrypt(photoId)
+	pID, err := server.EncryptionService().Decrypt(photoId)
 	if err != nil {
 		logger.WithError(err).WithField("photo id", photoId).Error("failed to decrypt photo id")
 		common.AbortBadRequestWithJson(c, err, "bad request")
@@ -180,7 +180,7 @@ func (server *Server) DeletePhoto(c *gin.Context, albumId apiv1.AlbumId, photoId
 	ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
 	logger := logutil.GetLogger(ctx)
 
-	id, err := decrypt(albumId)
+	id, err := server.EncryptionService().Decrypt(albumId)
 	if err != nil {
 		logger.WithError(err).WithField("album id", albumId).Error("failed to decrypt album id")
 		common.AbortInternalError(c)
@@ -212,7 +212,7 @@ func (server *Server) DeletePhoto(c *gin.Context, albumId apiv1.AlbumId, photoId
 		return
 	}
 
-	pID, err := decrypt(photoId)
+	pID, err := server.EncryptionService().Decrypt(photoId)
 	if err != nil {
 		logger.WithError(err).WithField("photo id", photoId).Error("failed to decrypt photo id")
 		common.AbortBadRequestWithJson(c, err, "bad request")
@@ -239,7 +239,7 @@ func (server *Server) UploadPhoto(c *gin.Context, albumId apiv1.AlbumId) {
 	ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
 	logger := logutil.GetLogger(ctx)
 
-	id, err := decrypt(albumId)
+	id, err := server.EncryptionService().Decrypt(albumId)
 	if err != nil {
 		logger.WithError(err).WithField("album id", albumId).Error("failed to decrypt album id")
 		common.AbortNotFoundWithJson(c, err, "album not found")

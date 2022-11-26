@@ -6,7 +6,10 @@ import (
 	"crypto/cipher"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
+
+	"github.com/tupyy/gophoto/internal/conf"
 )
 
 const (
@@ -17,12 +20,19 @@ type Generator struct {
 	key []byte
 }
 
-func NewGenerator(key string) *Generator {
+func New() (*Generator, error) {
+	if conf.GetEncryptionKey() == "" {
+		return nil, errors.New("encryption key is missing")
+	}
+	return newGenerator(conf.GetEncryptionKey()), nil
+}
+
+func newGenerator(key string) *Generator {
 	return &Generator{key: []byte(key)}
 }
 
-// EncryptData encrypts the data with the provided key. The result is not determinist.
-func (g *Generator) EncryptData(data string) (string, error) {
+// EncryptData encrypts the data with the provided key. The result is determinist.
+func (g *Generator) Encrypt(data string) (string, error) {
 	hash := sha256.Sum256(bytes.NewBufferString(data).Bytes())
 
 	nonce := make([]byte, nonceSize)
@@ -31,21 +41,8 @@ func (g *Generator) EncryptData(data string) (string, error) {
 	return g.encryptDataWithNonce(data, nonce)
 }
 
-func (g *Generator) encryptDataWithNonce(data string, nonce []byte) (string, error) {
-	aesgcm, err := g.getAEAD()
-	if err != nil {
-		return "", err
-	}
-
-	ciphertext := aesgcm.Seal(nil, nonce, []byte(data), nil)
-
-	ret := fmt.Sprintf("%x%x", nonce, ciphertext)
-
-	return ret, nil
-}
-
 // DecryptData decrypts the data with the provided key.
-func (g *Generator) DecryptData(data string) (string, error) {
+func (g *Generator) Decrypt(data string) (string, error) {
 	aesgcm, err := g.getAEAD()
 	if err != nil {
 		return "", err
@@ -67,6 +64,19 @@ func (g *Generator) DecryptData(data string) (string, error) {
 	// }
 
 	ret := string(hexEncodedText)
+
+	return ret, nil
+}
+
+func (g *Generator) encryptDataWithNonce(data string, nonce []byte) (string, error) {
+	aesgcm, err := g.getAEAD()
+	if err != nil {
+		return "", err
+	}
+
+	ciphertext := aesgcm.Seal(nil, nonce, []byte(data), nil)
+
+	ret := fmt.Sprintf("%x%x", nonce, ciphertext)
 
 	return ret, nil
 }

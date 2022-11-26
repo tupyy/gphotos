@@ -38,6 +38,7 @@ import (
 	"github.com/tupyy/gophoto/internal/repos/postgres/user"
 	"github.com/tupyy/gophoto/internal/router"
 	albumService "github.com/tupyy/gophoto/internal/services/album"
+	"github.com/tupyy/gophoto/internal/services/encryption"
 	"github.com/tupyy/gophoto/internal/services/media"
 	tagService "github.com/tupyy/gophoto/internal/services/tag"
 	usersService "github.com/tupyy/gophoto/internal/services/users"
@@ -151,6 +152,11 @@ func createServer(client pgclient.Client, mclient *minio.Client) (*handlersv1.Se
 	services["user"] = usersService
 	services["tag"] = tagService
 
-	server := handlersv1.NewServer(albumService, usersService, tagService, mediaService)
+	encryption, err := encryption.New()
+	if err != nil {
+		return nil, err
+	}
+
+	server := handlersv1.NewServer(albumService, usersService, tagService, mediaService, encryption)
 	return server, nil
 }

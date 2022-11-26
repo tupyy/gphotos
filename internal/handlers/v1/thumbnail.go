@@ -20,7 +20,7 @@ func (server *Server) GetAlbumThumbnail(c *gin.Context, albumId apiv1.AlbumId) {
 	ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
 	logger := logutil.GetLogger(ctx)
 
-	id, err := decrypt(albumId)
+	id, err := server.EncryptionService().Decrypt(albumId)
 	if err != nil {
 		logger.WithError(err).WithField("album id", albumId).Error("failed to decrypt album id")
 		common.AbortInternalError(c)

@@ -3,9 +3,7 @@ package v1
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -25,7 +23,7 @@ func (server *Server) SetAlbumPermissions(c *gin.Context, albumId apiv1.AlbumId)
 	ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
 	logger := logutil.GetLogger(ctx)
 
-	id, err := decrypt(albumId)
+	id, err := server.EncryptionService().Decrypt(albumId)
 	if err != nil {
 		logger.WithError(err).WithField("album id", albumId).Error("failed to decrypt album id")
 		common.AbortNotFoundWithJson(c, errors.New("not found"), "not found")
@@ -62,7 +60,7 @@ func (server *Server) SetAlbumPermissions(c *gin.Context, albumId apiv1.AlbumId)
 		return
 	}
 
-	perms, err := mapToPermissions(payload)
+	perms, err := mappersv1.MapToEntityPermissions(payload)
 	if err != nil {
 		common.AbortBadRequestWithJson(c, err, "cannot set permissions")
 		return
@@ -83,7 +81,7 @@ func (server *Server) GetAlbumPermissions(c *gin.Context, albumId string) {
 	ctx := context.WithValue(c.Request.Context(), "username", session.User.Username)
 	logger := logutil.GetLogger(ctx)
 
-	id, err := decrypt(albumId)
+	id, err := server.EncryptionService().Decrypt(albumId)
 	if err != nil {
 		logger.WithError(err).WithField("album id", albumId).Error("failed to decrypt album id")
 		common.AbortNotFoundWithJson(c, errors.New("not found"), "not found")
@@ -117,34 +115,3 @@ func (server *Server) GetAlbumPermissions(c *gin.Context, albumId string) {
 }
 
 func (s *Server) RemoveAlbumPermissions(c *gin.Context, albumId apiv1.AlbumId) {}
-
-func mapToPermissions(form apiv1.AlbumPermissionsRequest) ([]entity.AlbumPermission, error) {
-	mapToPermissionList := func(perms []string) []entity.Permission {
-		pperms := make([]entity.Permission, 0, len(perms))
-		for _, pp := range perms {
-			perm, err := entity.NewPermission(pp)
-			if err == nil {
-				pperms = append(pperms, perm)
-			}
-		}
-		return pperms
-	}
-
-	albumPermissions := []entity.AlbumPermission{}
-	for _, p := range form {
-		id, err := decrypt(p.Owner.Id)
-		if err != nil {
-			id = p.Owner.Id
-		}
-		perms := mapToPermissionList(p.Permissions)
-		if strings.ToLower(p.Owner.Kind) != "user" && strings.ToLower(p.Owner.Kind) != "group" {
-			return []entity.AlbumPermission{}, fmt.Errorf("invalid error kind: '%s'", p.Owner.Kind)
-		}
-		albumPermissions = append(albumPermissions, entity.AlbumPermission{
-			OwnerID:     id,
-			OwnerKind:   strings.ToLower(p.Owner.Kind),
-			Permissions: perms,
-		})
-	}
-	return albumPermissions, nil
-}

@@ -4,15 +4,16 @@ import (
 	"fmt"
 
 	apiv1 "github.com/tupyy/gophoto/api/v1"
-	"github.com/tupyy/gophoto/internal/conf"
 	"github.com/tupyy/gophoto/internal/entity"
-	"github.com/tupyy/gophoto/internal/utils/encryption"
+	"github.com/tupyy/gophoto/internal/services/encryption"
 )
 
 func MapMediaToModel(album entity.Album, photo entity.Media) apiv1.Photo {
 	id := fmt.Sprintf("%s/%s", photo.Bucket, photo.Filename)
-	gen := encryption.NewGenerator(conf.GetEncryptionKey())
-	encryptedID, _ := gen.EncryptData(id)
+
+	encryption, _ := encryption.New() // must not fail here. todo find a better way
+	encryptedID, _ := encryption.Encrypt(id)
+
 	model := apiv1.Photo{
 		Album:     mapAlbumRef(album),
 		Id:        encryptedID,
