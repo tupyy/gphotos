@@ -1,14 +1,12 @@
 package v1
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
 	apiv1 "github.com/tupyy/gophoto/api/v1"
-	"github.com/tupyy/gophoto/internal/common"
 	"github.com/tupyy/gophoto/internal/entity"
 	mappersv1 "github.com/tupyy/gophoto/internal/mappers/v1"
 	"github.com/tupyy/gophoto/internal/services/permissions"
@@ -21,14 +19,14 @@ func (server *Server) SetAlbumPermissions(c *gin.Context, albumId apiv1.AlbumId)
 	id, err := server.EncryptionService().Decrypt(albumId)
 	if err != nil {
 		zap.S().Errorw("failed to decrypt album id", "error", err, "album id", albumId, "user", session.User.Username)
-		common.AbortNotFoundWithJson(c, errors.New("not found"), "not found")
+		c.AbortWithStatusJSON(http.StatusNotFound, mappersv1.MapFromStatusf(http.StatusNotFound, "album with id '%s' not found", albumId))
 		return
 	}
 
 	album, err := server.AlbumService().Query().First(c, id)
 	if err != nil {
 		zap.S().Errorw("failed to get album", "error", err, "album_id", id, "user", session.User.Username)
-		common.AbortNotFoundWithJson(c, err, "update album")
+		c.AbortWithStatusJSON(http.StatusNotFound, mappersv1.MapFromStatusf(http.StatusNotFound, "album with id '%s' not found", albumId))
 		return
 	}
 
@@ -41,27 +39,28 @@ func (server *Server) SetAlbumPermissions(c *gin.Context, albumId apiv1.AlbumId)
 
 	if !hasPermission {
 		zap.S().Errorw("permission denied to set permission for album", "album", id, "user", session.User.Username)
-		common.AbortForbidden(c, common.NewMissingPermissionError(entity.PermissionEditAlbum, album, session.User), "get album")
+		c.AbortWithStatusJSON(http.StatusForbidden, mappersv1.MapFromStatus(http.StatusForbidden, "access denied"))
 		return
 	}
 
 	var payload apiv1.AlbumPermissionsRequest
 	if err := c.BindJSON(&payload); err != nil {
 		zap.S().Errorw("failed to bind to form", "album", id, "payload", payload, "user", session.User.Username)
-		common.AbortBadRequestWithJson(c, err, "failed to bind to form")
+		c.AbortWithStatusJSON(http.StatusBadRequest, mappersv1.MapFromStatusf(http.StatusBadRequest, "failed to parse payload: %s", err))
 		return
 	}
 
 	perms, err := mappersv1.MapToEntityPermissions(payload)
 	if err != nil {
 		zap.S().Errorw("failed to map permissions", "album", id, "permissions", payload, "user", session.User.Username)
-		common.AbortBadRequestWithJson(c, err, "cannot set permissions")
+		c.AbortWithStatusJSON(http.StatusBadRequest, mappersv1.MapFromStatusf(http.StatusBadRequest, "failed to parse payload: %s", err))
 		return
 	}
 
 	if err := server.AlbumService().SetPermissions(c, album, perms); err != nil {
 		zap.S().Errorw("failed to set permissions to album", "error", err, "album_id", id, "permissions", perms, "user", session.User.Username)
-		common.AbortBadRequestWithJson(c, err, "cannot set permissions")
+		apiErr := mappersv1.MapFromError(err)
+		c.AbortWithStatusJSON(apiErr.Code, apiErr)
 		return
 	}
 
@@ -75,15 +74,14 @@ func (server *Server) GetAlbumPermissions(c *gin.Context, albumId string) {
 	id, err := server.EncryptionService().Decrypt(albumId)
 	if err != nil {
 		zap.S().Errorw("failed to decrypt album id", "error", err, "album id", albumId, "user", session.User.Username)
-		common.AbortNotFoundWithJson(c, errors.New("not found"), "not found")
+		c.AbortWithStatusJSON(http.StatusNotFound, mappersv1.MapFromStatusf(http.StatusNotFound, "album with id '%s' not found", albumId))
 		return
 	}
 
 	album, err := server.AlbumService().Query().First(c, id)
 	if err != nil {
 		zap.S().Errorw("failed to get album", "error", err, "album_id", id, "user", session.User.Username)
-		common.AbortNotFound(c, err, "update album")
-
+		c.AbortWithStatusJSON(http.StatusNotFound, mappersv1.MapFromStatusf(http.StatusNotFound, "album with id '%s' not found", albumId))
 		return
 	}
 
@@ -96,7 +94,7 @@ func (server *Server) GetAlbumPermissions(c *gin.Context, albumId string) {
 
 	if !hasPermission {
 		zap.S().Errorw("permission denied to retrieve permissions", "album_id", id, "user", session.User.Username)
-		common.AbortForbidden(c, common.NewMissingPermissionError(entity.PermissionEditAlbum, album, session.User), "get album")
+		c.AbortWithStatusJSON(http.StatusForbidden, mappersv1.MapFromStatus(http.StatusForbidden, "access denied"))
 		return
 	}
 	c.JSON(http.StatusOK, mappersv1.MapAlbumPermissions(album))

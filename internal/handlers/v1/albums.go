@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"errors"
 	"fmt"
 	"html"
 	"net/http"
@@ -11,7 +10,6 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	apiv1 "github.com/tupyy/gophoto/api/v1"
-	"github.com/tupyy/gophoto/internal/common"
 	"github.com/tupyy/gophoto/internal/entity"
 	"github.com/tupyy/gophoto/internal/filter"
 	mappersv1 "github.com/tupyy/gophoto/internal/mappers/v1"
@@ -41,8 +39,7 @@ func (server *Server) GetAlbums(c *gin.Context, params apiv1.GetAlbumsParams) {
 		filter, err := filter.New(searchExp)
 		if err != nil {
 			zap.S().Errorw("failed to create filter engine", "filter", *&params.Search, "user", session.User.Username)
-			common.AbortBadRequestWithJson(c, err, err.Error())
-
+			c.AbortWithStatusJSON(http.StatusBadRequest, mappersv1.MapFromStatus(http.StatusBadRequest, "malformatted search expression"))
 			return
 		}
 
@@ -76,7 +73,8 @@ func (server *Server) GetAlbums(c *gin.Context, params apiv1.GetAlbumsParams) {
 	albums, total, err := q.All(c, session.User)
 	if err != nil {
 		zap.S().Errorw("failed to get albums", "error", err, "user", session.User.Username)
-		common.AbortInternalErrorWithJson(c)
+		apiErr := mappersv1.MapFromError(err)
+		c.AbortWithStatusJSON(apiErr.Code, apiErr)
 		return
 	}
 
@@ -103,7 +101,7 @@ func (server *Server) GetAlbumsByGroup(c *gin.Context, groupId string, params ap
 	id, err := server.EncryptionService().Decrypt(groupId)
 	if err != nil {
 		zap.S().Errorw("failed to decrypt group id", "error", err, "user", session.User.Username)
-		common.AbortInternalError(c)
+		c.AbortWithStatusJSON(http.StatusNotFound, mappersv1.MapFromStatusf(http.StatusNotFound, "group with id '%s' not found", groupId))
 		return
 	}
 
@@ -129,7 +127,8 @@ func (server *Server) GetAlbumsByGroup(c *gin.Context, groupId string, params ap
 	albums, total, err := q.All(c, session.User)
 	if err != nil {
 		zap.S().Errorw("failed to get albums", "error", err, "user", session.User.Username)
-		common.AbortInternalErrorWithJson(c)
+		apiErr := mappersv1.MapFromError(err)
+		c.AbortWithStatusJSON(apiErr.Code, apiErr)
 		return
 	}
 
@@ -156,7 +155,7 @@ func (server *Server) GetAlbumsByUser(c *gin.Context, userId string, params apiv
 	id, err := server.EncryptionService().Decrypt(userId)
 	if err != nil {
 		zap.S().Errorw("failed to decrypt user id", "error", err, "user id", userId, "user", session.User.Username)
-		common.AbortInternalError(c)
+		c.AbortWithStatusJSON(http.StatusNotFound, mappersv1.MapFromStatusf(http.StatusNotFound, "user with id '%s' not found", userId))
 		return
 	}
 
@@ -182,7 +181,8 @@ func (server *Server) GetAlbumsByUser(c *gin.Context, userId string, params apiv
 	albums, total, err := q.All(c, session.User)
 	if err != nil {
 		zap.S().Errorw("failed to get albums", "error", err, "user", session.User.Username)
-		common.AbortInternalErrorWithJson(c)
+		apiErr := mappersv1.MapFromError(err)
+		c.AbortWithStatusJSON(apiErr.Code, apiErr)
 		return
 	}
 
@@ -208,14 +208,15 @@ func (server *Server) GetAlbumByID(c *gin.Context, albumID apiv1.AlbumId) {
 	id, err := server.EncryptionService().Decrypt(albumID)
 	if err != nil {
 		zap.S().Errorw("failed to decrypt album id", "error", err, "album id", albumID, "user", session.User.Username)
-		common.AbortInternalError(c)
+		c.AbortWithStatusJSON(http.StatusNotFound, mappersv1.MapFromStatusf(http.StatusNotFound, "album with id '%s' not found", albumID))
 		return
 	}
 
 	album, err := server.AlbumService().Query().First(c, id)
 	if err != nil {
 		zap.S().Errorw("failed to get album", "error", err, "album id", id, "user", session.User.Username)
-		common.AbortNotFound(c, err, "update album")
+		apiErr := mappersv1.MapFromError(err)
+		c.AbortWithStatusJSON(apiErr.Code, apiErr)
 		return
 	}
 
@@ -231,7 +232,7 @@ func (server *Server) GetAlbumByID(c *gin.Context, albumID apiv1.AlbumId) {
 
 	if !hasPermission {
 		zap.S().Errorw("permission denied to access album", "album", id, "user", session.User.Username)
-		common.AbortForbidden(c, common.NewMissingPermissionError(entity.PermissionEditAlbum, album, session.User), "get album")
+		c.AbortWithStatusJSON(http.StatusForbidden, mappersv1.MapFromStatus(http.StatusForbidden, "access denied"))
 		return
 	}
 
@@ -251,18 +252,18 @@ func (server *Server) CreateAlbum(c *gin.Context) {
 
 	if !hasPermission {
 		zap.S().Errorw("permission denied to create album", "user", session.User.Username)
-		common.AbortForbidden(c, errors.New("user has no editor or admin role"), "user role forbids the creation of albums")
+		c.AbortWithStatusJSON(http.StatusForbidden, mappersv1.MapFromStatus(http.StatusForbidden, "access denied"))
 		return
 	}
 
 	var payload apiv1.AlbumRequestPayload
 	if err := c.BindJSON(&payload); err != nil {
-		common.AbortBadRequest(c, err, "fail to bind to form")
+		c.AbortWithStatusJSON(http.StatusBadRequest, mappersv1.MapFromStatusf(http.StatusBadRequest, "failed to parse payload: %s", err))
 		return
 	}
 
 	if len(payload.Name) == 0 {
-		common.AbortBadRequestWithJson(c, errors.New("name is missing"), "name is missing")
+		c.AbortWithStatusJSON(http.StatusBadRequest, mappersv1.MapFromStatus(http.StatusBadRequest, "album's name is missing"))
 		return
 	}
 
@@ -276,8 +277,8 @@ func (server *Server) CreateAlbum(c *gin.Context) {
 	}
 	albumID, err := server.AlbumService().Create(c, album)
 	if err != nil {
-		common.AbortInternalError(c)
-
+		apiErr := mappersv1.MapFromError(err)
+		c.AbortWithStatusJSON(apiErr.Code, apiErr)
 		return
 	}
 
@@ -296,15 +297,14 @@ func (server *Server) UpdateAlbum(c *gin.Context, albumID apiv1.AlbumId) {
 	id, err := server.EncryptionService().Decrypt(albumID)
 	if err != nil {
 		zap.S().Errorw("failed to decrypt album id", "error", err, "album id", albumID, "user", session.User.Username)
-		common.AbortInternalError(c)
+		c.AbortWithStatusJSON(http.StatusNotFound, mappersv1.MapFromStatusf(http.StatusNotFound, "album with id '%s' not found", albumID))
 		return
 	}
 
 	album, err := server.AlbumService().Query().First(c, id)
 	if err != nil {
 		zap.S().Errorw("failed to get album", "album id", id, "user", session.User.Username)
-		common.AbortNotFoundWithJson(c, err, "update album")
-
+		c.AbortWithStatusJSON(http.StatusNotFound, mappersv1.MapFromStatusf(http.StatusNotFound, "album with id '%s' not found", albumID))
 		return
 	}
 
@@ -320,13 +320,14 @@ func (server *Server) UpdateAlbum(c *gin.Context, albumID apiv1.AlbumId) {
 
 	if !hasPermission {
 		zap.S().Errorw("failed to update album. user has no edit permission", "album id", id, "user", session.User.Username)
+		c.AbortWithStatusJSON(http.StatusForbidden, mappersv1.MapFromStatus(http.StatusForbidden, "access denied"))
 		return
 	}
 
 	var payload apiv1.AlbumRequestPayload
 	if err := c.BindJSON(&payload); err != nil {
 		zap.S().Errorw("failed to bind payload", "album id", id, "error", err, "payload", payload, "user", session.User.Username)
-		common.AbortBadRequest(c, err, "failed to parse payload")
+		c.AbortWithStatusJSON(http.StatusBadRequest, mappersv1.MapFromStatusf(http.StatusBadRequest, "failed to parse payload: %s", err))
 		return
 	}
 
@@ -345,7 +346,8 @@ func (server *Server) UpdateAlbum(c *gin.Context, albumID apiv1.AlbumId) {
 
 	if _, err := server.AlbumService().Update(c, album); err != nil {
 		zap.S().Errorw("failed to update album", "album id", id, "error", err, "payload", payload, "user", session.User.Username)
-		common.AbortInternalError(c)
+		apiErr := mappersv1.MapFromError(err)
+		c.AbortWithStatusJSON(apiErr.Code, apiErr)
 		return
 	}
 
@@ -361,15 +363,14 @@ func (server *Server) DeleteAlbum(c *gin.Context, albumId apiv1.AlbumId) {
 	id, err := server.EncryptionService().Decrypt(albumId)
 	if err != nil {
 		zap.S().Errorw("failed to decrypt album id", "error", err, "album id", albumId, "album", session.User.Username)
-		common.AbortInternalError(c)
+		c.AbortWithStatusJSON(http.StatusNotFound, mappersv1.MapFromStatusf(http.StatusNotFound, "album with id '%s' not found", albumId))
 		return
 	}
 
 	album, err := server.AlbumService().Query().First(c, id)
 	if err != nil {
 		zap.S().Errorw("failed to get album", "error", err, "album id", id, "user", session.User.Username)
-		common.AbortNotFound(c, err, "update album")
-
+		c.AbortWithStatusJSON(http.StatusNotFound, mappersv1.MapFromStatusf(http.StatusNotFound, "album with id '%s' not found", albumId))
 		return
 	}
 
@@ -384,13 +385,14 @@ func (server *Server) DeleteAlbum(c *gin.Context, albumId apiv1.AlbumId) {
 
 	if !hasPermission {
 		zap.S().Errorw("failed to delete album. missing permissions", "album id", id, "user", session.User.Username)
-		common.AbortForbidden(c, common.NewMissingPermissionError(entity.PermissionDeleteAlbum, album, session.User), "delete album")
+		c.AbortWithStatusJSON(http.StatusForbidden, mappersv1.MapFromStatus(http.StatusForbidden, "access denied"))
 		return
 	}
 
 	if err := server.AlbumService().Delete(c, album); err != nil {
 		zap.S().Errorw("failed to delete album", "error", err, "album id", id, "user", session.User.Username)
-		common.AbortInternalError(c)
+		apiErr := mappersv1.MapFromError(err)
+		c.AbortWithStatusJSON(apiErr.Code, apiErr)
 		return
 	}
 

@@ -17,6 +17,6 @@ var (
 	ErrUpdateAlbum = errors.New("failed to update album")
 	// ErrDeleteAlbum means the albums cannot be delete it.
 	ErrDeleteAlbum = errors.New("failed to delete album")
-	// ErrGetAlbums means that we cannot fetch album from repo.
-	ErrGetAlbums = errors.New("failed to get albums")
+
+	ErrNotFound = errors.New("resource not found")
 )

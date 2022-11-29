@@ -2,18 +2,10 @@ package album
 
 import (
 	"context"
-	"errors"
-	"fmt"
 
 	"github.com/tupyy/gophoto/internal/entity"
-	"github.com/tupyy/gophoto/internal/services"
 	"github.com/tupyy/gophoto/internal/services/media"
 	"go.uber.org/zap"
-)
-
-var (
-	// AlbumSearchError means something went wrong when searching though albums
-	AlbumSearchError = errors.New("album search error")
 )
 
 type Filter interface {
@@ -88,7 +80,7 @@ func (q *Query) All(ctx context.Context, user entity.User) ([]entity.Album, int,
 		// fetch personal albums
 		pa, err := q.albumRepo.GetByOwner(ctx, user.Username)
 		if err != nil {
-			return []entity.Album{}, 0, fmt.Errorf("%w personal album: %v", services.ErrGetAlbums, err)
+			return []entity.Album{}, 0, err
 		}
 
 		for _, a := range pa {
@@ -101,7 +93,7 @@ func (q *Query) All(ctx context.Context, user entity.User) ([]entity.Album, int,
 		if user.Role == entity.RoleAdmin {
 			sa, err := q.albumRepo.Get(ctx)
 			if err != nil {
-				return []entity.Album{}, 0, fmt.Errorf("%w all albums: %v", services.ErrGetAlbums, err)
+				return []entity.Album{}, 0, err
 			}
 
 			for _, a := range sa {
@@ -110,7 +102,7 @@ func (q *Query) All(ctx context.Context, user entity.User) ([]entity.Album, int,
 		} else if user.CanShare {
 			sharedAlbums, err := q.albumRepo.GetByUser(ctx, user.Username)
 			if err != nil {
-				return []entity.Album{}, 0, fmt.Errorf("%w shared albums: %v", services.ErrGetAlbums, err)
+				return []entity.Album{}, 0, err
 			}
 
 			// get albums shared by the user's groups but filter out the ones owns by the user
@@ -167,12 +159,12 @@ func (q *Query) All(ctx context.Context, user entity.User) ([]entity.Album, int,
 func (q *Query) First(ctx context.Context, id string) (entity.Album, error) {
 	album, err := q.albumRepo.GetByID(ctx, id)
 	if err != nil {
-		return entity.Album{}, fmt.Errorf("failed to get album '%s': %v", id, err)
+		return entity.Album{}, err
 	}
 
 	medias, err := q.mediaService.ListBucket(ctx, album.Bucket)
 	if err != nil {
-		return entity.Album{}, fmt.Errorf("%w album id '%s': %v", services.ErrListBucket, id, err)
+		return entity.Album{}, err
 	}
 
 	photos := make([]entity.Media, 0, len(medias))

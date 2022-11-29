@@ -5,17 +5,20 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/pkg/errors"
 	"github.com/rs/xid"
 	pgclient "github.com/tupyy/gophoto/internal/clients/pg"
+	"github.com/tupyy/gophoto/internal/common"
 	"github.com/tupyy/gophoto/internal/entity"
-	repo "github.com/tupyy/gophoto/internal/repos"
 	"github.com/tupyy/gophoto/internal/repos/models"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
 type AlbumPostgresRepo struct {
-	db     *gorm.DB
-	client pgclient.Client
+	db             *gorm.DB
+	client         pgclient.Client
+	circuitBreaker pgclient.CircuitBreaker
 }
 
 func NewPostgresRepo(client pgclient.Client) (*AlbumPostgresRepo, error) {
@@ -28,42 +31,58 @@ func NewPostgresRepo(client pgclient.Client) (*AlbumPostgresRepo, error) {
 		return &AlbumPostgresRepo{}, err
 	}
 
-	return &AlbumPostgresRepo{gormDB, client}, nil
+	return &AlbumPostgresRepo{gormDB, client, client.GetCircuitBreaker()}, nil
 }
 
 func (a *AlbumPostgresRepo) Create(ctx context.Context, album entity.Album) (entity.Album, error) {
-	tx := a.db.WithContext(ctx).Begin()
+	if !a.circuitBreaker.IsAvailable() {
+		return entity.Album{}, common.NewPostgresNotAvailableError("pg not available while creating album")
+	}
 
 	m := toModel(album)
 	m.ID = xid.New().String()
 	album.ID = m.ID
 
-	result := tx.Create(&m)
+	result := a.db.WithContext(ctx).Create(&m)
 	if result.Error != nil {
-		return album, fmt.Errorf("%w cannot create album %+v", repo.ErrCreateAlbum, result.Error)
-	}
-
-	if err := tx.Commit().Error; err != nil {
-		return album, fmt.Errorf("%w cannot create album %+v", repo.ErrCreateAlbum, result.Error)
+		if a.checkNetworkError(result.Error) {
+			return entity.Album{}, common.NewPostgresNotAvailableError("pg not available while creating album")
+		}
+		return album, common.NewInternalError(result.Error, "failed to create album")
 	}
 
 	return album, nil
 }
 
 func (a *AlbumPostgresRepo) Delete(ctx context.Context, id string) error {
-	if res := a.db.WithContext(ctx).Delete(&models.Album{}, id); res.Error != nil {
-		return fmt.Errorf("%w %+v", repo.ErrDeleteAlbum, res.Error)
+	if !a.circuitBreaker.IsAvailable() {
+		return common.NewPostgresNotAvailableError("pg not available while removing album")
 	}
 
+	if result := a.db.WithContext(ctx).Delete(&models.Album{}, id); result.Error != nil {
+		if a.checkNetworkError(result.Error) {
+			return common.NewPostgresNotAvailableError("pg not available while removing album")
+		}
+		return common.NewInternalError(result.Error, fmt.Sprintf("failed to delete album with id '%s'", id))
+	}
 	return nil
 }
 
 func (a *AlbumPostgresRepo) Update(ctx context.Context, album entity.Album) (entity.Album, error) {
-	var ca albumJoinRow
+	if !a.circuitBreaker.IsAvailable() {
+		return album, common.NewPostgresNotAvailableError("pg not available while updating album")
+	}
 
+	var ca albumJoinRow
 	tx := a.db.WithContext(ctx).Table("album").Where("id = ?", album.ID).First(&ca)
 	if tx.Error != nil {
-		return album, fmt.Errorf("%w %v album_id=%s", repo.ErrAlbumNotFound, tx.Error, album.ID)
+		if a.checkNetworkError(tx.Error) {
+			return album, common.NewPostgresNotAvailableError("pg not available while updating album")
+		}
+		if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
+			return album, common.NewEntityNotFound(fmt.Sprintf("album '%s' not found", album.ID))
+		}
+		return album, common.NewInternalError(tx.Error, fmt.Sprintf("failed to get album with id '%s'", album.ID))
 	}
 
 	newAlbum := entity.Album{
@@ -76,18 +95,15 @@ func (a *AlbumPostgresRepo) Update(ctx context.Context, album entity.Album) (ent
 		Thumbnail:   album.Thumbnail,
 	}
 
-	tx = a.db.WithContext(ctx).Begin()
-
 	m := toModel(newAlbum)
 	m.ID = album.ID
 
-	result := tx.Save(&m)
+	result := a.db.WithContext(ctx).Save(&m)
 	if result.Error != nil {
-		return album, fmt.Errorf("%w %+v", repo.ErrUpdateAlbum, result.Error)
-	}
-
-	if err := tx.Commit().Error; err != nil {
-		return album, fmt.Errorf("%w %+v album_id: %s", repo.ErrUpdateAlbum, result.Error, album.ID)
+		if a.checkNetworkError(tx.Error) {
+			return album, common.NewPostgresNotAvailableError("pg not available while updating album")
+		}
+		return album, common.NewInternalError(result.Error, fmt.Sprintf("failed to update album with id '%s'", album.ID))
 	}
 
 	return album, nil
@@ -95,8 +111,11 @@ func (a *AlbumPostgresRepo) Update(ctx context.Context, album entity.Album) (ent
 
 // Get returns all the albums sorted by id.
 func (a *AlbumPostgresRepo) Get(ctx context.Context) ([]entity.Album, error) {
-	var albums albumJoinRows
+	if !a.circuitBreaker.IsAvailable() {
+		return []entity.Album{}, common.NewPostgresNotAvailableError("pg not available while retrieving albums")
+	}
 
+	var albums albumJoinRows
 	tagSubQuery := a.db.WithContext(ctx).Table("tag").
 		Select("id, albums_tags.album_id, name, color").
 		Joins("JOIN albums_tags ON (albums_tags.tag_id = tag.id)")
@@ -109,11 +128,14 @@ func (a *AlbumPostgresRepo) Get(ctx context.Context) ([]entity.Album, error) {
 
 	tx.Find(&albums)
 	if tx.Error != nil {
-		return []entity.Album{}, fmt.Errorf("%w internal error: %v", repo.ErrInternalError, tx.Error)
+		if a.checkNetworkError(tx.Error) {
+			return []entity.Album{}, common.NewPostgresNotAvailableError("pg not available while retrieving albums")
+		}
+		return []entity.Album{}, common.NewInternalError(tx.Error, "failed to fetch albums")
 	}
 
 	if len(albums) == 0 {
-		return []entity.Album{}, nil
+		return []entity.Album{}, common.NewEntityNotFound("albums not found")
 	}
 
 	entities := albums.Merge()
@@ -123,8 +145,11 @@ func (a *AlbumPostgresRepo) Get(ctx context.Context) ([]entity.Album, error) {
 
 // GetByID return the album if any with id id.
 func (a *AlbumPostgresRepo) GetByID(ctx context.Context, id string) (entity.Album, error) {
-	var albums albumJoinRows
+	if !a.circuitBreaker.IsAvailable() {
+		return entity.Album{}, common.NewPostgresNotAvailableError("pg not available while retrieving album by id")
+	}
 
+	var albums albumJoinRows
 	tagSubQuery := a.db.WithContext(ctx).Table("tag").
 		Select("id, albums_tags.album_id, name, color").
 		Joins("JOIN albums_tags ON (albums_tags.tag_id = tag.id)")
@@ -138,11 +163,14 @@ func (a *AlbumPostgresRepo) GetByID(ctx context.Context, id string) (entity.Albu
 		Find(&albums)
 
 	if tx.Error != nil {
-		return entity.Album{}, fmt.Errorf("%w internal error: %v", repo.ErrInternalError, tx.Error)
+		if !a.circuitBreaker.IsAvailable() {
+			return entity.Album{}, common.NewPostgresNotAvailableError("pg not available while retrieving album by id")
+		}
+		return entity.Album{}, common.NewInternalError(tx.Error, fmt.Sprintf("failed to fetch album by id '%s'", id))
 	}
 
 	if len(albums) == 0 {
-		return entity.Album{}, fmt.Errorf("album not found")
+		return entity.Album{}, common.NewEntityNotFound(fmt.Sprintf("failed to fetch album with id '%s'", id))
 	}
 
 	entities := albums.Merge()
@@ -152,8 +180,11 @@ func (a *AlbumPostgresRepo) GetByID(ctx context.Context, id string) (entity.Albu
 
 // GetByOwnerID return all albums of an user.
 func (a *AlbumPostgresRepo) GetByOwner(ctx context.Context, owner string) ([]entity.Album, error) {
-	var albums albumJoinRows
+	if !a.circuitBreaker.IsAvailable() {
+		return []entity.Album{}, common.NewPostgresNotAvailableError("pg not available while fetching albums by owner")
+	}
 
+	var albums albumJoinRows
 	tagSubQuery := a.db.WithContext(ctx).Table("tag").
 		Select("id, albums_tags.album_id, name, color").
 		Joins("JOIN albums_tags ON (albums_tags.tag_id = tag.id)")
@@ -167,11 +198,14 @@ func (a *AlbumPostgresRepo) GetByOwner(ctx context.Context, owner string) ([]ent
 
 	tx.Find(&albums)
 	if tx.Error != nil {
-		return []entity.Album{}, fmt.Errorf("%w internal error: %v", repo.ErrInternalError, tx.Error)
+		if !a.circuitBreaker.IsAvailable() {
+			return []entity.Album{}, common.NewPostgresNotAvailableError("pg not available while fetching albums by owner")
+		}
+		return []entity.Album{}, common.NewInternalError(tx.Error, fmt.Sprintf("failed to get albums by owner '%s'", owner))
 	}
 
 	if len(albums) == 0 {
-		return []entity.Album{}, nil
+		return []entity.Album{}, common.NewEntityNotFound(fmt.Sprintf("albums not found with owner '%s'", owner))
 	}
 
 	entities := albums.Merge()
@@ -181,8 +215,11 @@ func (a *AlbumPostgresRepo) GetByOwner(ctx context.Context, owner string) ([]ent
 
 // GetByUserID returns a list of albums for which the user has at one permission set.
 func (a *AlbumPostgresRepo) GetByUser(ctx context.Context, username string) ([]entity.Album, error) {
-	var albums albumJoinRows
+	if !a.circuitBreaker.IsAvailable() {
+		return []entity.Album{}, common.NewPostgresNotAvailableError("pg not available while fetching albums by user")
+	}
 
+	var albums albumJoinRows
 	tagSubQuery := a.db.WithContext(ctx).Table("tag").
 		Select("id, albums_tags.album_id, name, color").
 		Joins("JOIN albums_tags ON (albums_tags.tag_id = tag.id)")
@@ -197,11 +234,14 @@ func (a *AlbumPostgresRepo) GetByUser(ctx context.Context, username string) ([]e
 
 	tx.Find(&albums)
 	if tx.Error != nil {
-		return []entity.Album{}, fmt.Errorf("%w internal error: %v", repo.ErrInternalError, tx.Error)
+		if !a.circuitBreaker.IsAvailable() {
+			return []entity.Album{}, common.NewPostgresNotAvailableError("pg not available while fetching albums by user")
+		}
+		return []entity.Album{}, common.NewInternalError(tx.Error, fmt.Sprintf("failed to get albums by user '%s'", username))
 	}
 
 	if len(albums) == 0 {
-		return []entity.Album{}, nil
+		return []entity.Album{}, common.NewEntityNotFound(fmt.Sprintf("albums not found with user '%s'", username))
 	}
 
 	entities := albums.Merge()
@@ -211,8 +251,11 @@ func (a *AlbumPostgresRepo) GetByUser(ctx context.Context, username string) ([]e
 
 // GetAlbumsByGroup returns a list of albums for which the group has at one permission set.
 func (a *AlbumPostgresRepo) GetByGroupName(ctx context.Context, groupName string) ([]entity.Album, error) {
-	var albums albumJoinRows
+	if !a.circuitBreaker.IsAvailable() {
+		return []entity.Album{}, common.NewPostgresNotAvailableError("pg not available while fetching albums by group")
+	}
 
+	var albums albumJoinRows
 	tagSubQuery := a.db.WithContext(ctx).Table("tag").
 		Select("id, albums_tags.album_id, name, color").
 		Joins("JOIN albums_tags ON (albums_tags.tag_id = tag.id)")
@@ -227,11 +270,14 @@ func (a *AlbumPostgresRepo) GetByGroupName(ctx context.Context, groupName string
 
 	tx.Find(&albums)
 	if tx.Error != nil {
-		return []entity.Album{}, fmt.Errorf("%w internal error: %v", repo.ErrInternalError, tx.Error)
+		if !a.circuitBreaker.IsAvailable() {
+			return []entity.Album{}, common.NewPostgresNotAvailableError("pg not available while fetching albums by group")
+		}
+		return []entity.Album{}, common.NewInternalError(tx.Error, fmt.Sprintf("failed to get albums by group '%s'", groupName))
 	}
 
 	if len(albums) == 0 {
-		return []entity.Album{}, nil
+		return []entity.Album{}, common.NewEntityNotFound(fmt.Sprintf("albums not found by group '%s'", groupName))
 	}
 
 	entities := albums.Merge()
@@ -241,6 +287,10 @@ func (a *AlbumPostgresRepo) GetByGroupName(ctx context.Context, groupName string
 
 // GetByGroups returns a list of albums with at least one persmission for at least on group in the list.
 func (a *AlbumPostgresRepo) GetByGroups(ctx context.Context, groupNames []string) ([]entity.Album, error) {
+	if !a.circuitBreaker.IsAvailable() {
+		return []entity.Album{}, common.NewPostgresNotAvailableError("pg not available while fetching albums by groups")
+	}
+
 	var albums albumJoinRows
 
 	if len(groupNames) == 0 {
@@ -270,11 +320,14 @@ func (a *AlbumPostgresRepo) GetByGroups(ctx context.Context, groupNames []string
 
 	tx.Find(&albums)
 	if tx.Error != nil {
-		return []entity.Album{}, fmt.Errorf("%w internal error: %v", repo.ErrInternalError, tx.Error)
+		if !a.circuitBreaker.IsAvailable() {
+			return []entity.Album{}, common.NewPostgresNotAvailableError("pg not available while fetching albums by groups")
+		}
+		return []entity.Album{}, common.NewInternalError(tx.Error, fmt.Sprintf("failed to get albums by groups [%+v]", groupNames))
 	}
 
 	if len(albums) == 0 {
-		return []entity.Album{}, nil
+		return []entity.Album{}, common.NewEntityNotFound(fmt.Sprintf("albums not found by groups [%+v]", groupNames))
 	}
 
 	entities := albums.Merge()
@@ -283,6 +336,10 @@ func (a *AlbumPostgresRepo) GetByGroups(ctx context.Context, groupNames []string
 }
 
 func (a *AlbumPostgresRepo) SetPermissions(ctx context.Context, albumId string, permissions []entity.AlbumPermission) error {
+	if !a.circuitBreaker.IsAvailable() {
+		return common.NewPostgresNotAvailableError("pg not available while setting permissions")
+	}
+
 	mapper := func(perms []entity.Permission) models.PermissionIDs {
 		mperms := make(models.PermissionIDs, 0, len(permissions))
 		for _, p := range perms {
@@ -300,22 +357,41 @@ func (a *AlbumPostgresRepo) SetPermissions(ctx context.Context, albumId string, 
 			Permissions: mapper(permission.Permissions),
 		})
 		if tx.Error != nil {
-			return fmt.Errorf("failed to set permissions for album '%s' for owner '%s': %w", albumId, permission.OwnerID, tx.Error)
+			if !a.circuitBreaker.IsAvailable() {
+				return common.NewPostgresNotAvailableError("pg not available while setting permissions")
+			}
+			return common.NewInternalError(tx.Error, fmt.Sprintf("failed to set permissions for album '%s' for owner '%s'", albumId, permission.OwnerID))
 		}
-
 	}
 
 	if err := tx.Commit().Error; err != nil {
-		return fmt.Errorf("failed to set permissions for album '%s': %w", albumId, tx.Error)
+		if !a.circuitBreaker.IsAvailable() {
+			return common.NewPostgresNotAvailableError("pg not available while setting permissions")
+		}
+		return common.NewInternalError(tx.Error, fmt.Sprintf("failed to set permissions for album '%s'", albumId))
 	}
 
 	return nil
 }
 
 func (a *AlbumPostgresRepo) RemovePermissions(ctx context.Context, albumId string) error {
+	if !a.circuitBreaker.IsAvailable() {
+		return common.NewPostgresNotAvailableError("pg not available while removing permissions")
+	}
 	tx := a.db.WithContext(ctx).Where("album_id = ?", albumId).Delete(&models.AlbumPermissions{})
 	if tx.Error != nil {
-		return fmt.Errorf("failed to remove permissions of album '%s': %w", albumId, tx.Error)
+		if !a.circuitBreaker.IsAvailable() {
+			return common.NewPostgresNotAvailableError("pg not available while removing permissions")
+		}
+		return common.NewInternalError(tx.Error, fmt.Sprintf("failed to remove permissions of album '%s'", albumId))
 	}
 	return nil
+}
+
+func (a *AlbumPostgresRepo) checkNetworkError(err error) (isOpen bool) {
+	isOpen = a.circuitBreaker.BreakOnNetworkError(err)
+	if isOpen {
+		zap.S().Warn("circuit breaker is now open")
+	}
+	return
 }
