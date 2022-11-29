@@ -6,8 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	apiv1 "github.com/tupyy/gophoto/api/v1"
-	"github.com/tupyy/gophoto/internal/common"
 	"github.com/tupyy/gophoto/internal/entity"
+	mappersv1 "github.com/tupyy/gophoto/internal/mappers/v1"
 	"github.com/tupyy/gophoto/internal/services/permissions"
 	"go.uber.org/zap"
 )
@@ -18,14 +18,14 @@ func (server *Server) GetAlbumThumbnail(c *gin.Context, albumId apiv1.AlbumId) {
 	id, err := server.EncryptionService().Decrypt(albumId)
 	if err != nil {
 		zap.S().Errorw("failed to decrypt album id", "error", err, "album_id", albumId, "user", session.User.Username)
-		common.AbortNotFoundWithJson(c, err, "album not found")
+		c.AbortWithStatusJSON(http.StatusNotFound, mappersv1.MapFromStatusf(http.StatusNotFound, "album with id '%s' not found", albumId))
 		return
 	}
 
 	album, err := server.AlbumService().Query().First(c, id)
 	if err != nil {
 		zap.S().Errorw("failed to get album", "error", err, "album_id", id, "user", session.User.Username)
-		common.AbortNotFoundWithJson(c, err, "")
+		c.AbortWithStatusJSON(http.StatusNotFound, mappersv1.MapFromStatusf(http.StatusNotFound, "album with id '%s' not found", albumId))
 		return
 	}
 
@@ -41,21 +41,21 @@ func (server *Server) GetAlbumThumbnail(c *gin.Context, albumId apiv1.AlbumId) {
 
 	if !hasPermission {
 		zap.S().Errorw("user has no read permissions on the album", "album_id", id, "user", session.User.Username)
-		common.AbortForbidden(c, common.NewMissingPermissionError(entity.PermissionEditAlbum, album, session.User), "get album")
+		c.AbortWithStatusJSON(http.StatusForbidden, mappersv1.MapFromStatus(http.StatusForbidden, "access denied"))
 		return
 	}
 
 	thumbnail, _, err := server.MediaService().GetPhoto(c, album.Bucket, album.Thumbnail)
 	if err != nil {
 		zap.S().Errorw("failed to get album", "error", err, "album_id", id, "thumbnail_filename", album.Thumbnail, "bucket", album.Bucket, "user", session.User.Username)
-		common.AbortNotFoundWithJson(c, err, "thumbnail not found")
+		c.AbortWithStatusJSON(http.StatusNotFound, mappersv1.MapFromStatusf(http.StatusNotFound, "thumbnail not found for album '%s'", albumId))
 		return
 	}
 
 	content, err := ioutil.ReadAll(thumbnail)
 	if err != nil {
 		zap.S().Errorw("failed to read thumbnail", "error", err, "album_id", id, "thumbnail_filename", album.Thumbnail, "bucket", album.Bucket, "user", session.User.Username)
-		common.AbortInternalErrorWithJson(c)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, mappersv1.MapFromStatusf(http.StatusInternalServerError, "failed to read thumbnail: %s", err))
 		return
 	}
 

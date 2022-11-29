@@ -1035,9 +1035,11 @@ components:
         - type: object
           properties:
             code:
-              type: string
+              type: integer
             reason:
               type: string
+          required:
+            - code
     Album:
       allOf:
       - $ref: '#/components/schemas/ObjectReference'

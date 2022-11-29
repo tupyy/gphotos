@@ -81,7 +81,7 @@ type AlbumRequestPayload struct {
 
 // Error defines model for Error.
 type Error struct {
-	Code   *string `json:"code,omitempty"`
+	Code   int     `json:"code"`
 	Href   string  `json:"href"`
 	Id     string  `json:"id"`
 	Kind   string  `json:"kind"`

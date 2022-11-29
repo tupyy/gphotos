@@ -3,6 +3,7 @@ package v1
 import (
 	"context"
 	"errors"
+	"fmt"
 	"html"
 	"io"
 	"net/http"
@@ -11,7 +12,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	apiv1 "github.com/tupyy/gophoto/api/v1"
-	"github.com/tupyy/gophoto/internal/common"
 	"github.com/tupyy/gophoto/internal/entity"
 	mappersv1 "github.com/tupyy/gophoto/internal/mappers/v1"
 	"github.com/tupyy/gophoto/internal/services/media"
@@ -33,14 +33,14 @@ func (server *Server) GetAlbumPhotos(c *gin.Context, albumID string, params apiv
 	id, err := server.EncryptionService().Decrypt(albumID)
 	if err != nil {
 		zap.S().Errorw("failed to decrypt album id", "error", err, "album id", albumID, "user", session.User.Username)
-		common.AbortInternalError(c)
+		c.AbortWithStatusJSON(http.StatusNotFound, fmt.Sprintf("album with id '%s' not found", id))
 		return
 	}
 
 	album, err := server.AlbumService().Query().First(c, id)
 	if err != nil {
 		zap.S().Errorw("failed to get album", "error", err, "album_id", id, "user", session.User.Username)
-		common.AbortNotFound(c, err, "download photos")
+		c.AbortWithStatusJSON(http.StatusNotFound, fmt.Sprintf("album with id '%s' not found", id))
 		return
 	}
 
@@ -54,14 +54,15 @@ func (server *Server) GetAlbumPhotos(c *gin.Context, albumID string, params apiv
 
 	if !hasPermission {
 		zap.S().Errorw("permission denied to access album", "album", albumID, "user", session.User.Username)
-		common.AbortForbiddenWithJson(c, errors.New("user has no permission to read photos"), "")
+		c.AbortWithStatusJSON(http.StatusForbidden, "access denied")
 		return
 	}
 
 	photos, err := server.MediaService().ListBucket(c, album.Bucket)
 	if err != nil {
 		zap.S().Errorw("failed to get photos", "error", err, "album id", id, "user", session.User.Username)
-		common.AbortInternalErrorWithJson(c)
+		apiErr := mappersv1.MapFromError(err)
+		c.AbortWithStatusJSON(apiErr.Code, apiErr)
 		return
 	}
 
@@ -87,14 +88,14 @@ func (server *Server) GetPhoto(c *gin.Context, albumId apiv1.AlbumId, photoId ap
 	id, err := server.EncryptionService().Decrypt(albumId)
 	if err != nil {
 		zap.S().Errorw("failed to decrypt album id", "error", err, "album id", albumId, "user", session.User.Username)
-		common.AbortNotFoundWithJson(c, err, "not found")
+		c.AbortWithStatusJSON(http.StatusNotFound, fmt.Sprintf("album with id '%s' not found", id))
 		return
 	}
 
 	album, err := server.AlbumService().Query().First(ctx, id)
 	if err != nil {
 		zap.S().Errorw("failed to get album", "album", id, "user", session.User.Username)
-		common.AbortNotFoundWithJson(c, err, "download photo")
+		c.AbortWithStatusJSON(http.StatusNotFound, fmt.Sprintf("album with id '%s' not found", id))
 		return
 	}
 
@@ -107,28 +108,30 @@ func (server *Server) GetPhoto(c *gin.Context, albumId apiv1.AlbumId, photoId ap
 		Resolve(album, session.User)
 
 	if !hasPermission {
-		common.AbortForbidden(c, errors.New("user has no permission to read photo"), "")
+		c.AbortWithStatusJSON(http.StatusForbidden, "access denied")
 		return
 	}
 
 	pID, err := server.EncryptionService().Decrypt(photoId)
 	if err != nil {
 		zap.S().Errorw("failed to decrypt photo id", "error", err, "photo id", photoId, "user", session.User.Username)
-		common.AbortNotFoundWithJson(c, err, "not found")
+		c.AbortWithStatusJSON(http.StatusNotFound, fmt.Sprintf("photo with id '%s' not found", id))
 		return
 	}
 
 	r, _, err := server.MediaService().GetPhoto(ctx, album.Bucket, pID)
 	if err != nil {
 		zap.S().Errorw("failed to open photo", "error", err, "album id", id, "photo id", pID, "user", session.User.Username)
-		common.AbortInternalError(c)
+		apiErr := mappersv1.MapFromError(err)
+		c.AbortWithStatusJSON(apiErr.Code, apiErr)
 		return
 	}
 
 	fileContent, err := io.ReadAll(r)
 	if err != nil {
 		zap.S().Errorw("failed to read photo", "error", err, "album id", id, "photo id", pID, "user", session.User.Username)
-		common.AbortInternalError(c)
+		apiErr := mappersv1.MapFromError(err)
+		c.AbortWithStatusJSON(apiErr.Code, apiErr)
 		return
 	}
 
@@ -138,7 +141,8 @@ func (server *Server) GetPhoto(c *gin.Context, albumId apiv1.AlbumId, photoId ap
 
 	if _, err := w.Write(fileContent); err != nil {
 		zap.S().Errorw("failed to write photo to response", "error", err, "album id", id, "photo id", pID, "user", session.User.Username)
-		common.AbortInternalError(c)
+		apiErr := mappersv1.MapFromError(err)
+		c.AbortWithStatusJSON(apiErr.Code, apiErr)
 	}
 }
 
@@ -149,14 +153,14 @@ func (server *Server) DeletePhoto(c *gin.Context, albumId apiv1.AlbumId, photoId
 	id, err := server.EncryptionService().Decrypt(albumId)
 	if err != nil {
 		zap.S().Errorw("failed to decrypt album id", "error", err, "album", id, "user", session.User.Username)
-		common.AbortNotFoundWithJson(c, err, "blbl")
+		c.AbortWithStatusJSON(http.StatusNotFound, fmt.Sprintf("album with id '%s' not found", id))
 		return
 	}
 
 	album, err := server.AlbumService().Query().First(c, id)
 	if err != nil {
 		zap.S().Errorw("failed to get album", "error", err, "album id", id, "user", session.User.Username)
-		common.AbortNotFoundWithJson(c, err, "delete photo")
+		c.AbortWithStatusJSON(http.StatusNotFound, fmt.Sprintf("album with id '%s' not found", id))
 		return
 	}
 
@@ -170,21 +174,22 @@ func (server *Server) DeletePhoto(c *gin.Context, albumId apiv1.AlbumId, photoId
 
 	if !hasPermission {
 		zap.S().Errorw("user has no permission to write photo", "album id", id, "user", session.User.Username)
-		common.AbortForbidden(c, errors.New("user has no permission to write photo"), "")
+		c.AbortWithStatusJSON(http.StatusForbidden, "access denied")
 		return
 	}
 
 	pID, err := server.EncryptionService().Decrypt(photoId)
 	if err != nil {
 		zap.S().Errorw("failed to decrypt photo id", photoId, "album id", id, "user", session.User.Username)
-		common.AbortNotFoundWithJson(c, err, "t")
+		c.AbortWithStatusJSON(http.StatusNotFound, fmt.Sprintf("photo with id '%s' not found", id))
 		return
 	}
 
 	err = server.MediaService().Delete(c, album.Bucket, pID)
 	if err != nil {
 		zap.S().Errorw("failed to delete photo", "error", err, "photo id", pID, "album id", id, "user", session.User.Username)
-		common.AbortInternalError(c)
+		apiErr := mappersv1.MapFromError(err)
+		c.AbortWithStatusJSON(apiErr.Code, apiErr)
 		return
 	}
 	c.JSON(http.StatusNoContent, gin.H{})
@@ -197,13 +202,13 @@ func (server *Server) UploadPhoto(c *gin.Context, albumId apiv1.AlbumId) {
 	id, err := server.EncryptionService().Decrypt(albumId)
 	if err != nil {
 		zap.S().Errorw("failed to decrypt album id", "error", err, "album_id", albumId, "user", session.User.Username)
-		common.AbortNotFoundWithJson(c, err, "album not found")
+		c.AbortWithStatusJSON(http.StatusNotFound, fmt.Sprintf("album with id '%s' not found", id))
 		return
 	}
 
 	album, err := server.AlbumService().Query().First(c, id)
 	if err != nil {
-		common.AbortNotFoundWithJson(c, err, "update album")
+		c.AbortWithStatusJSON(http.StatusNotFound, fmt.Sprintf("album with id '%s' not found", id))
 		return
 	}
 
@@ -217,28 +222,28 @@ func (server *Server) UploadPhoto(c *gin.Context, albumId apiv1.AlbumId) {
 
 	if !hasPermission {
 		zap.S().Errorw("user hos no permission to update photo to album", "album_id", id, "user", session.User.Username)
-		common.AbortForbidden(c, errors.New("user has no permission to upload media"), "")
+		c.AbortWithStatusJSON(http.StatusForbidden, "access denied")
 		return
 	}
 
 	file, err := c.FormFile("file")
 	if err != nil {
 		zap.S().Errorw("failed to bind to file from request", "error", err, "user", session.User.Username)
-		common.AbortInternalError(c)
+		c.AbortWithStatusJSON(http.StatusBadRequest, "failed to get file from request")
 		return
 	}
 
 	// validate filename
 	if err := validate(file.Filename); err != nil {
 		zap.S().Errorw("failed to valdidate filename", "error", err, "filename", file.Filename, "user", session.User.Username)
-		common.AbortBadRequestWithJson(c, err, "invalid filename")
+		c.AbortWithStatusJSON(http.StatusBadRequest, fmt.Sprintf("invalid filename '%s'", err))
 		return
 	}
 
 	src, err := file.Open()
 	if err != nil {
 		zap.S().Errorw("failed to open file from request", "error", err, "filename", file.Filename, "user", session.User.Username)
-		common.AbortInternalError(c)
+		c.AbortWithStatusJSON(http.StatusBadRequest, "failed to open file from request")
 		return
 	}
 	defer src.Close()
@@ -247,7 +252,8 @@ func (server *Server) UploadPhoto(c *gin.Context, albumId apiv1.AlbumId) {
 
 	if err := server.MediaService().Save(c, album.Bucket, sanitizedFilename, src, media.Photo); err != nil {
 		zap.S().Errorw("failed to upload photo to repo", "error", err, "album_id", id, "user", session.User.Username)
-		common.AbortInternalErrorWithJson(c)
+		apiErr := mappersv1.MapFromError(err)
+		c.AbortWithStatusJSON(apiErr.Code, apiErr)
 		return
 	}
 
